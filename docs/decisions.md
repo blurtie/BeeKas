@@ -1,0 +1,149 @@
+# Catatan Keputusan
+
+Setiap keputusan yang memengaruhi produk atau arsitektur dicatat di sini beserta alasannya. Keputusan baru ditambahkan di bawah, bukan menimpa yang lama. Kalau sebuah keputusan diganti, tandai yang lama sebagai **Diganti oleh D-xx**.
+
+Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetujuan tim.
+
+---
+
+## D-01 — Stack aplikasi
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan**
+
+| Bagian | Pilihan |
+|---|---|
+| Framework | Next.js (App Router) + TypeScript + Tailwind CSS |
+| Basis data | Supabase Postgres, akses data dijaga Row Level Security |
+| Autentikasi | Supabase Auth dengan kode OTP ke email |
+| Penyimpanan gambar | Supabase Storage |
+| Email OTP | Penyedia SMTP kustom, bukan SMTP bawaan Supabase |
+| Model AI | Claude API, dipanggil dari Route Handler di server |
+| Validasi data | Zod, untuk masukan pengguna dan keluaran AI |
+
+**Alasan**
+
+- Aplikasi harus dapat dibuka dari tautan tanpa pemasangan, dan tautan listing yang dibagikan di WhatsApp harus menampilkan pratinjau foto serta harga barang tersebut. Aplikasi web dengan render di server memenuhi keduanya. SPA murni dan Flutter Web tidak.
+- Next.js menyediakan sisi server dalam proyek yang sama, sehingga kredensial AI dan basis data tidak pernah sampai ke peramban.
+- Supabase menyediakan autentikasi, basis data, dan penyimpanan berkas sekaligus, sehingga waktu semester tidak habis untuk membangun infrastruktur.
+- CTO sudah pernah mempelajari React, dan Next.js dibangun di atas React.
+
+**Konsekuensi**
+
+- SMTP bawaan Supabase punya batas kirim yang rendah dan, untuk proyek Free baru, template email tidak dapat diubah. SMTP kustom dipasang sejak awal.
+- Supabase Free dapat menjeda proyek yang tidak aktif selama 7 hari, dan backup tidak dapat diunduh. Perlu backup terjadwal atau upgrade setelah ada transaksi.
+- Batas default pendaftaran dengan SMTP kustom adalah 30 pengguna baru per jam. Batas ini dinaikkan sebelum promosi di BINUS Festival.
+
+## D-02 — Aplikasi dibangun sebagai PWA
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan:** Aplikasi web dijadikan Progressive Web App sejak tahap pertama pengerjaan: dapat dipasang ke layar utama, tampil tanpa bilah alamat, dan menampilkan kerangka aplikasi saat sinyal buruk.
+
+**Alasan:** Tim ingin BeeKas terasa seperti aplikasi di ponsel tanpa kehilangan kemampuan dibuka dari tautan. Aplikasi native ditunda sampai ada bukti pengguna mau memasangnya.
+
+**Konsekuensi**
+
+- Di iPhone, pemasangan dilakukan manual lewat menu Share, sehingga perlu layar kecil yang memandu pengguna iPhone.
+- Notifikasi push tidak termasuk rilis pertama.
+- Kalau nanti dibutuhkan kehadiran di Play Store, aplikasi web dapat dibungkus tanpa ditulis ulang. Kemungkinan ini perlu diverifikasi saat dibutuhkan.
+
+## D-03 — Domain email yang diterima
+
+**Status:** Disetujui
+
+**Keputusan:** Pendaftaran hanya menerima email `@binus.ac.id` (mahasiswa) dan `@binus.edu` (dosen dan staf). Domain lain ditolak di server.
+
+**Alasan:** Identitas pengguna yang terikat pada akun kampus adalah dasar kepercayaan BeeKas.
+
+**Konsekuensi:** Alumni yang email kampusnya sudah tidak aktif belum dapat mendaftar. Lihat keputusan terbuka.
+
+**Perlu dicek:** pengiriman kode OTP ke kedua domain belum diuji. Filter email kampus dapat mengarantina email dari domain baru. Uji ke beberapa akun anggota tim sebelum membangun fitur di atas autentikasi.
+
+## D-04 — Kanal komunikasi pembeli dan penjual lewat WhatsApp
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan:** Halaman detail listing memiliki tombol yang membuka WhatsApp penjual dengan pesan awal yang sudah terisi. Tidak ada fitur chat di dalam aplikasi.
+
+**Alasan:** Chat internal membutuhkan pesan realtime, penyimpanan percakapan, dan moderasi, dengan usaha pengembangan beberapa minggu. WhatsApp sudah dipakai semua calon pengguna.
+
+**Konsekuensi**
+
+- Nomor WhatsApp penjual hanya terlihat oleh pengguna terverifikasi, dan hanya di halaman detail listing.
+- Percakapan dan kesepakatan terjadi di luar aplikasi, sehingga BeeKas tidak memiliki catatannya. Status booking dan harga akhir dicatat oleh penjual di aplikasi.
+
+## D-05 — Model pendapatan: fee listing Rp1.000
+
+**Status:** Disetujui
+
+**Keputusan:** Penjual membayar Rp1.000 untuk setiap listing yang diterbitkan, termasuk listing donasi. Model ini menggantikan skema potongan persentase dari harga jual.
+
+**Alasan:** Potongan persentase terlalu besar untuk barang preloved yang umumnya murah. Fee kecil yang tetap tidak banyak menghambat penjual. Pada listing donasi, fee berfungsi menyaring listing spam dan asal-asalan, bukan untuk mencari untung dari barang yang diberikan gratis.
+
+## D-06 — Pembayaran fee lewat kuota listing, QRIS statis, dan konfirmasi manual
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan**
+
+1. Penjual membeli **paket kuota listing**. Satu kuota setara satu listing seharga Rp1.000.
+2. Pembayaran dilakukan ke **QRIS statis milik tim**, yang gambarnya ditampilkan di aplikasi beserta nominal paket.
+3. Penjual mengunggah bukti bayar. Pembelian berstatus menunggu konfirmasi.
+4. Admin mencocokkan bukti dengan mutasi yang benar-benar masuk di aplikasi merchant QRIS, lalu mengonfirmasi atau menolak.
+5. Setelah dikonfirmasi, kuota bertambah. Setiap listing yang terbit mengurangi satu kuota.
+
+**Aturan kuota**
+
+- Istilah yang dipakai di antarmuka dan kode adalah **kuota**, bukan saldo.
+- Kuota tidak dapat diuangkan kembali, tidak dapat dipindahkan ke akun lain, dan hanya dapat dipakai untuk menerbitkan listing.
+
+**Alasan**
+
+- Payment gateway otomatis umumnya mensyaratkan badan usaha. Xendit, misalnya, tidak menerima akun perorangan.
+- Mulai 1 Oktober 2026, MDR QRIS 0% berlaku untuk transaksi sampai Rp100.000 di semua merchant, dan sampai Rp500.000 untuk usaha mikro, sehingga biaya pembayaran fee praktis nol. Perlu dicek ulang di siaran pers resmi Bank Indonesia.
+- Paket menghindari pembayaran berulang untuk nominal Rp1.000.
+- Kuota yang hanya dapat dipakai untuk jasa listing menjauhkan BeeKas dari karakteristik uang elektronik. Batas hukumnya belum diverifikasi.
+
+**Konsekuensi**
+
+- Admin harus mengonfirmasi pembelian dalam waktu yang wajar. Target waktunya perlu ditetapkan.
+- Screenshot bukti bayar dapat dipalsukan, jadi konfirmasi wajib berdasarkan mutasi di aplikasi merchant.
+- QRIS sebaiknya terdaftar atas nama usaha BeeKas, bukan rekening pribadi anggota, agar pencatatan untuk laporan keuangan terpisah.
+- Butuh tabel pembelian kuota dan buku besar kuota. Isinya sekaligus menjadi data pendapatan untuk laporan.
+
+## D-07 — Booking default 1x24 jam, dapat diperpanjang penjual
+
+**Status:** Disetujui
+
+**Keputusan**
+
+- Pembeli yang melakukan booking wajib menyelesaikan COD atau pembayaran kepada penjual paling lambat 1x24 jam sejak booking.
+- Penjual dapat memperpanjang batas waktu tersebut.
+- Berlaku untuk listing jual maupun donasi.
+
+**Implementasi:** batas waktu disimpan sebagai kolom `booked_until`. Listing yang `booked_until`-nya sudah lewat diperlakukan sebagai tersedia saat data dibaca, tanpa job terjadwal. Pendekatan ini tidak dapat gagal karena job yang tidak berjalan.
+
+## D-08 — AI hanya dipanggil dari server
+
+**Status:** Disetujui
+
+**Keputusan:** Pemanggilan Claude API hanya terjadi di Route Handler. Kunci API hanya ada di environment server. Keluaran AI divalidasi bentuknya sebelum dikirim ke klien. Kegagalan AI tidak menghentikan pemasangan listing.
+
+---
+
+## Keputusan yang masih terbuka
+
+| Topik | Pertanyaan |
+|---|---|
+| Hosting | Penyedia mana yang mengizinkan penggunaan komersial, dan berapa biayanya untuk perhitungan COGS. Vercel Hobby tidak boleh dipakai untuk penggunaan komersial, sehingga hanya layak untuk pengembangan dan demo. |
+| Paket kuota | Pilihan paket dan harganya, misalnya 5 dan 10 listing. |
+| Kuota gratis akun baru | Ada atau tidak, dan berapa. Membantu masalah cold start di awal. |
+| Kuota saat listing dihapus | Dikembalikan atau tidak bila listing dihapus sebelum terjual. |
+| Target waktu konfirmasi | Berapa jam paling lama admin mengonfirmasi pembelian kuota. |
+| Batas perpanjangan booking | Berapa kali penjual boleh memperpanjang, dan berapa lama setiap perpanjangan. |
+| Sanksi pembeli yang tidak datang | Misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi. |
+| Notifikasi ke pembeli | Saat booking diperpanjang atau berakhir: lewat email, di dalam aplikasi, atau tidak ada pada rilis pertama. |
+| Batas klaim donasi | Batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali. |
+| Alumni | Jalur verifikasi untuk alumni yang email kampusnya sudah tidak aktif. |

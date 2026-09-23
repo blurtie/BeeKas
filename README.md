@@ -44,9 +44,11 @@ Saran harga yang dihasilkan AI adalah estimasi, bukan data pasar. Karena itu dit
 - Nominalnya sengaja kecil supaya tidak menghambat penjual di tahap awal.
 - Pada listing donasi, fee tidak dimaksudkan untuk mencari untung dari barang yang diberikan gratis. Fungsinya menyaring listing spam dan listing asal-asalan, sehingga katalog tetap berisi barang yang benar-benar tersedia.
 
+**Cara bayar: paket kuota listing.** Penjual membeli paket kuota (satu kuota untuk satu listing) dengan membayar ke QRIS milik tim, lalu mengunggah bukti bayar. Admin mencocokkan bukti dengan mutasi yang masuk, lalu mengonfirmasi. Setiap listing yang terbit mengurangi satu kuota. Kuota tidak dapat diuangkan kembali atau dipindahkan ke akun lain.
+
 ## Mekanisme booking
 
-1. Pembeli menekan tombol booking. Status listing berubah menjadi **Sedang dibooking**.
+1. Pembeli menekan tombol booking, lalu menghubungi penjual lewat tombol WhatsApp untuk mengatur COD. Status listing berubah menjadi **Sedang dibooking**.
 2. Pembeli wajib menyelesaikan COD atau pembayaran kepada penjual **paling lambat 1x24 jam** sejak booking.
 3. Penjual dapat memperpanjang batas waktu tersebut, misalnya saat booking dilakukan menjelang akhir pekan atau hari libur. Tanpa perpanjangan, batas default tetap 1x24 jam.
 4. Setelah barang berpindah tangan, penjual mengubah status menjadi **Terjual**.
@@ -112,10 +114,13 @@ Kebutuhan yang menjadi dasar pemilihan:
 - Pemanggilan model AI **melalui backend**, bukan langsung dari peramban, agar kredensial tidak terekspos ke pengguna
 - Pencatatan transaksi dan fee listing yang dapat diekspor untuk keperluan pelaporan
 
+Rincian kebutuhan ada di [`docs/PRD.md`](docs/PRD.md), dan keputusan beserta alasannya di [`docs/decisions.md`](docs/decisions.md).
+
 ## Keputusan yang masih terbuka
 
-- [ ] **Kanal komunikasi pembeli dan penjual:** chat internal di aplikasi atau tautan WhatsApp. Chat internal membutuhkan usaha pengembangan yang jauh lebih besar.
-- [ ] **Cara bayar fee listing:** dibayar per listing, atau lewat sistem saldo yang di-top-up sekali lalu terpotong otomatis. Biaya admin transfer dapat mendekati nominal fee Rp1.000.
+- [x] **Kanal komunikasi pembeli dan penjual:** lewat WhatsApp, tanpa chat di dalam aplikasi.
+- [x] **Cara bayar fee listing:** paket kuota listing lewat QRIS dengan konfirmasi manual oleh admin.
+- [ ] **Paket kuota:** pilihan paket dan harganya, dan ada atau tidaknya kuota gratis untuk akun baru.
 - [ ] **Batas perpanjangan booking:** berapa kali penjual boleh memperpanjang, dan apa yang terjadi setelah batas waktu lewat (misalnya status otomatis kembali ke Tersedia).
 - [ ] **Sanksi pembeli yang tidak datang:** misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi.
 - [ ] **Notifikasi ke pembeli** saat booking diperpanjang atau berakhir.
