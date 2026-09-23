@@ -171,6 +171,23 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 
 ---
 
+## D-11 — Vitest sebagai test runner untuk logika di src/lib/domain/
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan**
+
+Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes dijalankan dengan `npm test`.
+
+**Alasan:** Aturan keamanan seperti validasi domain email kampus harus dites ulang setiap kali ada perubahan. Kesalahan kecil, misalnya menerima `x@binus.ac.id.evil.com`, tidak terlihat dari tampilan dan baru ketahuan setelah akun yang tidak berhak berhasil mendaftar.
+
+**Konsekuensi**
+
+- Vitest hanya dipasang sebagai devDependency dan tidak ikut ke bundle aplikasi.
+- Versi yang dipakai adalah Vitest 4, karena Vitest 5 membutuhkan `@types/node` versi 22 ke atas, sedangkan proyek masih memakai versi 20.
+
+---
+
 ## Keputusan yang masih terbuka
 
 | Topik | Pertanyaan |

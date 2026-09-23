@@ -13,6 +13,12 @@ export const copy = {
   offline: {
     banner: "You're offline. Some content may be out of date.",
   },
+  auth: {
+    errors: {
+      invalid_email: "Enter a valid email address.",
+      not_campus_domain: "Use your @binus.ac.id or @binus.edu email.",
+    },
+  },
   pages: {
     catalog: { title: "Catalog", empty: "No listings yet. Check back soon." },
     post: { title: "Post an item", empty: "Posting will be available soon." },
