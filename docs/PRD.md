@@ -1,13 +1,15 @@
 # PRD — BeeKas
 
-Product Requirements Document, versi 0.2 (23 September 2026)
+Product Requirements Document, versi 0.3 (23 September 2026)
 Dokumen ini dipakai sebagai brief pengerjaan di Claude Code.
 
 Status: **draf**. Bagian bertanda `[KEPUTUSAN]` belum diputuskan tim. Asisten koding tidak boleh menebak bagian tersebut. Implementasikan bagian lain, lalu sediakan titik yang mudah diubah (konstanta atau kolom) untuk bagian yang belum diputuskan.
 
 Keputusan beserta alasannya dicatat di [`decisions.md`](decisions.md). Kalau dokumen ini bertentangan dengan `decisions.md`, ikuti `decisions.md` dan laporkan pertentangannya.
 
-**Perubahan dari versi 0.1:** komisi titip jual digantikan fee listing Rp1.000 yang dibayar lewat kuota. Ditambahkan listing donasi, domain `@binus.edu`, mekanisme booking 1x24 jam, dan PWA. Kanal komunikasi ditetapkan lewat WhatsApp.
+**Perubahan versi 0.3:** teks antarmuka dan kode dalam bahasa Inggris (D-09). Nilai enum diganti ke bahasa Inggris.
+
+**Perubahan versi 0.2:** komisi titip jual digantikan fee listing Rp1.000 yang dibayar lewat kuota. Ditambahkan listing donasi, domain `@binus.edu`, mekanisme booking 1x24 jam, dan PWA. Kanal komunikasi ditetapkan lewat WhatsApp.
 
 ---
 
@@ -103,13 +105,13 @@ Penomoran dipakai sebagai acuan saat implementasi dan commit.
 - F2.1 Profil berisi nama panggilan, email, jenis pengguna, nomor WhatsApp, dan kampus utama.
 - F2.2 Jenis pengguna diturunkan dari domain email: `@binus.ac.id` sebagai mahasiswa, `@binus.edu` sebagai dosen atau staf. Pengguna tidak memilihnya sendiri.
 - F2.3 Mahasiswa wajib mengisi jurusan dan BINUSIAN. Dosen dan staf tidak mengisi keduanya.
-- F2.4 Jurusan dipilih dari daftar program studi S1 BINUS, dikelompokkan per fakultas atau school, ditambah opsi "Lainnya". Daftar disimpan sebagai konstanta.
+- F2.4 Jurusan dipilih dari daftar program studi S1 BINUS, dikelompokkan per fakultas atau school, ditambah opsi "Other". Nama jurusan memakai nama resmi program dalam bahasa Inggris. Daftar disimpan sebagai konstanta.
 - F2.5 BINUSIAN dipilih dari daftar B27 sampai B30. Nilainya memakai tahun kelulusan, bukan tahun masuk, dan keterangan ini ditampilkan di bawah kolom isian.
 - F2.6 Yang terlihat oleh pengguna lain hanya nama panggilan, jenis pengguna, jurusan, BINUSIAN, dan kampus. Email tidak pernah ditampilkan. Nomor WhatsApp hanya terlihat oleh pengguna yang sudah masuk, dan hanya di halaman detail listing.
 
 ### F3 — Kuota listing
 
-- F3.1 Istilah di antarmuka, kode, dan basis data adalah **kuota**, bukan saldo. Satu kuota setara satu listing seharga Rp1.000.
+- F3.1 Istilah di antarmuka adalah **listing credits** (di kode dan basis data: `credits`). Jangan pernah memakai "balance", "wallet", atau "saldo". Satu kredit setara satu listing seharga Rp1.000. Dokumen ini tetap menyebutnya "kuota".
 - F3.2 Kuota tidak dapat diuangkan kembali, tidak dapat dipindahkan ke akun lain, dan hanya dapat dipakai untuk menerbitkan listing. Aturan ini ditampilkan kepada pengguna sebelum membeli.
 - F3.3 `[KEPUTUSAN]` Pilihan paket dan harganya. Simpan daftar paket sebagai konstanta atau tabel, bukan ditulis di komponen.
 - F3.4 `[KEPUTUSAN]` Kuota gratis untuk akun baru. Sediakan konstanta yang bernilai 0 sampai diputuskan.
@@ -122,7 +124,7 @@ Penomoran dipakai sebagai acuan saat implementasi dan commit.
 
 ### F4 — Memasang listing
 
-- F4.1 Penjual memilih jenis listing: `jual` atau `donasi`. Listing donasi tidak memiliki harga dan ditampilkan dengan label Gratis.
+- F4.1 Penjual memilih jenis listing: `jual` atau `donasi`. Listing donasi tidak memiliki harga dan ditampilkan dengan label Free.
 - F4.2 Unggah satu foto dari kamera atau galeri. Gambar dikompresi di sisi klien sebelum dikirim, dengan sisi terpanjang maksimal 1024 piksel.
 - F4.3 Foto dikirim ke model AI melalui backend. **Tidak boleh ada pemanggilan API model langsung dari peramban.** Pemanggilan AI tidak mengurangi kuota.
 - F4.4 Draf dari AI mengisi judul, kategori, kondisi, deskripsi, dan rentang harga. Seluruh kolom tetap dapat diubah pengguna. Untuk listing donasi, rentang harga diabaikan.
@@ -137,15 +139,15 @@ Penomoran dipakai sebagai acuan saat implementasi dan commit.
 - F5.1 Katalog menampilkan listing berstatus Tersedia dan Dibooking, diurutkan dari yang terbaru.
 - F5.2 Pencarian teks bekerja pada judul dan deskripsi.
 - F5.3 Filter jenis (jual atau donasi), kategori, dan kampus.
-- F5.4 Kartu listing menampilkan foto, harga atau label Gratis, judul, kampus, dan badge status bila sedang dibooking.
+- F5.4 Kartu listing menampilkan foto, harga atau label Free, judul, kampus, dan badge status bila sedang dibooking.
 - F5.5 Katalog kosong dan hasil pencarian kosong memiliki tampilan dan ajakan yang berbeda.
 - F5.6 `[KEPUTUSAN]` Paginasi atau muat bertahap. Untuk volume awal, muat seluruhnya masih memadai.
 
 ### F6 — Halaman detail
 
-- F6.1 Menampilkan foto, harga atau label Gratis, judul, status, kondisi, kategori, identitas penjual, kampus, tanggal pemasangan, dan deskripsi.
+- F6.1 Menampilkan foto, harga atau label Free, judul, status, kondisi, kategori, identitas penjual, kampus, tanggal pemasangan, dan deskripsi.
 - F6.2 Halaman detail memiliki metadata Open Graph (judul, harga, foto) yang dirender di server, agar tautan yang dibagikan di WhatsApp menampilkan pratinjau barang tersebut.
-- F6.3 Tombol WhatsApp membuka `https://wa.me/<nomor>?text=<pesan awal>` di tab baru. Nomor diubah ke format 62 sebelum dipakai. Pesan awal menyebut judul barang dan tautan listing.
+- F6.3 Tombol WhatsApp membuka `https://wa.me/<nomor>?text=<pesan awal>` di tab baru. Nomor diubah ke format 62 sebelum dipakai. Pesan awal menyebut judul barang dan tautan listing. `[KEPUTUSAN]` Bahasa pesan awal. Pesan ini dikirim pembeli sebagai dirinya sendiri kepada penjual, jadi bahasa Indonesia mungkin lebih wajar meskipun antarmuka berbahasa Inggris. Sampai diputuskan, simpan templatnya di berkas teks antarmuka agar mudah diganti.
 - F6.4 Tombol booking tampil untuk pengguna yang sudah masuk bila listing Tersedia. Bila listing sedang dibooking orang lain, tampilkan sisa waktu booking.
 - F6.5 Listing berstatus Terjual ditampilkan diredupkan, dan tombol booking serta WhatsApp nonaktif.
 - F6.6 Pemilik listing melihat tombol pengelolaan, bukan tombol booking.
@@ -203,10 +205,10 @@ Titik awal, bukan skema final. Seluruh tabel memakai Row Level Security.
 `id`, `user_id`, `delta` (positif atau negatif), `reason` (`purchase`, `listing_publish`, `signup_bonus`, `admin_adjustment`), `purchase_id`, `listing_id`, `note`, `created_by`, `created_at`
 
 Nilai enum lain:
-`category` bernilai `buku`, `lab`, `elektronik`, `kos`, atau `lainnya`.
-`condition` bernilai `seperti_baru`, `bekas_mulus`, atau `ada_bekas_pakai`.
+`category` bernilai `books`, `lab`, `electronics`, `dorm`, atau `other`.
+`condition` bernilai `like_new`, `good`, atau `used`.
 
-Nilai enum disimpan dalam bahasa Inggris atau sebagai kode. Label bahasa Indonesia berada di lapisan tampilan.
+Nilai enum adalah kode bahasa Inggris. Label yang dilihat pengguna berada di berkas teks antarmuka, bukan di basis data.
 
 ## 8. Kontrak integrasi AI
 
@@ -220,12 +222,12 @@ Keluaran: objek JSON dengan bentuk tetap di bawah ini.
   "rejection_reason": null,
   "photo_clear": true,
   "title": "string, maksimal 60 karakter",
-  "category": "buku | lab | elektronik | kos | lainnya",
-  "condition": "seperti_baru | bekas_mulus | ada_bekas_pakai",
+  "category": "books | lab | electronics | dorm | other",
+  "condition": "like_new | good | used",
   "description": "string, maksimal 200 karakter",
   "price_min": 0,
   "price_max": 0,
-  "price_confidence": "rendah | sedang | tinggi"
+  "price_confidence": "low | medium | high"
 }
 ```
 
@@ -237,6 +239,7 @@ Ketentuan:
 - `allowed` bernilai false untuk kategori barang terlarang pada F4.7, disertai `rejection_reason` singkat.
 - `photo_clear` bernilai false bila barang tidak terlihat jelas.
 - Backend wajib memvalidasi bentuk keluaran sebelum dikirim ke klien. Keluaran yang tidak sesuai diperlakukan sebagai kegagalan, dan alur berlanjut ke F4.6.
+- `[KEPUTUSAN]` Bahasa judul dan deskripsi yang dihasilkan AI. Antarmuka berbahasa Inggris, tetapi listing ditulis oleh dan untuk sivitas BINUS, yang umumnya menulis dalam bahasa Indonesia. Simpan pilihan bahasa sebagai konstanta di prompt AI.
 - Batasi laju permintaan per pengguna untuk mencegah pembengkakan biaya, karena pemanggilan AI tidak mengurangi kuota.
 
 ## 9. Kebutuhan non-fungsional
@@ -262,9 +265,9 @@ Desain rinci belum ada. Yang sudah ditetapkan baru token warna dan satu elemen p
 | Garis | `#E3DCCD` |
 | Teks sekunder | `#6B6154` |
 
-Elemen pembeda: label harga berbentuk hang tag, yaitu persegi dengan ujung kiri meruncing dan titik menyerupai lubang tali, ditempel sedikit miring di pojok kanan atas foto barang. Pada listing donasi, label yang sama bertuliskan Gratis. Elemen ini menjadi satu-satunya bagian yang mencolok; sisanya dibuat tenang.
+Elemen pembeda: label harga berbentuk hang tag, yaitu persegi dengan ujung kiri meruncing dan titik menyerupai lubang tali, ditempel sedikit miring di pojok kanan atas foto barang. Pada listing donasi, label yang sama bertuliskan Free. Elemen ini menjadi satu-satunya bagian yang mencolok; sisanya dibuat tenang.
 
-Seluruh teks antarmuka dalam bahasa Indonesia. Label tombol memakai kata kerja yang menjelaskan akibatnya, bukan "Submit" atau "OK".
+Seluruh teks antarmuka dalam bahasa Inggris (D-09). Semua teks yang dilihat pengguna disimpan terpusat di satu berkas, tidak ditulis langsung di komponen, agar mudah diubah atau diterjemahkan nanti. Label tombol memakai kata kerja yang menjelaskan akibatnya, misalnya "Publish listing" atau "Book this item", bukan "Submit" atau "OK". Mata uang tetap rupiah dengan format Indonesia, misalnya Rp15.000.
 
 ## 11. Keputusan teknis
 

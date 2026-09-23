@@ -96,7 +96,7 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 
 **Aturan kuota**
 
-- Istilah yang dipakai di antarmuka dan kode adalah **kuota**, bukan saldo.
+- Istilah di antarmuka dan kode: lihat D-09 ("listing credits" / `credits`). Tidak pernah "saldo", "balance", atau "wallet".
 - Kuota tidak dapat diuangkan kembali, tidak dapat dipindahkan ke akun lain, dan hanya dapat dipakai untuk menerbitkan listing.
 
 **Alasan**
@@ -131,6 +131,24 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 
 **Keputusan:** Pemanggilan Claude API hanya terjadi di Route Handler. Kunci API hanya ada di environment server. Keluaran AI divalidasi bentuknya sebelum dikirim ke klien. Kegagalan AI tidak menghentikan pemasangan listing.
 
+## D-09 — Antarmuka dan kode dalam bahasa Inggris
+
+**Status:** Disetujui, 23 September 2026. Mengganti ketentuan "seluruh teks antarmuka dalam bahasa Indonesia" di PRD v0.2.
+
+**Keputusan**
+
+- Teks yang dilihat pengguna (label, tombol, pesan) dalam bahasa Inggris.
+- Kode dalam bahasa Inggris: nama berkas, komponen, variabel, route (misalnya `/catalog`, `/my-listings`), dan nilai enum.
+- Istilah untuk kuota di antarmuka adalah "listing credits". Tidak pernah "balance" atau "wallet".
+
+**Konsekuensi**
+
+- Semua teks antarmuka disimpan terpusat di satu berkas, tidak ditulis langsung di komponen. Tanpa library i18n. Kalau nanti bahasa diganti atau ditambah, cukup berkas itu yang diubah.
+- Mata uang tetap rupiah dengan format Indonesia.
+- Isi listing (judul, deskripsi) ditulis pengguna dan tidak dipaksa berbahasa Inggris.
+- Arahan desain untuk tim Figma perlu diperbarui agar teks di prototype juga berbahasa Inggris.
+- Dua hal turunan masih terbuka: bahasa pesan awal WhatsApp dan bahasa draf listing dari AI.
+
 ---
 
 ## Keputusan yang masih terbuka
@@ -146,4 +164,6 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 | Sanksi pembeli yang tidak datang | Misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi. |
 | Notifikasi ke pembeli | Saat booking diperpanjang atau berakhir: lewat email, di dalam aplikasi, atau tidak ada pada rilis pertama. |
 | Batas klaim donasi | Batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali. |
+| Bahasa pesan awal WhatsApp | Pesan dikirim pembeli sebagai dirinya sendiri, sehingga bahasa Indonesia mungkin lebih wajar. |
+| Bahasa draf listing dari AI | Inggris mengikuti antarmuka, atau Indonesia mengikuti kebiasaan pengguna. |
 | Alumni | Jalur verifikasi untuk alumni yang email kampusnya sudah tidak aktif. |
