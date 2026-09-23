@@ -1,8 +1,8 @@
 # BeeKas
 
-Marketplace barang preloved khusus mahasiswa dan alumni BINUS University.
+Marketplace barang preloved dan donasi khusus sivitas BINUS University.
 
-> **Status: tahap eksplorasi.** Prototype fungsional sudah ada untuk keperluan validasi, tetapi stack aplikasi sebenarnya belum ditentukan. Repositori ini akan diisi bertahap seiring keputusan teknis diambil.
+> **Status: awal pengembangan.** Prototype fungsional sudah ada untuk keperluan validasi, dan stack aplikasi sudah ditentukan. Beberapa keputusan produk masih terbuka dan tercatat di bagian [Keputusan yang masih terbuka](#keputusan-yang-masih-terbuka).
 
 ---
 
@@ -28,23 +28,43 @@ BeeKas membatasi aksesnya pada sivitas BINUS, lalu membangun tiga hal di atas pe
 
 1. **Katalog, bukan lini masa.** Barang disimpan dalam katalog yang dapat dicari dan difilter per kategori. Barang yang diunggah hari ini tetap dapat ditemukan bulan depan.
 2. **Status ketersediaan yang eksplisit.** Setiap listing memiliki status Tersedia, Sedang dibooking, atau Terjual, sehingga pembeli tidak perlu bertanya lebih dulu.
-3. **Identitas penjual yang terverifikasi.** Profil menampilkan nama, jurusan, dan angkatan (BINUSIAN) yang terikat pada akun kampus. Transaksi dilakukan secara COD di lingkungan kampus.
+3. **Identitas penjual yang terverifikasi.** Akun hanya dapat dibuat dengan email kampus `@binus.ac.id` (mahasiswa) atau `@binus.edu` (dosen dan staf). Profil menampilkan identitas yang terikat pada akun kampus tersebut. Transaksi dilakukan secara COD di lingkungan kampus.
+
+Selain barang yang dijual, pengguna juga dapat memasang **listing donasi**, yaitu barang yang diberikan secara gratis kepada sesama sivitas BINUS. Fitur ini mendukung tujuan circular economy: barang yang tidak lagi bernilai jual tetap dapat dipakai ulang alih-alih dibuang.
 
 Sebagai pelengkap, penyusunan listing dibantu model AI: penjual cukup mengunggah satu foto, lalu judul, kategori, kondisi, deskripsi, dan kisaran harga tersusun sebagai draf yang tinggal dikoreksi. Tujuannya menurunkan hambatan terbesar penjual, yaitu keharusan mengetik listing dari nol.
 
 Saran harga yang dihasilkan AI adalah estimasi, bukan data pasar. Karena itu ditampilkan sebagai rentang dan selalu dapat diubah penjual. Setelah terkumpul cukup data transaksi, saran harga direncanakan beralih ke acuan berbasis riwayat penjualan.
+
+## Model bisnis
+
+**Fee listing Rp1.000 per listing**, dibayar penjual saat memasang barang. Fee ini berlaku untuk listing jual maupun listing donasi.
+
+- Model ini menggantikan skema potongan persentase dari harga jual, yang terlalu besar untuk barang preloved yang umumnya murah.
+- Nominalnya sengaja kecil supaya tidak menghambat penjual di tahap awal.
+- Pada listing donasi, fee tidak dimaksudkan untuk mencari untung dari barang yang diberikan gratis. Fungsinya menyaring listing spam dan listing asal-asalan, sehingga katalog tetap berisi barang yang benar-benar tersedia.
+
+## Mekanisme booking
+
+1. Pembeli menekan tombol booking. Status listing berubah menjadi **Sedang dibooking**.
+2. Pembeli wajib menyelesaikan COD atau pembayaran kepada penjual **paling lambat 1x24 jam** sejak booking.
+3. Penjual dapat memperpanjang batas waktu tersebut, misalnya saat booking dilakukan menjelang akhir pekan atau hari libur. Tanpa perpanjangan, batas default tetap 1x24 jam.
+4. Setelah barang berpindah tangan, penjual mengubah status menjadi **Terjual**.
+
+Batas waktu ini menjaga status barang tetap akurat, sehingga listing tidak tertahan oleh booking yang tidak ditindaklanjuti.
 
 ## Ruang lingkup
 
 **Termasuk dalam ruang lingkup**
 
 - Barang kuliah dan perlengkapan penunjang: buku, jas lab dan alat praktikum, elektronik kecil, perlengkapan kos
-- Pengguna: mahasiswa aktif dan alumni BINUS
+- Listing jual dan listing donasi
+- Pengguna: mahasiswa, dosen, dan staf BINUS dengan email `@binus.ac.id` atau `@binus.edu`
 - Transaksi tatap muka di lingkungan kampus
 
 **Di luar ruang lingkup untuk saat ini**
 
-- Pembayaran dan rekening bersama di dalam aplikasi
+- Pembayaran harga barang dan rekening bersama di dalam aplikasi. Pembayaran barang tetap terjadi langsung antara pembeli dan penjual; yang dibayar melalui BeeKas hanya fee listing
 - Pengiriman barang antarkota
 - Aplikasi native iOS dan Android
 - Fitur sosial seperti umpan aktivitas, pengikut, dan komentar publik
@@ -66,22 +86,42 @@ Keputusan untuk menunda hal-hal di atas diambil karena tidak satu pun berkontrib
 | Prototype fungsional untuk validasi | Berjalan |
 | Survei harga dan kebutuhan pengguna | Sedang berjalan |
 | Uji coba transaksi pertama | Belum |
-| Penentuan stack aplikasi | Belum |
+| Penentuan model bisnis (fee listing) | Selesai |
+| Penentuan stack aplikasi | Selesai, kecuali hosting |
 | Implementasi aplikasi | Belum |
 
 Prototype yang ada saat ini merupakan prototipe validasi, bukan basis kode produksi. Fungsinya membuktikan alur produk kepada calon pengguna, bukan menjadi fondasi aplikasi akhir.
 
 ## Rencana teknis
 
-Stack belum ditentukan. Beberapa hal sudah pasti menjadi kebutuhan, apa pun pilihan teknologinya:
+**Stack yang dipilih**
 
-- Antarmuka mobile-first yang dapat dibuka langsung dari tautan tanpa pemasangan aplikasi
-- Autentikasi berbasis email institusi untuk mahasiswa aktif, dengan jalur verifikasi terpisah untuk alumni yang email kampusnya sudah tidak aktif
+| Bagian | Pilihan |
+|---|---|
+| Framework | Next.js (App Router) + TypeScript + Tailwind CSS, dijadikan PWA agar dapat dipasang di layar utama ponsel |
+| Basis data, autentikasi, penyimpanan gambar | Supabase (Postgres, Auth dengan kode OTP email, Storage) |
+| Email OTP | Penyedia SMTP kustom |
+| Model AI | Claude API, dipanggil dari server |
+| Hosting | Belum ditentukan |
+
+Kebutuhan yang menjadi dasar pemilihan:
+
+- Antarmuka mobile-first yang dapat dibuka langsung dari tautan tanpa pemasangan aplikasi, termasuk pratinjau listing yang benar saat tautan dibagikan di WhatsApp
+- Autentikasi berbasis email institusi, hanya menerima domain `@binus.ac.id` dan `@binus.edu`
 - Penyimpanan berkas gambar
 - Pemanggilan model AI **melalui backend**, bukan langsung dari peramban, agar kredensial tidak terekspos ke pengguna
-- Pencatatan transaksi yang dapat diekspor untuk keperluan pelaporan
+- Pencatatan transaksi dan fee listing yang dapat diekspor untuk keperluan pelaporan
 
-Keputusan mengenai framework, basis data, dan penyedia hosting akan dicatat di direktori `docs/` setelah diambil.
+## Keputusan yang masih terbuka
+
+- [ ] **Kanal komunikasi pembeli dan penjual:** chat internal di aplikasi atau tautan WhatsApp. Chat internal membutuhkan usaha pengembangan yang jauh lebih besar.
+- [ ] **Cara bayar fee listing:** dibayar per listing, atau lewat sistem saldo yang di-top-up sekali lalu terpotong otomatis. Biaya admin transfer dapat mendekati nominal fee Rp1.000.
+- [ ] **Batas perpanjangan booking:** berapa kali penjual boleh memperpanjang, dan apa yang terjadi setelah batas waktu lewat (misalnya status otomatis kembali ke Tersedia).
+- [ ] **Sanksi pembeli yang tidak datang:** misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi.
+- [ ] **Notifikasi ke pembeli** saat booking diperpanjang atau berakhir.
+- [ ] **Klaim listing donasi:** batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali.
+- [ ] **Alumni** yang email kampusnya sudah tidak aktif.
+- [ ] **Hosting.** Karena BeeKas memungut fee, penyedia hosting harus mengizinkan penggunaan komersial.
 
 ## Tim
 
