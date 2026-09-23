@@ -1,10 +1,11 @@
 // BeeKas service worker: offline app shell only.
-// NOTE: revisit this cache strategy when real data/auth arrive —
-// authenticated pages and user data must never be served stale.
+// Only pages listed in PUBLIC_SHELL are cached. Every other page is treated as
+// private (account data) by default: never precached, never written to cache,
+// and served /offline when the network is down.
 const VERSION = new URL(self.location).searchParams.get("v") || "dev";
 const SHELL_CACHE = `beekas-shell-${VERSION}`;
 const STATIC_CACHE = `beekas-static-${VERSION}`;
-const SHELL = ["/catalog", "/post", "/my-listings", "/profile", "/offline", "/manifest.webmanifest"];
+const PUBLIC_SHELL = ["/catalog", "/offline", "/manifest.webmanifest"];
 
 const cacheable = (res) => res && res.ok && !res.redirected && res.type === "basic";
 
@@ -12,7 +13,7 @@ async function precache() {
   const shell = await caches.open(SHELL_CACHE);
   const assets = new Set();
   await Promise.allSettled(
-    SHELL.map(async (path) => {
+    PUBLIC_SHELL.map(async (path) => {
       const res = await fetch(path, { cache: "no-store" });
       if (!cacheable(res)) return;
       await shell.put(path, res.clone());
@@ -54,14 +55,15 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (cacheable(res) && SHELL.includes(url.pathname)) {
+          if (cacheable(res) && PUBLIC_SHELL.includes(url.pathname)) {
             const copy = res.clone();
             caches.open(SHELL_CACHE).then((c) => c.put(url.pathname, copy));
           }
           return res;
         })
         .catch(async () =>
-          (await caches.match(url.pathname, { cacheName: SHELL_CACHE })) ||
+          (PUBLIC_SHELL.includes(url.pathname) &&
+            (await caches.match(url.pathname, { cacheName: SHELL_CACHE }))) ||
           (await caches.match("/offline", { cacheName: SHELL_CACHE })) ||
           Response.error()),
     );
