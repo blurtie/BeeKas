@@ -149,6 +149,26 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 - Arahan desain untuk tim Figma perlu diperbarui agar teks di prototype juga berbahasa Inggris.
 - Dua hal turunan masih terbuka: bahasa pesan awal WhatsApp dan bahasa draf listing dari AI.
 
+## D-10 — Logika inti tidak terikat pada Next.js
+
+**Status:** Disetujui, 23 September 2026
+
+**Keputusan**
+
+1. Aturan bisnis yang menyangkut data dijalankan di **fungsi Postgres (RPC Supabase) atau Route Handler**, bukan di Server Actions. Ini termasuk pengurangan kuota saat listing terbit, konfirmasi dan penolakan pembelian kuota, penyesuaian kuota oleh admin, pembuatan, perpanjangan, dan pembatalan booking, serta penandaan terjual.
+2. Aturan yang menjaga konsistensi data, misalnya kuota tidak boleh negatif dan satu listing hanya punya satu booking aktif, ditegakkan di basis data (constraint, RLS, atau fungsi Postgres), bukan hanya di kode aplikasi.
+3. Logika yang tidak berhubungan dengan tampilan ditulis sebagai TypeScript murni di folder tersendiri, tanpa import dari Next.js atau React. Contohnya validasi domain email, perhitungan status booking kedaluwarsa, format rupiah, dan skema Zod.
+4. Server Actions boleh dipakai hanya sebagai pembungkus tipis yang memanggil fungsi di poin 1 atau 3, tidak berisi aturan bisnis sendiri.
+
+**Alasan:** Tim membuka kemungkinan membuat aplikasi native dengan React Native di kemudian hari. Server Actions hanya dapat dipanggil dari aplikasi Next.js itu sendiri, sehingga aturan yang ditaruh di sana harus ditulis ulang untuk klien lain. Dengan aturan di basis data dan endpoint API, klien lain cukup memanggil hal yang sama. Aturan kuota juga lebih aman bila ditegakkan di basis data, karena berlaku untuk semua klien.
+
+**Konsekuensi**
+
+- React Native tetap menulis ulang seluruh tampilan, tetapi dapat memakai ulang backend, tipe data, skema validasi, logika murni, berkas teks antarmuka, dan token warna.
+- Flutter hanya dapat memakai ulang backend.
+- Membungkus PWA dengan Capacitor tetap mungkin, tetapi aplikasi yang hanya membungkus situs web berisiko ditolak App Store. Perlu diverifikasi saat dibutuhkan.
+- Keputusan ini tidak mengubah rencana rilis pertama: aplikasi tetap PWA (D-02).
+
 ---
 
 ## Keputusan yang masih terbuka
