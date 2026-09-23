@@ -57,7 +57,7 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 
 **Alasan:** Identitas pengguna yang terikat pada akun kampus adalah dasar kepercayaan BeeKas.
 
-**Konsekuensi:** Alumni yang email kampusnya sudah tidak aktif belum dapat mendaftar. Lihat keputusan terbuka.
+**Konsekuensi:** Tidak ada jalur verifikasi terpisah untuk alumni. Alumni yang email kampusnya sudah tidak aktif tidak dapat mendaftar. Keputusan ini disetujui tim pada September 2026.
 
 **Perlu dicek:** pengiriman kode OTP ke kedua domain belum diuji. Filter email kampus dapat mengarantina email dari domain baru. Uji ke beberapa akun anggota tim sebelum membangun fitur di atas autentikasi.
 
@@ -186,4 +186,3 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 | Batas klaim donasi | Batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali. |
 | Bahasa pesan awal WhatsApp | Pesan dikirim pembeli sebagai dirinya sendiri, sehingga bahasa Indonesia mungkin lebih wajar. |
 | Bahasa draf listing dari AI | Inggris mengikuti antarmuka, atau Indonesia mengikuti kebiasaan pengguna. |
-| Alumni | Jalur verifikasi untuk alumni yang email kampusnya sudah tidak aktif. |

@@ -90,7 +90,7 @@ Keputusan untuk menunda hal-hal di atas diambil karena tidak satu pun berkontrib
 | Uji coba transaksi pertama | Belum |
 | Penentuan model bisnis (fee listing) | Selesai |
 | Penentuan stack aplikasi | Selesai, kecuali hosting |
-| Implementasi aplikasi | Belum |
+| Implementasi aplikasi | Berjalan: kerangka aplikasi selesai, lihat [roadmap](docs/roadmap.md) |
 
 Prototype yang ada saat ini merupakan prototipe validasi, bukan basis kode produksi. Fungsinya membuktikan alur produk kepada calon pengguna, bukan menjadi fondasi aplikasi akhir.
 
@@ -114,7 +114,7 @@ Kebutuhan yang menjadi dasar pemilihan:
 - Pemanggilan model AI **melalui backend**, bukan langsung dari peramban, agar kredensial tidak terekspos ke pengguna
 - Pencatatan transaksi dan fee listing yang dapat diekspor untuk keperluan pelaporan
 
-Rincian kebutuhan ada di [`docs/PRD.md`](docs/PRD.md), dan keputusan beserta alasannya di [`docs/decisions.md`](docs/decisions.md).
+Rincian kebutuhan ada di [`docs/PRD.md`](docs/PRD.md), keputusan beserta alasannya di [`docs/decisions.md`](docs/decisions.md), dan urutan pengerjaan di [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Keputusan yang masih terbuka
 
@@ -125,7 +125,7 @@ Rincian kebutuhan ada di [`docs/PRD.md`](docs/PRD.md), dan keputusan beserta ala
 - [ ] **Sanksi pembeli yang tidak datang:** misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi.
 - [ ] **Notifikasi ke pembeli** saat booking diperpanjang atau berakhir.
 - [ ] **Klaim listing donasi:** batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali.
-- [ ] **Alumni** yang email kampusnya sudah tidak aktif.
+- [x] **Alumni:** tidak ada jalur terpisah. Alumni hanya dapat mendaftar bila email kampusnya masih aktif.
 - [ ] **Hosting.** Karena BeeKas memungut fee, penyedia hosting harus mengizinkan penggunaan komersial.
 
 ## Tim

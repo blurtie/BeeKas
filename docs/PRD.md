@@ -96,7 +96,7 @@ Penomoran dipakai sebagai acuan saat implementasi dan commit.
 
 - F1.1 Pendaftaran dan masuk memakai kode OTP yang dikirim ke email. Hanya domain `@binus.ac.id` dan `@binus.edu` yang diterima. Pemeriksaan domain dilakukan di server, bukan hanya di formulir.
 - F1.2 Domain yang diizinkan disimpan sebagai satu konstanta, bukan ditulis di banyak tempat.
-- F1.3 `[KEPUTUSAN]` Jalur verifikasi alumni yang email kampusnya sudah tidak aktif. Sampai diputuskan, jangan implementasikan. Sediakan kolom `verification_method` pada profil.
+- F1.3 Tidak ada jalur verifikasi terpisah untuk alumni (D-03). Alumni hanya dapat mendaftar bila email kampusnya masih aktif.
 - F1.4 Pengguna yang belum masuk dapat menelusuri katalog, tetapi tidak dapat melakukan booking, memasang listing, maupun melihat nomor WhatsApp.
 - F1.5 Sesi login bertahan sampai pengguna keluar secara eksplisit.
 
@@ -188,7 +188,7 @@ Penomoran dipakai sebagai acuan saat implementasi dan commit.
 Titik awal, bukan skema final. Seluruh tabel memakai Row Level Security.
 
 **profiles**
-`id` (sama dengan id pengguna Supabase Auth), `nickname`, `email`, `user_type` (`student` atau `staff`), `major`, `binusian`, `whatsapp`, `campus`, `verification_method`, `is_admin`, `created_at`
+`id` (sama dengan id pengguna Supabase Auth), `nickname`, `email`, `user_type` (`student` atau `staff`), `major`, `binusian`, `whatsapp`, `campus`, `is_admin`, `created_at`
 
 **listings**
 `id`, `seller_id`, `type` (`sale` atau `donation`), `title`, `category`, `condition`, `description`, `price` (null untuk donasi), `image_path`, `status`, `sold_price`, `sold_at`, `ai_price_min`, `ai_price_max`, `ai_confidence`, `created_at`, `updated_at`
