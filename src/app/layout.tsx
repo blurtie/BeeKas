@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: copy.app.name,
   description: copy.app.description,
   applicationName: copy.app.name,
+  appleWebApp: { title: copy.app.name, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
