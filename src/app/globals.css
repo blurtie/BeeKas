@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-honey: var(--honey);
+  --color-ink: var(--ink);
+  --color-primary: var(--primary);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--ink);
+}
