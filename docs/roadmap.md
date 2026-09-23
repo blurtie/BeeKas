@@ -50,7 +50,7 @@ Status: **selesai**
 
 **Development**
 
-- [ ] Strategi cache service worker diubah: halaman yang memuat data pribadi tidak disimpan untuk offline.
+- [x] Strategi cache service worker diubah: halaman yang memuat data pribadi tidak disimpan untuk offline.
 - [ ] Login dan pendaftaran dengan OTP, hanya dua domain kampus (F1)
 - [ ] Profil mahasiswa dan dosen/staf (F2)
 - [ ] Row Level Security untuk tabel profil
