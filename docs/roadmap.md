@@ -37,6 +37,7 @@ Status: **selesai**
 
 - [x] PRD, catatan keputusan, dan README
 - [x] Kerangka Next.js, token warna, navigasi bawah, PWA (tahap 1 PRD)
+- [ ] Uji deploy ke Netlify: build Next.js berhasil dan service worker berjalan (D-12)
 - [ ] Uji tahap 1 di HP lewat HTTPS: dapat dipasang ke layar utama di Android dan iPhone, terbuka tanpa bilah alamat, halaman offline muncul saat mode pesawat
 
 ## Fase 1 — Auth dan profil (tahap 2 PRD)
@@ -144,13 +145,9 @@ Berjalan paralel sejak Fase 2, per alur, begitu frame berstatus `Siap dev`. Logi
 
 ## Fase 8 — Siap produksi
 
-**Keputusan yang dibutuhkan**
-
-- [ ] Penyedia hosting yang mengizinkan penggunaan komersial, beserta biayanya untuk COGS
-
 **Pekerjaan**
 
-- [ ] Pindah ke hosting komersial sebelum fee pertama ditarik
+- [ ] Pantau pemakaian Netlify dan siapkan upgrade bila mendekati batas menjelang Festival (D-12)
 - [ ] Naikkan batas pendaftaran auth sebelum promosi Festival
 - [ ] Backup basis data terjadwal
 - [ ] Aplikasi di domain BeeKas dengan HTTPS

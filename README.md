@@ -89,7 +89,7 @@ Keputusan untuk menunda hal-hal di atas diambil karena tidak satu pun berkontrib
 | Survei harga dan kebutuhan pengguna | Sedang berjalan |
 | Uji coba transaksi pertama | Belum |
 | Penentuan model bisnis (fee listing) | Selesai |
-| Penentuan stack aplikasi | Selesai, kecuali hosting |
+| Penentuan stack aplikasi | Selesai |
 | Implementasi aplikasi | Berjalan: kerangka aplikasi selesai, lihat [roadmap](docs/roadmap.md) |
 
 Prototype yang ada saat ini merupakan prototipe validasi, bukan basis kode produksi. Fungsinya membuktikan alur produk kepada calon pengguna, bukan menjadi fondasi aplikasi akhir.
@@ -104,7 +104,7 @@ Prototype yang ada saat ini merupakan prototipe validasi, bukan basis kode produ
 | Basis data, autentikasi, penyimpanan gambar | Supabase (Postgres, Auth dengan kode OTP email, Storage) |
 | Email OTP | Penyedia SMTP kustom |
 | Model AI | Claude API, dipanggil dari server |
-| Hosting | Belum ditentukan |
+| Hosting | Netlify |
 
 Kebutuhan yang menjadi dasar pemilihan:
 
@@ -126,7 +126,7 @@ Rincian kebutuhan ada di [`docs/PRD.md`](docs/PRD.md), keputusan beserta alasann
 - [ ] **Notifikasi ke pembeli** saat booking diperpanjang atau berakhir.
 - [ ] **Klaim listing donasi:** batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali.
 - [x] **Alumni:** tidak ada jalur terpisah. Alumni hanya dapat mendaftar bila email kampusnya masih aktif.
-- [ ] **Hosting.** Karena BeeKas memungut fee, penyedia hosting harus mengizinkan penggunaan komersial.
+- [x] **Hosting:** Netlify, yang mengizinkan penggunaan komersial di paket Free.
 
 ## Tim
 

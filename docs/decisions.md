@@ -188,11 +188,46 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 
 ---
 
+## D-12 — Hosting di Netlify
+
+**Status:** Disetujui, 24 September 2026
+
+**Keputusan:** Aplikasi di-deploy ke Netlify paket Free, untuk pengembangan maupun rilis.
+
+**Alasan**
+
+- Netlify mengizinkan penggunaan komersial di paket Free, sedangkan Vercel Hobby tidak. BeeKas memungut fee, jadi termasuk penggunaan komersial.
+- Batas bulanan paket Free (sekitar 100 GB bandwidth dan 125.000 pemanggilan function, per pengumuman Netlify November 2024) jauh di atas perkiraan volume satu semester. Angka ini perlu dicek ulang di halaman harga Netlify sebelum dipakai untuk laporan.
+- Biaya hosting Rp0 selama volume di bawah batas.
+
+**Konsekuensi**
+
+- Bila batas bulanan terlampaui, situs dihentikan sampai akhir bulan, bukan ditagih. Pantau pemakaian menjelang dan selama BINUS Festival, dan siapkan upgrade bila mendekati batas.
+- Kompatibilitas Next.js versi terpasang dan service worker di Netlify belum diuji. Uji deploy dilakukan sebelum Fase 1 berjalan jauh.
+- Pengembangan langsung di Netlify, tanpa Vercel, supaya tidak ada perpindahan platform di tengah jalan.
+- Alternatif bila Netlify tidak cocok: Cloudflare Workers (paket $5 per bulan) atau Vercel Pro ($20 per bulan).
+
+## D-13 — Draf listing dengan AI dipertahankan
+
+**Status:** Disetujui, 24 September 2026
+
+**Keputusan:** Fitur draf listing dengan Claude API tetap bagian dari produk (Fase 5 roadmap), bukan dihapus.
+
+**Alasan:** Draf AI adalah salah satu pembeda BeeKas yang sudah dipresentasikan. Perkiraan biayanya kecil: dengan model kelas Haiku, sekitar $0,003 per draf, atau sekitar 5% dari fee Rp1.000 per listing. Angka ini perkiraan dan perlu dicek setelah implementasi.
+
+**Konsekuensi**
+
+- Batas jumlah draf per pengguna wajib ada (bagian 8 PRD), karena pemanggilan AI tidak mengurangi kuota.
+- Kredit API kemungkinan perlu dibeli di muka. Biaya ini masuk perhitungan COGS.
+- Model yang dipakai disimpan sebagai konstanta di server agar mudah diganti.
+- AI tetap menjadi fitur pertama yang ditunda bila waktu tidak cukup. MVP Transaksi tidak bergantung padanya.
+
+---
+
 ## Keputusan yang masih terbuka
 
 | Topik | Pertanyaan |
 |---|---|
-| Hosting | Penyedia mana yang mengizinkan penggunaan komersial, dan berapa biayanya untuk perhitungan COGS. Vercel Hobby tidak boleh dipakai untuk penggunaan komersial, sehingga hanya layak untuk pengembangan dan demo. |
 | Paket kuota | Pilihan paket dan harganya, misalnya 5 dan 10 listing. |
 | Kuota gratis akun baru | Ada atau tidak, dan berapa. Membantu masalah cold start di awal. |
 | Kuota saat listing dihapus | Dikembalikan atau tidak bila listing dihapus sebelum terjual. |

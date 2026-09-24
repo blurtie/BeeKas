@@ -273,7 +273,7 @@ Seluruh teks antarmuka dalam bahasa Inggris (D-09). Semua teks yang dilihat peng
 
 Stack sudah diputuskan. Rinciannya ada di `decisions.md` (D-01 sampai D-08).
 
-- `[KEPUTUSAN]` Penyedia hosting. Harus mengizinkan penggunaan komersial karena BeeKas memungut fee.
+- Hosting di Netlify (D-12). Draf AI dipertahankan (D-13).
 
 ## 12. Urutan pengerjaan
 
