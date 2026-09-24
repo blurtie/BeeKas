@@ -53,8 +53,8 @@ Status: **selesai**
 
 - [x] Strategi cache service worker diubah: halaman yang memuat data pribadi tidak disimpan untuk offline.
 - [ ] Login dan pendaftaran dengan OTP, hanya dua domain kampus (F1)
-- [ ] Profil mahasiswa dan dosen/staf (F2)
-- [ ] Row Level Security untuk tabel profil
+- [x] Profil mahasiswa dan dosen/staf (F2)
+- [x] Row Level Security untuk tabel profil
 
 **Selesai bila:** anggota tim dapat mendaftar dengan email kampus, email domain lain ditolak di server, dan data profil satu akun tidak dapat dibaca akun lain.
 

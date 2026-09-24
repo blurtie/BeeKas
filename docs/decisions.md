@@ -242,6 +242,7 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 
 - Tes OTP di Fase 1 hanya membuktikan alur login. Keterkiriman ke email kampus dari domain sendiri baru teruji di Fase 7, sehingga domain tidak boleh dibeli menjelang Festival.
 - SMTP bawaan Supabase tidak mengizinkan perubahan template email untuk project Free baru. Tampilan email OTP bawaan diterima selama pengembangan.
+- Selama SMTP bawaan dipakai, login lewat tautan di /auth/confirm tetap aktif di produksi sebagai cadangan. Ditinjau ulang setelah SMTP kustom terpasang di Fase 7.
 - Domain didaftarkan dengan akun tim, dan biaya perpanjangan tahunannya masuk perhitungan COGS.
 
 ## D-15 — Alur kerja branch, Pull Request, dan CI
