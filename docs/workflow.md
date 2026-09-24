@@ -44,7 +44,7 @@ Setiap PR dan setiap push ke `main` menjalankan dua hal.
 
 1. `npm ci`
 2. `npm run lint`
-3. `npx tsc --noEmit`
+3. `npm run typecheck` (next typegen, lalu tsc --noEmit)
 4. `npm test`
 5. `npm run build`
 6. Pengecekan bahwa kredensial server tidak dirujuk dari kode klien
