@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CAMPUSES, createProfileSchema, majorCodes, normalizeWhatsapp, profileSchema, whatsappSchema } from "./profile";
 
-// Fixture lists: the official majors and campuses are not available yet.
+// Fixture lists keep these tests independent of the real BINUS lists.
 const schema = createProfileSchema({
   majorGroups: [{ school: "School A", majors: [{ code: "maj_a", name: "Major A" }] }],
   campuses: ["camp_a"],
@@ -64,12 +64,11 @@ describe("profile schema", () => {
     expect(schema.parse({ ...staff, user_type: "student" }).user_type).toBe("staff");
   });
 
-  // TODO: PRD F2.3 requires major for students; make required again once MAJOR_GROUPS is filled.
-  it("requires binusian but (temporarily) not major for students", () => {
+  it("requires major and binusian for students", () => {
     expect(codes(schema.safeParse({ ...student, major: undefined, binusian: null }))).toEqual([
+      "major_required",
       "binusian_required",
     ]);
-    expect(schema.parse({ ...student, major: null }).major).toBeNull();
   });
 
   it("rejects unknown major, binusian and campus", () => {
@@ -95,10 +94,10 @@ describe("profile schema", () => {
     expect(codes(schema.safeParse({ ...student, email: "a@gmail.com" }))).toContain("not_campus_domain");
   });
 
-  it("default lists: only the other major, campus codes in order", () => {
+  it("default lists: other major always included, campus codes in order", () => {
     expect(majorCodes([])).toEqual(["other"]);
-    expect(CAMPUSES[0]).toBe("anggrek");
-    expect(CAMPUSES).toHaveLength(11);
+    expect(CAMPUSES[0]).toBe("kemanggisan");
+    expect(CAMPUSES).toHaveLength(9);
     expect(codes(profileSchema.safeParse(student))).toContain("invalid_campus");
     expect(profileSchema.parse({ ...student, campus: "alam_sutera", major: "other" }).campus).toBe("alam_sutera");
   });

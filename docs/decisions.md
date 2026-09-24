@@ -271,6 +271,27 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 - CI tidak memakai kredensial Supabase sungguhan. Tes yang butuh basis data (misalnya RLS dengan dua akun) masih dijalankan manual ke `beekas-dev` sampai ada Supabase lokal di CI.
 - Deploy Preview dan produksi memakai project `beekas-dev` yang sama sampai project produksi dibuat. Data uji di Preview ikut terlihat di produksi.
 
+## D-16 — Daftar kampus digabung per area, BINUS Online tanpa kampus fisik
+
+**Status:** Disetujui, 24 September 2026
+
+**Keputusan**
+
+1. Pilihan kampus di profil digabung per area: Kemanggisan (Anggrek, Syahdan, Kijang), Senayan (JWC, fX), Alam Sutera, BASE, Bekasi, Bandung, Malang, dan Semarang.
+2. BINUS Online ditambahkan sebagai pilihan kampus (`online`) dan sebagai grup jurusan tersendiri.
+3. Pengguna BINUS Online tidak punya kampus fisik. Tempat dan cara COD disepakati sendiri oleh pembeli dan penjual lewat WhatsApp.
+4. Daftar kampus dan jurusan dijaga di basis data dengan constraint (`supabase/migrations/0002_majors_campuses.sql`) dan tes paritas Vitest terhadap konstanta di `src/lib/domain/profile.ts`.
+
+**Alasan**
+
+- Kampus yang berdekatan cukup satu pilihan, karena COD bisa dilakukan di mana saja dalam area itu.
+- Mahasiswa BINUS Online tetap bisa memakai BeeKas tanpa dipaksa memilih kampus fisik.
+
+**Konsekuensi**
+
+- Fase 2: filter kampus di katalog menampilkan "BINUS Online" sebagai pilihan terpisah.
+- Daftar jurusan diambil dari situs kurikulum BINUS (24 September 2026) dan belum dicek tim. Poin yang perlu dicek ada di tabel keputusan terbuka.
+
 ---
 
 ## Keputusan yang masih terbuka
@@ -287,3 +308,7 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 | Batas klaim donasi | Batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali. |
 | Bahasa pesan awal WhatsApp | Pesan dikirim pembeli sebagai dirinya sendiri, sehingga bahasa Indonesia mungkin lebih wajar. |
 | Bahasa draf listing dari AI | Inggris mengikuti antarmuka, atau Indonesia mengikuti kebiasaan pengguna. |
+| Kelengkapan program BINUS Online | Daftar diambil dari halaman kurikulum. Halaman BINUS @Semarang menyebut program online lain, misalnya Accounting. Perlu dicek ulang. |
+| Nama program yang mirip | Management, Business Management, dan Business Management & Marketing tercantum terpisah di situs. Cek apakah ada yang sebenarnya satu program dengan nama lama. |
+| Nama fakultas | Diambil dari halaman kurikulum; halaman lain memakai nama berbeda (misalnya "Faculty of Economics and Communication"). Hanya memengaruhi pengelompokan dropdown, bukan data yang disimpan. |
+| Tahun kurikulum daftar jurusan | Halaman sumber tidak menyebut tahun kurikulum. Program yang baru dibuka atau sudah ditutup di 2026 perlu dicek. |

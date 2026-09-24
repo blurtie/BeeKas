@@ -14,11 +14,10 @@ export type ProfileCompletenessInput = {
 const filled = (v: string | null | undefined) => typeof v === "string" && v.trim() !== "";
 
 // Everyone needs nickname, WhatsApp and campus; students also need a BINUSIAN
-// year (and major, once required again). Staff never have major/binusian.
+// year and a major. Staff never have major/binusian.
 export function isProfileComplete(p: ProfileCompletenessInput | null | undefined): boolean {
   if (!p) return false;
   if (!filled(p.nickname) || !filled(p.whatsapp) || !filled(p.campus)) return false;
-  // TODO: PRD F2.3 requires major for students; make required again once MAJOR_GROUPS is filled.
-  if (p.user_type === "student") return filled(p.binusian);
+  if (p.user_type === "student") return filled(p.major) && filled(p.binusian);
   return p.user_type === "staff";
 }

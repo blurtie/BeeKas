@@ -8,7 +8,6 @@ export type ProfileFormText = {
   intro: string;
   save: string;
   saving: string;
-  listComingSoon: string;
   fields: {
     email: string;
     userType: string;
@@ -61,8 +60,6 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
 export function ProfileForm(p: Props) {
   const { fields } = p.text;
   const e = p.errors;
-  const noCampuses = p.campuses.length === 0;
-  const noMajors = p.majorGroups.length === 0;
   return (
     <section className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold text-ink">{p.text.title}</h1>
@@ -87,10 +84,10 @@ export function ProfileForm(p: Props) {
             aria-describedby={describedBy("whatsapp", fields.whatsappHint, e.whatsapp)} className={inputClass} />
         </Field>
 
-        <Field id="campus" label={fields.campus} required hint={noCampuses ? p.text.listComingSoon : undefined} error={e.campus}>
+        <Field id="campus" label={fields.campus} required error={e.campus}>
           <select id="campus" name="campus" required defaultValue={p.values.campus}
             aria-invalid={e.campus ? true : undefined}
-            aria-describedby={describedBy("campus", noCampuses ? p.text.listComingSoon : undefined, e.campus)}
+            aria-describedby={describedBy("campus", undefined, e.campus)}
             className={inputClass}>
             <option value="">{fields.campusPlaceholder}</option>
             {p.campuses.map((c) => (
@@ -101,10 +98,10 @@ export function ProfileForm(p: Props) {
 
         {p.isStudent && (
           <>
-            <Field id="major" label={fields.major} hint={noMajors ? p.text.listComingSoon : undefined} error={e.major}>
-              <select id="major" name="major" defaultValue={p.values.major}
+            <Field id="major" label={fields.major} required error={e.major}>
+              <select id="major" name="major" required defaultValue={p.values.major}
                 aria-invalid={e.major ? true : undefined}
-                aria-describedby={describedBy("major", noMajors ? p.text.listComingSoon : undefined, e.major)}
+                aria-describedby={describedBy("major", undefined, e.major)}
                 className={inputClass}>
                 <option value="">{fields.majorPlaceholder}</option>
                 {p.majorGroups.map((g) => (

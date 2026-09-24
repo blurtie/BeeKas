@@ -1,5 +1,5 @@
 // scripts/rls-check.mjs
-// Proves profile RLS and campus-domain rejection against the real Supabase project.
+// Proves profile RLS, campus-domain rejection and 0002 value lists against the real Supabase project.
 // Run: node --env-file=.env.local scripts/rls-check.mjs
 // service_role is used ONLY to create/delete test accounts and mint sign-in OTPs.
 // Every RLS check runs as a test account via an ANON-key client + that account's session.
@@ -205,6 +205,16 @@ async function main() {
     result("10a admin email change -> error (beekas_block_email_change)", !!error, error ? errMsg(error) : "email change unexpectedly succeeded");
     const { data, error: e2 } = await A.from("profiles").select("email").eq("id", userA.id).single();
     result("10b A's profile email unchanged", !e2 && data.email === EMAIL_A, e2 ? errMsg(e2) : `email=${data.email}`);
+  });
+
+  // 11 (0002: campus list, student major+binusian pairing, staff without major)
+  await check("11 profile value lists", async () => {
+    const campus = await A.from("profiles").update({ campus: "anggrek" }).eq("id", userA.id).select();
+    result("11a campus outside list -> check violation (23514)", campus.error?.code === "23514", errMsg(campus.error));
+    const noMajor = await A.from("profiles").update({ binusian: "B28", major: null }).eq("id", userA.id).select();
+    result("11b student with binusian but no major -> 23514", noMajor.error?.code === "23514", errMsg(noMajor.error));
+    const staffMajor = await C.from("profiles").update({ major: "computer_science" }).eq("id", userC.id).select();
+    result("11c staff with major -> 23514", staffMajor.error?.code === "23514", errMsg(staffMajor.error));
   });
 
   await Promise.all([A, B, C].map((c) => c.auth.signOut().catch(() => {})));

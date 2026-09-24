@@ -41,5 +41,6 @@ Login hanya memakai kode 6 digit, sehingga Redirect URLs tidak dipakai oleh alur
 Migrasi dijalankan manual lewat SQL Editor, berurutan sesuai nomor berkas di `supabase/migrations/`:
 
 1. `0001_profiles.sql`: tabel `profiles`, validasi domain email kampus, pemblokiran perubahan email, RLS, dan `get_public_profile`.
+2. `0002_majors_campuses.sql`: daftar kampus final, daftar jurusan, jurusan wajib untuk mahasiswa (diisi bersama BINUSIAN).
 
 Setelah menjalankan migrasi, jalankan `node --env-file=.env.local scripts/rls-check.mjs` untuk memastikan RLS berjalan. Skrip ini membutuhkan `SUPABASE_SERVICE_ROLE_KEY` di `.env.local`.
