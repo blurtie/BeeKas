@@ -30,7 +30,9 @@ export function AppShell({ children, tabs, navLabel, appName }: Props) {
   return (
     <>
       <Header appName={appName} />
-      <main className="mx-auto w-full max-w-[480px] flex-1 px-6 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      {/* Bottom padding = nav bar (min-h-16 + 1px border) + raised Post button (-mt-5) + safe area,
+          so the last field is never hidden behind the fixed nav. */}
+      <main className="mx-auto w-full max-w-[480px] flex-1 px-6 pt-6 pb-[calc(4rem+1px+1.25rem+env(safe-area-inset-bottom))]">
         {children}
       </main>
       <BottomNav
