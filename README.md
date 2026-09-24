@@ -102,7 +102,7 @@ Prototype yang ada saat ini merupakan prototipe validasi, bukan basis kode produ
 |---|---|
 | Framework | Next.js (App Router) + TypeScript + Tailwind CSS, dijadikan PWA agar dapat dipasang di layar utama ponsel |
 | Basis data, autentikasi, penyimpanan gambar | Supabase (Postgres, Auth dengan kode OTP email, Storage) |
-| Email OTP | Penyedia SMTP kustom |
+| Email OTP | SMTP bawaan Supabase selama pengembangan, SMTP kustom dengan domain BeeKas sebelum uji coba |
 | Model AI | Claude API, dipanggil dari server |
 | Hosting | Netlify |
 

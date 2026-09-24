@@ -37,17 +37,17 @@ Status: **selesai**
 
 - [x] PRD, catatan keputusan, dan README
 - [x] Kerangka Next.js, token warna, navigasi bawah, PWA (tahap 1 PRD)
-- [ ] Uji deploy ke Netlify: build Next.js berhasil dan service worker berjalan (D-12)
-- [ ] Uji tahap 1 di HP lewat HTTPS: dapat dipasang ke layar utama di Android dan iPhone, terbuka tanpa bilah alamat, halaman offline muncul saat mode pesawat
+- [x] Uji deploy ke Netlify: build Next.js berhasil dan service worker berjalan (D-12)
+- [ ] Alur branch, Pull Request, dan CI aktif, termasuk branch protection untuk `main` (D-15, [`workflow.md`](workflow.md))
+- [ ] Uji tahap 1 di HP lewat HTTPS: dapat dipasang ke layar utama di Android dan iPhone, terbuka tanpa bilah alamat, halaman offline muncul saat mode pesawat. Android (Chrome) sudah dapat dipasang; iPhone belum diuji.
 
 ## Fase 1 — Auth dan profil (tahap 2 PRD)
 
 **Prasyarat non-kode**
 
-- [ ] Domain untuk BeeKas dibeli. Dibutuhkan untuk SMTP dan alamat aplikasi.
-- [ ] Project Supabase dibuat. Kredensial hanya di `.env.local`.
-- [ ] Penyedia SMTP dipasang dengan domain pengirim yang terverifikasi.
-- [ ] Uji kirim OTP ke akun `@binus.ac.id` dan `@binus.edu` milik anggota tim. Email masuk ke inbox, bukan karantina.
+- [x] Project Supabase dibuat. Kredensial di `.env.local` dan di environment variables Netlify.
+- [ ] Site URL dan Redirect URLs di Supabase Auth diisi dengan URL Netlify dan `http://localhost:3000`
+- [ ] Uji alur OTP ke akun `@binus.ac.id` dan `@binus.edu` milik anggota tim memakai SMTP bawaan Supabase, atau Gmail dengan App Password bila batas kirimnya terlalu kecil (D-14). Tes ini membuktikan alurnya, belum membuktikan keterkiriman dari domain sendiri.
 
 **Development**
 
@@ -139,6 +139,16 @@ Berjalan paralel sejak Fase 2, per alur, begitu frame berstatus `Siap dev`. Logi
 
 ## Fase 7 — Uji coba tertutup
 
+**Prasyarat non-kode, dikerjakan di awal fase (D-14)**
+
+- [ ] Domain untuk BeeKas dibeli atas nama akun tim
+- [ ] Project Supabase produksi terpisah dari `beekas-dev`, dengan migrasi yang sama; Deploy Preview tetap memakai `beekas-dev` (D-15)
+- [ ] Aplikasi dipindah ke domain BeeKas sebelum pengguna di luar tim memasang PWA
+- [ ] SMTP kustom (misalnya Resend) dipasang dengan domain pengirim terverifikasi (SPF, DKIM, DMARC)
+- [ ] Uji ulang kirim OTP ke `@binus.ac.id` dan `@binus.edu` dari domain sendiri. Email masuk ke inbox, bukan karantina.
+
+**Uji coba**
+
 - [ ] Uji coba dengan tim dan 10 sampai 20 pengguna di luar tim
 - [ ] Minimal satu transaksi sungguhan dari awal sampai akhir: beli kuota, pasang listing, booking, COD, tandai terjual
 - [ ] Perbaikan hasil uji coba
@@ -150,7 +160,7 @@ Berjalan paralel sejak Fase 2, per alur, begitu frame berstatus `Siap dev`. Logi
 - [ ] Pantau pemakaian Netlify dan siapkan upgrade bila mendekati batas menjelang Festival (D-12)
 - [ ] Naikkan batas pendaftaran auth sebelum promosi Festival
 - [ ] Backup basis data terjadwal
-- [ ] Aplikasi di domain BeeKas dengan HTTPS
+- [ ] Aplikasi di domain BeeKas dengan HTTPS (dipindah di Fase 7)
 
 ## Fase 9 — BINUS Festival dan laporan
 

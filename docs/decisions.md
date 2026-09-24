@@ -31,7 +31,7 @@ Asisten koding tidak boleh menambah atau mengubah isi dokumen ini tanpa persetuj
 
 **Konsekuensi**
 
-- SMTP bawaan Supabase punya batas kirim yang rendah dan, untuk proyek Free baru, template email tidak dapat diubah. SMTP kustom dipasang sejak awal.
+- SMTP bawaan Supabase punya batas kirim yang rendah dan, untuk proyek Free baru, template email tidak dapat diubah. Waktu pemasangan SMTP kustom diatur di D-14.
 - Supabase Free dapat menjeda proyek yang tidak aktif selama 7 hari, dan backup tidak dapat diunduh. Perlu backup terjadwal atau upgrade setelah ada transaksi.
 - Batas default pendaftaran dengan SMTP kustom adalah 30 pengguna baru per jam. Batas ini dinaikkan sebelum promosi di BINUS Festival.
 
@@ -221,6 +221,54 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 - Kredit API kemungkinan perlu dibeli di muka. Biaya ini masuk perhitungan COGS.
 - Model yang dipakai disimpan sebagai konstanta di server agar mudah diganti.
 - AI tetap menjadi fitur pertama yang ditunda bila waktu tidak cukup. MVP Transaksi tidak bergantung padanya.
+
+## D-14 — Pengiriman email OTP bertahap, domain dibeli di awal Fase 7
+
+**Status:** Disetujui, 24 September 2026. Mengubah konsekuensi D-01 bahwa SMTP kustom dipasang sejak awal.
+
+**Keputusan**
+
+1. Selama pengembangan (Fase 1 sampai 6), OTP dikirim lewat SMTP bawaan Supabase. Bila batas kirimnya terlalu kecil untuk tes tim, pakai Gmail dengan App Password dari akun email tim.
+2. Domain BeeKas dibeli di awal Fase 7, sebelum uji coba dengan pengguna di luar tim.
+3. Setelah domain ada, SMTP kustom dipasang dengan domain pengirim terverifikasi, dan aplikasi dipindah ke domain tersebut.
+
+**Alasan**
+
+- Menunda biaya domain sampai benar-benar dibutuhkan.
+- Pengiriman email dilakukan oleh server Supabase, jadi pilihan SMTP tidak bergantung pada platform aplikasi (PWA, React Native, atau Flutter).
+- Aplikasi harus pindah ke domain sendiri sebelum banyak orang memasang PWA, karena aplikasi terpasang, sesi login, dan cache offline terikat pada alamat situs.
+
+**Konsekuensi**
+
+- Tes OTP di Fase 1 hanya membuktikan alur login. Keterkiriman ke email kampus dari domain sendiri baru teruji di Fase 7, sehingga domain tidak boleh dibeli menjelang Festival.
+- SMTP bawaan Supabase tidak mengizinkan perubahan template email untuk project Free baru. Tampilan email OTP bawaan diterima selama pengembangan.
+- Domain didaftarkan dengan akun tim, dan biaya perpanjangan tahunannya masuk perhitungan COGS.
+
+## D-15 — Alur kerja branch, Pull Request, dan CI
+
+**Status:** Disetujui, 24 September 2026
+
+**Keputusan**
+
+1. Semua perubahan masuk ke `main` lewat Pull Request dari branch fitur. Tidak ada commit langsung ke `main`.
+2. GitHub Actions menjalankan lint, typecheck, test, build, dan pengecekan kredensial untuk setiap PR dan push ke `main`. PR tidak boleh di-merge bila CI merah.
+3. Netlify membuat Deploy Preview untuk setiap PR. `main` otomatis ter-deploy ke produksi.
+4. Merge memakai squash merge dan selalu dilakukan manusia. Asisten koding boleh membuka PR, tidak boleh merge.
+5. Migrasi basis data dijalankan manual, tidak otomatis dari CI, sampai ada project Supabase produksi terpisah.
+6. Rincian alur ada di [`workflow.md`](workflow.md).
+
+**Alasan**
+
+- Setelah D-12, setiap push ke `main` langsung live. Tanpa PR dan CI, perubahan yang belum dites bisa dipakai pengguna.
+- Deploy Preview memberi tempat menguji tampilan dari desain Figma di HP sebelum masuk produksi.
+- Merge oleh manusia menjadi titik persetujuan yang jelas untuk pekerjaan multi-agent.
+
+**Konsekuensi**
+
+- Branch protection untuk `main` harus diaktifkan oleh pemilik repo. Tanpa itu, aturan ini hanya kesepakatan.
+- Node.js dikunci lewat `.nvmrc` agar versi di laptop, CI, dan Netlify sama.
+- CI tidak memakai kredensial Supabase sungguhan. Tes yang butuh basis data (misalnya RLS dengan dua akun) masih dijalankan manual ke `beekas-dev` sampai ada Supabase lokal di CI.
+- Deploy Preview dan produksi memakai project `beekas-dev` yang sama sampai project produksi dibuat. Data uji di Preview ikut terlihat di produksi.
 
 ---
 
