@@ -8,7 +8,9 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-poppins);
 }
 
 body {

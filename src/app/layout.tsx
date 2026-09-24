@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { copy } from "@/config/copy";
 import { TABS } from "@/config/navigation";
 import { colors, cssVariables } from "@/styles/tokens";
@@ -8,7 +8,7 @@ import { OfflineIndicator } from "./offline-indicator";
 import { SwRegister } from "./sw-register";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
   title: copy.app.name,
@@ -26,14 +26,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
       <head>
         <style>{cssVariables}</style>
       </head>
       <body className="flex min-h-full flex-col bg-background text-ink">
         <SwRegister />
         <OfflineIndicator />
-        <AppShell tabs={TABS} navLabel={copy.nav.label}>
+        <AppShell tabs={TABS} navLabel={copy.nav.label} appName={copy.app.name}>
           {children}
         </AppShell>
       </body>
