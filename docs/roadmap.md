@@ -47,12 +47,12 @@ Status: **selesai**
 
 - [x] Project Supabase dibuat. Kredensial di `.env.local` dan di environment variables Netlify.
 - [ ] Site URL dan Redirect URLs di Supabase Auth diisi dengan URL Netlify dan `http://localhost:3000`
-- [ ] Uji alur OTP ke akun `@binus.ac.id` dan `@binus.edu` milik anggota tim memakai SMTP bawaan Supabase, atau Gmail dengan App Password bila batas kirimnya terlalu kecil (D-14). Tes ini membuktikan alurnya, belum membuktikan keterkiriman dari domain sendiri.
+- [ ] Uji alur OTP ke akun `@binus.ac.id` dan `@binus.edu` milik anggota tim memakai SMTP bawaan Supabase, atau Gmail dengan App Password bila batas kirimnya terlalu kecil (D-14). Tes ini membuktikan alurnya, belum membuktikan keterkiriman dari domain sendiri. `@binus.ac.id` lolos 24 Sep 2026 (Gmail SMTP, masuk Focused Inbox kurang dari 1 menit); `@binus.edu` belum diuji.
 
 **Development**
 
 - [x] Strategi cache service worker diubah: halaman yang memuat data pribadi tidak disimpan untuk offline.
-- [ ] Login dan pendaftaran dengan OTP, hanya dua domain kampus (F1)
+- [ ] Login dan pendaftaran dengan OTP, hanya dua domain kampus (F1). `@binus.ac.id` lolos 24 Sep 2026; `@binus.edu` belum diuji.
 - [x] Profil mahasiswa dan dosen/staf (F2)
 - [x] Row Level Security untuk tabel profil
 

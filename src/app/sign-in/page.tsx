@@ -10,6 +10,5 @@ const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   const params = await searchParams;
   const next = safeNextPath(first(params.next));
-  const initialError = first(params.error) === "link_failed" ? "link_failed" : undefined;
-  return <SignInFlow next={next} initialError={initialError} />;
+  return <SignInFlow next={next} />;
 }

@@ -12,25 +12,22 @@ import { SignInForm } from "@/ui/sign-in-form";
 type ErrorKey = keyof typeof copy.auth.errors;
 const isErrorKey = (k: unknown): k is ErrorKey => typeof k === "string" && k in copy.auth.errors;
 
-type Props = { next: string; initialError?: ErrorKey };
+type Props = { next: string };
 
-export function SignInFlow({ next, initialError }: Props) {
+export function SignInFlow({ next }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<ErrorKey | undefined>(initialError);
+  const [error, setError] = useState<ErrorKey>();
   const [info, setInfo] = useState<string>();
 
   async function sendCode(address: string) {
     const { error: err } = await createClient().auth.signInWithOtp({
       email: address,
-      options: {
-        shouldCreateUser: true,
-        // Dev-only link fallback (D-14); see src/app/auth/confirm/route.ts.
-        emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
-      },
+      // Code-only sign-in: the email templates contain only {{ .Token }} (D-14).
+      options: { shouldCreateUser: true },
     });
     return err ? authErrorKey(err) : null;
   }

@@ -37,7 +37,6 @@ export const copy = {
       invalid_otp: "That code is wrong or has expired. Check it or request a new one.",
       rate_limited: "Too many attempts. Please wait a minute and try again.",
       generic: "Something went wrong. Please try again.",
-      link_failed: "That sign-in link is invalid or has expired. Request a new code.",
     },
   },
   profile: {
