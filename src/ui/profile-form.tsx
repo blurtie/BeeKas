@@ -50,8 +50,8 @@ type Props = {
 function ReadOnly({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-ink">{label}</span>
-      <span className="min-h-11 rounded-xl border border-border bg-background px-3 py-2.5 break-all text-muted">
+      <span className="text-sm font-medium text-muted">{label}</span>
+      <span className="min-h-11 border-b border-border py-2.5 break-all text-ink">
         {value}
       </span>
     </div>
@@ -65,29 +65,29 @@ export function ProfileForm(p: Props) {
   const noMajors = p.majorGroups.length === 0;
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">{p.text.title}</h1>
-      <p className="text-muted">{p.text.intro}</p>
+      <h1 className="text-lg font-semibold text-ink">{p.text.title}</h1>
+      <p className="text-sm text-muted">{p.text.intro}</p>
       {p.formError && <FormMessage tone="error">{p.formError}</FormMessage>}
       <form action={p.action} noValidate className="flex flex-col gap-4">
         <input type="hidden" name="next" value={p.next} />
         <ReadOnly label={fields.email} value={p.email} />
         <ReadOnly label={fields.userType} value={p.userTypeLabel} />
 
-        <Field id="nickname" label={fields.nickname} error={e.nickname}>
+        <Field id="nickname" label={fields.nickname} required error={e.nickname}>
           <input id="nickname" name="nickname" type="text" autoComplete="nickname" required
             maxLength={p.nicknameMax} defaultValue={p.values.nickname}
             aria-invalid={e.nickname ? true : undefined}
             aria-describedby={describedBy("nickname", undefined, e.nickname)} className={inputClass} />
         </Field>
 
-        <Field id="whatsapp" label={fields.whatsapp} hint={fields.whatsappHint} error={e.whatsapp}>
+        <Field id="whatsapp" label={fields.whatsapp} required hint={fields.whatsappHint} error={e.whatsapp}>
           <input id="whatsapp" name="whatsapp" type="tel" inputMode="tel" autoComplete="tel" required
             defaultValue={p.values.whatsapp}
             aria-invalid={e.whatsapp ? true : undefined}
             aria-describedby={describedBy("whatsapp", fields.whatsappHint, e.whatsapp)} className={inputClass} />
         </Field>
 
-        <Field id="campus" label={fields.campus} hint={noCampuses ? p.text.listComingSoon : undefined} error={e.campus}>
+        <Field id="campus" label={fields.campus} required hint={noCampuses ? p.text.listComingSoon : undefined} error={e.campus}>
           <select id="campus" name="campus" required defaultValue={p.values.campus}
             aria-invalid={e.campus ? true : undefined}
             aria-describedby={describedBy("campus", noCampuses ? p.text.listComingSoon : undefined, e.campus)}
@@ -118,7 +118,7 @@ export function ProfileForm(p: Props) {
               </select>
             </Field>
 
-            <Field id="binusian" label={fields.binusian} hint={fields.binusianHint} error={e.binusian}>
+            <Field id="binusian" label={fields.binusian} required hint={fields.binusianHint} error={e.binusian}>
               <select id="binusian" name="binusian" required defaultValue={p.values.binusian}
                 aria-invalid={e.binusian ? true : undefined}
                 aria-describedby={describedBy("binusian", fields.binusianHint, e.binusian)}

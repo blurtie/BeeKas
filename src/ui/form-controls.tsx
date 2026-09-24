@@ -1,30 +1,31 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export const inputClass =
-  "min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-base text-ink outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60";
+  "min-h-11 w-full border-0 border-b border-border bg-transparent px-0 text-base text-ink placeholder:text-muted outline-none focus-visible:border-b-2 focus-visible:border-primary disabled:opacity-60";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" };
 
 export function Button({ variant = "primary", className = "", ...props }: ButtonProps) {
   const look =
     variant === "primary"
-      ? "bg-honey text-ink"
-      : "border border-border bg-surface text-primary";
+      ? "rounded-full bg-honey font-bold text-ink"
+      : "rounded-xl font-semibold text-primary";
   return (
     <button
       {...props}
-      className={`min-h-11 w-full rounded-xl px-4 text-base font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${look} ${className}`}
+      className={`min-h-11 w-full px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${look} ${className}`}
     />
   );
 }
 
-type FieldProps = { id: string; label: string; hint?: string; error?: string; children: ReactNode };
+type FieldProps = { id: string; label: string; required?: boolean; hint?: string; error?: string; children: ReactNode };
 
-export function Field({ id, label, hint, error, children }: FieldProps) {
+export function Field({ id, label, required, hint, error, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
+      <label htmlFor={id} className="text-sm font-medium text-muted">
         {label}
+        {required && <span aria-hidden className="text-danger">*</span>}
       </label>
       {children}
       {hint && (
