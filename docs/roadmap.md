@@ -46,7 +46,7 @@ Status: **selesai**
 **Prasyarat non-kode**
 
 - [x] Project Supabase dibuat. Kredensial di `.env.local` dan di environment variables Netlify.
-- [ ] Site URL dan Redirect URLs di Supabase Auth diisi dengan URL Netlify dan `http://localhost:3000`
+- [x] Site URL dan Redirect URLs di Supabase Auth diisi dengan URL Netlify dan `http://localhost:3000`
 - [ ] Uji alur OTP ke akun `@binus.ac.id` dan `@binus.edu` milik anggota tim memakai SMTP bawaan Supabase, atau Gmail dengan App Password bila batas kirimnya terlalu kecil (D-14). Tes ini membuktikan alurnya, belum membuktikan keterkiriman dari domain sendiri. `@binus.ac.id` lolos 24 Sep 2026 (Gmail SMTP, masuk Focused Inbox kurang dari 1 menit); `@binus.edu` belum diuji.
 
 **Development**
