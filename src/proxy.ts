@@ -5,7 +5,7 @@ import { PROFILE_COLUMNS, type OwnProfileRow } from "@/lib/supabase/profile-row"
 import { createProxyClient, redirectWithCookies } from "@/lib/supabase/proxy";
 
 // Pages that need a signed-in user.
-const PROTECTED = ["/post", "/my-listings", "/profile"];
+const PROTECTED = ["/post", "/my-listings", "/profile", "/admin"];
 // Pages that also need a complete profile.
 const NEEDS_PROFILE = ["/post", "/my-listings"];
 
