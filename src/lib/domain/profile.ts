@@ -4,24 +4,146 @@ import { campusEmailSchema, userTypeFromEmail, type UserType } from "./campus-em
 export type Option = { readonly code: string; readonly name: string };
 export type MajorGroup = { readonly school: string; readonly majors: readonly Option[] };
 
-// TODO: official list pending from team
-export const MAJOR_GROUPS: readonly MajorGroup[] = [];
+// Source: BINUS curriculum site, 24 Sep 2026 (open points in docs/decisions.md).
+// Codes must match the MAJORS block in supabase/migrations/0002_majors_campuses.sql.
+export const MAJOR_GROUPS: readonly MajorGroup[] = [
+  {
+    school: "School of Computer Science",
+    majors: [
+      { code: "computer_science", name: "Computer Science" },
+      { code: "mobile_application_technology", name: "Mobile Application and Technology" },
+      { code: "mathematics_computer_science", name: "Mathematics & Computer Science" },
+      { code: "statistics_computer_science", name: "Statistics & Computer Science" },
+      { code: "game_application_technology", name: "Game Application and Technology" },
+      { code: "cyber_security", name: "Cyber Security" },
+      { code: "data_science", name: "Data Science" },
+      { code: "software_engineering", name: "Software Engineering" },
+      { code: "artificial_intelligence", name: "Artificial Intelligence" },
+    ],
+  },
+  {
+    school: "School of Information Systems",
+    majors: [
+      { code: "information_systems", name: "Information Systems" },
+      { code: "business_information_technology", name: "Business Information Technology" },
+      { code: "business_analytics", name: "Business Analytics" },
+      { code: "digital_business_innovation", name: "Digital Business Innovation" },
+    ],
+  },
+  {
+    school: "School of Design",
+    majors: [
+      { code: "visual_communication_design", name: "Visual Communication Design" },
+      { code: "interior_design", name: "Interior Design" },
+      { code: "film", name: "Film" },
+      { code: "fashion", name: "Fashion" },
+    ],
+  },
+  {
+    school: "Faculty of Engineering",
+    majors: [
+      { code: "architecture", name: "Architecture" },
+      { code: "civil_engineering", name: "Civil Engineering" },
+      { code: "industrial_engineering", name: "Industrial Engineering" },
+      { code: "computer_engineering", name: "Computer Engineering" },
+      { code: "food_technology", name: "Food Technology" },
+      { code: "biotechnology", name: "Biotechnology" },
+    ],
+  },
+  {
+    school: "BINUS ASO School of Engineering",
+    majors: [
+      { code: "automotive_robotics_engineering", name: "Automotive & Robotics Engineering" },
+      { code: "product_design_engineering", name: "Product Design Engineering" },
+      { code: "business_engineering", name: "Business Engineering" },
+    ],
+  },
+  {
+    school: "Faculty of Humanities",
+    majors: [
+      { code: "global_business_chinese", name: "Global Business Chinese" },
+      { code: "creative_digital_english", name: "Creative Digital English" },
+      { code: "japanese_popular_culture", name: "Japanese Popular Culture" },
+      { code: "psychology", name: "Psychology" },
+      { code: "digital_psychology", name: "Digital Psychology" },
+      { code: "business_law", name: "Business Law" },
+      { code: "international_relations", name: "International Relations" },
+      { code: "primary_teacher_education", name: "Primary Teacher Education" },
+    ],
+  },
+  {
+    school: "School of Accounting",
+    majors: [
+      { code: "accounting", name: "Accounting" },
+      { code: "finance", name: "Finance" },
+      { code: "taxation", name: "Taxation" },
+    ],
+  },
+  {
+    school: "Faculty of Digital Communication and Hotel & Tourism",
+    majors: [
+      { code: "hotel_management", name: "Hotel Management" },
+      { code: "business_hotel_management", name: "Business Hotel Management" },
+      { code: "tourism", name: "Tourism" },
+      { code: "marketing_communication", name: "Marketing Communication" },
+      { code: "mass_communication", name: "Mass Communication" },
+      { code: "creative_communication", name: "Creative Communication" },
+    ],
+  },
+  {
+    school: "BINUS Business School",
+    majors: [
+      { code: "management", name: "Management" },
+      { code: "global_business_marketing", name: "Global Business Marketing" },
+      { code: "international_business_management", name: "International Business Management" },
+      { code: "business_creation", name: "Business Creation" },
+      { code: "business_management", name: "Business Management" },
+      { code: "international_business", name: "International Business" },
+      { code: "business_management_marketing", name: "Business Management & Marketing" },
+      { code: "digital_business", name: "Digital Business" },
+      { code: "creativepreneurship", name: "Creativepreneurship" },
+      { code: "entrepreneurship_business_creation", name: "Entrepreneurship Business Creation" },
+      { code: "international_trade", name: "International Trade" },
+    ],
+  },
+  {
+    school: "BINUS International",
+    majors: [
+      { code: "intl_computer_science", name: "Computer Science (International)" },
+      { code: "intl_business_information_systems", name: "Business Information Systems (International)" },
+      { code: "intl_graphic_design_new_media", name: "Graphic Design & New Media (International)" },
+      { code: "intl_communication", name: "Communication (International)" },
+      { code: "intl_creative_digital_communication", name: "Creative Digital Communication (International)" },
+    ],
+  },
+  {
+    school: "BINUS Online",
+    majors: [
+      { code: "online_computer_science", name: "Computer Science (Online)" },
+      { code: "online_information_systems", name: "Information Systems (Online)" },
+      { code: "online_business_management", name: "Business Management (Online)" },
+      { code: "online_finance", name: "Finance (Online)" },
+      { code: "online_industrial_engineering", name: "Industrial Engineering (Online)" },
+      { code: "online_data_science", name: "Data Science (Online)" },
+      { code: "online_business_analytics", name: "Business Analytics (Online)" },
+      { code: "online_digital_business_management", name: "Digital Business Management (Online)" },
+    ],
+  },
+];
 export const OTHER_MAJOR = "other";
 
 // Stable campus codes; display labels live in src/config/copy.ts.
-// verify with team
+// Must match the CAMPUSES block in supabase/migrations/0002_majors_campuses.sql.
 export const CAMPUSES = [
-  "anggrek",
-  "syahdan",
-  "kijang",
-  "jwc",
-  "fx",
+  "kemanggisan",
+  "senayan",
   "alam_sutera",
   "base",
   "bekasi",
   "bandung",
   "malang",
   "semarang",
+  "online",
 ] as const;
 export type CampusCode = (typeof CAMPUSES)[number];
 
@@ -97,9 +219,8 @@ export function createProfileSchema(lists: ProfileLists) {
       const issue = (path: string, message: string) =>
         ctx.addIssue({ code: "custom", path: [path], message });
       if (user_type === "student") {
-        // TODO: PRD F2.3 requires major for students; make required again once MAJOR_GROUPS is filled.
-        // Until then major is optional for students (major_required is not raised).
-        if (major !== null && !majors.has(major)) issue("major", "invalid_major");
+        if (major === null) issue("major", "major_required");
+        else if (!majors.has(major)) issue("major", "invalid_major");
         if (binusian === null) issue("binusian", "binusian_required");
         else if (!(BINUSIANS as readonly string[]).includes(binusian)) issue("binusian", "invalid_binusian");
       } else {

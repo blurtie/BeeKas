@@ -28,12 +28,7 @@ describe("isProfileComplete", () => {
     expect(isProfileComplete({ ...staff, [field]: "   " })).toBe(false);
   });
 
-  // TODO: PRD F2.3 requires major for students; make required again once MAJOR_GROUPS is filled.
-  it("treats major as optional for students for now", () => {
-    expect(isProfileComplete({ ...student, major: null })).toBe(true);
-  });
-
-  it.each(["binusian"] as const)("requires %s for students only", (field) => {
+  it.each(["major", "binusian"] as const)("requires %s for students only", (field) => {
     expect(isProfileComplete({ ...student, [field]: null })).toBe(false);
     expect(isProfileComplete({ ...student, [field]: "" })).toBe(false);
     expect(isProfileComplete(staff)).toBe(true);

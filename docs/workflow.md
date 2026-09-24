@@ -78,6 +78,7 @@ Kode di-deploy otomatis, tetapi skema basis data tidak. Migrasi dijalankan manua
 2. Migrasi dijalankan ke project `beekas-dev` **sebelum** PR di-merge, supaya Deploy Preview bisa diuji dengan skema baru.
 3. Migrasi harus aman untuk kode lama yang masih live selama jeda antara migrasi dan merge. Hindari menghapus atau mengganti nama kolom yang masih dipakai. Lakukan dalam dua PR bila perlu.
 4. Setelah ada project produksi terpisah (sebelum Fase 7), migrasi dijalankan ke produksi sesudah merge, dan dicatat di deskripsi PR.
+5. Mulai Fase 7 (ada pengguna di luar tim), perubahan constraint memakai dua migrasi: *expand* (longgarkan aturan, kode lama dan baru sama-sama lolos) sebelum merge, lalu *contract* (perketat aturan) setelah kode baru live dan data lama sudah disesuaikan. Sebelum Fase 7 boleh satu migrasi, dijalankan tepat sebelum merge.
 
 ## 8. Menerjemahkan desain Figma
 
