@@ -242,7 +242,7 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 
 - Tes OTP di Fase 1 hanya membuktikan alur login. Keterkiriman ke email kampus dari domain sendiri baru teruji di Fase 7, sehingga domain tidak boleh dibeli menjelang Festival.
 - SMTP bawaan Supabase tidak mengizinkan perubahan template email untuk project Free baru. Tampilan email OTP bawaan diterima selama pengembangan.
-- Selama SMTP bawaan dipakai, login lewat tautan di /auth/confirm tetap aktif di produksi sebagai cadangan. Ditinjau ulang setelah SMTP kustom terpasang di Fase 7.
+- Sejak Fase 1, Gmail SMTP (`beekas2026@gmail.com`) dipakai sebagai SMTP kustom sementara. Login hanya dengan kode 6 digit; template email hanya berisi kode. Login lewat tautan ditiadakan karena gagal di Outlook BINUS, kemungkinan karena pemindai tautan Microsoft 365 atau perbedaan browser (belum dikonfirmasi dari log). Domain sendiri dan SMTP transaksional tetap di Fase 7. Pengaturan dashboard dicatat di [`supabase-setup.md`](supabase-setup.md).
 - Domain didaftarkan dengan akun tim, dan biaya perpanjangan tahunannya masuk perhitungan COGS.
 
 ## D-15 — Alur kerja branch, Pull Request, dan CI
