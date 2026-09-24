@@ -294,19 +294,49 @@ Vitest dipakai sebagai test runner untuk logika murni di `src/lib/domain/`. Tes 
 
 ---
 
+## D-17 — Akses listing, kontak, foto, dan kuota di Fase 2
+
+**Status:** Disetujui CTO, 24 September 2026
+
+**Keputusan**
+
+1. Pengunjung yang belum login dapat membuka katalog dan halaman detail. Yang terlihat hanya foto, judul, harga atau label Free, kondisi, kategori, kampus, tanggal, dan deskripsi. Identitas penjual (F2.6), nomor WhatsApp, lokasi COD, dan tombol booking hanya untuk pengguna yang sudah login.
+2. Nomor WhatsApp tidak pernah ada di HTML untuk pengunjung anonim. Nomor diambil lewat fungsi Postgres yang hanya dapat dipanggil pengguna yang sudah login, dan tidak diberikan untuk listing Terjual.
+3. Foto listing disimpan di bucket publik untuk dibaca. Unggah hanya ke folder `<user_id>/` (dijaga RLS Storage) dengan nama berkas acak. Form memberi peringatan agar foto tidak menampilkan wajah atau data pribadi. Satu foto per listing (F4.2).
+4. Di Fase 2, kuota hanya diberikan lewat penyesuaian manual oleh admin dari halaman admin sederhana, dengan alasan wajib. Status admin diisi lewat SQL Editor. Sisa kuota tidak boleh negatif, termasuk akibat penyesuaian.
+5. Kampus listing (`listings.campus`) dipilih saat memasang listing, dengan nilai awal kampus di profil penjual.
+6. Lokasi COD adalah kolom opsional `meetup_note`, maksimal 100 karakter, hanya terlihat oleh pengguna yang sudah login. Ini tambahan lingkup untuk F4 dan F6.
+7. Tanpa AI, barang terlarang (F4.7) dicegah lewat kategori yang hanya dapat dipilih dari enum, dan pernyataan F4.8 memuat daftar barang terlarang.
+8. Batas harga listing jual sementara Rp1.000 sampai Rp100.000.000, rupiah bulat, disimpan sebagai konstanta dan constraint.
+
+**Alasan:** tautan listing yang dibagikan di WhatsApp harus dapat dibuka dan menampilkan pratinjau. Data pribadi yang terbuka untuk pengunjung anonim dibuat seminimal mungkin (UU PDP). Invariant kuota ditegakkan di basis data (D-10).
+
+**Konsekuensi**
+
+- `get_public_profile` tetap hanya untuk pengguna yang sudah login (keputusan Fase 1).
+- Pengaturan bucket dicatat di [`supabase-setup.md`](supabase-setup.md).
+- Hapus listing (F8.4) tidak ada di Fase 2; keputusan pengembalian kuota dipindah ke sebelum Fase 4.
+- Fitur simpan barang (wishlist) dari desain Figma di luar lingkup rilis pertama.
+
+---
+
 ## Keputusan yang masih terbuka
 
 | Topik | Pertanyaan |
 |---|---|
 | Paket kuota | Pilihan paket dan harganya, misalnya 5 dan 10 listing. |
 | Kuota gratis akun baru | Ada atau tidak, dan berapa. Membantu masalah cold start di awal. |
-| Kuota saat listing dihapus | Dikembalikan atau tidak bila listing dihapus sebelum terjual. |
+| Kuota saat listing dihapus | Dikembalikan atau tidak bila listing dihapus sebelum terjual. Sampai diputuskan, tidak dikembalikan (F3.10). |
+| Kuota untuk listing donasi | Listing donasi mengurangi kuota atau gratis. Sementara mengurangi satu kuota, sesuai PRD. |
+| Batas harga listing jual | Batas bawah dan atas harga. Sementara Rp1.000 sampai Rp100.000.000 (D-17). |
+| Jumlah foto per listing | PRD F4.2 satu foto; desain Figma menampilkan dua atau lebih. Sementara satu. |
+| Listing Terjual di katalog | PRD F5.1 tidak menampilkannya; desain Figma menampilkannya. Sementara tidak tampil, halaman detail tetap dapat dibuka dan tampil redup. |
 | Target waktu konfirmasi | Berapa jam paling lama admin mengonfirmasi pembelian kuota. |
 | Batas perpanjangan booking | Berapa kali penjual boleh memperpanjang, dan berapa lama setiap perpanjangan. |
 | Sanksi pembeli yang tidak datang | Misalnya pembatasan booking sementara setelah beberapa kali tidak menyelesaikan transaksi. |
 | Notifikasi ke pembeli | Saat booking diperpanjang atau berakhir: lewat email, di dalam aplikasi, atau tidak ada pada rilis pertama. |
 | Batas klaim donasi | Batas klaim per akun untuk mencegah barang donasi diambil lalu dijual kembali. |
-| Bahasa pesan awal WhatsApp | Pesan dikirim pembeli sebagai dirinya sendiri, sehingga bahasa Indonesia mungkin lebih wajar. |
+| Bahasa pesan awal WhatsApp | Pesan dikirim pembeli sebagai dirinya sendiri, sehingga bahasa Indonesia mungkin lebih wajar. Sementara bahasa Indonesia: "Halo, saya tertarik dengan *{judul}* di BeeKas: {tautan}". |
 | Bahasa draf listing dari AI | Inggris mengikuti antarmuka, atau Indonesia mengikuti kebiasaan pengguna. |
 | Kelengkapan program BINUS Online | Daftar diambil dari halaman kurikulum. Halaman BINUS @Semarang menyebut program online lain, misalnya Accounting. Perlu dicek ulang. |
 | Nama program yang mirip | Management, Business Management, dan Business Management & Marketing tercantum terpisah di situs. Cek apakah ada yang sebenarnya satu program dengan nama lama. |
