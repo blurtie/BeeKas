@@ -60,10 +60,6 @@ Status: **selesai**
 
 ## Fase 2 — Kuota inti dan listing (tahap 3 PRD)
 
-**Keputusan yang dibutuhkan sebelum mulai**
-
-- [ ] Kuota dikembalikan atau tidak bila listing dihapus sebelum terjual
-
 **Development**
 
 - [ ] Buku besar kuota dan penyesuaian manual oleh admin, ditegakkan di basis data (F3.8, F3.9, F9.5, D-10)
@@ -94,6 +90,7 @@ Status: **selesai**
 **Keputusan yang dibutuhkan sebelum mulai**
 
 - [ ] Batas jumlah dan lama perpanjangan booking
+- [ ] Kuota dikembalikan atau tidak bila listing dihapus sebelum terjual
 
 **Development**
 
