@@ -1,5 +1,5 @@
 // scripts/rls-check.mjs
-// Proves profile RLS, campus-domain rejection, 0002 value lists and 0003 credit ledger and 0004 listing photo rules against the real Supabase project.
+// Proves profile RLS, campus-domain rejection, 0002 value lists and 0003 credit ledger, 0004 listing photo and 0005 publish rules against the real Supabase project.
 // Run: node --env-file=.env.local scripts/rls-check.mjs
 // service_role is used ONLY to create/delete test accounts, mint sign-in OTPs and flag the test admin.
 // Every RLS check runs as a test account via an ANON-key client + that account's session.
@@ -295,6 +295,75 @@ async function main() {
     const del = await A.storage.from("listing-photos").remove([ownPath]);
     const still = await fetch(A.storage.from("listing-photos").getPublicUrl(ownPath).data.publicUrl);
     result("13h A cannot delete own photo", still.ok, del.error ? errMsg(del.error) : `status=${still.status}`);
+  });
+
+  // 14 (0005: publish_listing; runs after 12, so B starts with 3 credits and A is admin)
+  await check("14 publish listing", async () => {
+    const jpeg = new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: "image/jpeg" });
+    const photo = async (client, user) => {
+      const path = `${user.id}/${crypto.randomUUID()}.jpg`;
+      uploadedPhotos.push(path);
+      const { error } = await client.storage.from("listing-photos").upload(path, jpeg, { contentType: "image/jpeg" });
+      if (error) throw new Error(`upload ${path}: ${errMsg(error)}`);
+      return path;
+    };
+    const listing = (image, over = {}) => ({
+      p_type: "sale", p_title: "RLS test item", p_category: "books", p_condition: "good",
+      p_description: "Test listing from rls-check.", p_price: 15000, p_campus: "kemanggisan",
+      p_meetup_note: "Lobby", p_image_path: image, ...over,
+    });
+    const publish = (client, args) => client.rpc("publish_listing", args);
+    const fillProfile = (client, user) =>
+      client.from("profiles").update({ nickname: "RLS Seller", whatsapp: "6281234567890", campus: "kemanggisan" }).eq("id", user.id);
+    const creditsOf = async (client) => (await client.rpc("get_my_credits")).data;
+
+    const cPhoto = await photo(C, userC);
+    const incomplete = await publish(C, listing(cPhoto));
+    result("14a incomplete profile -> profile_incomplete", !!incomplete.error?.message.includes("profile_incomplete"), errMsg(incomplete.error));
+    await fillProfile(C, userC);
+    const broke = await publish(C, listing(cPhoto));
+    result("14b 0 credits -> no_credits", !!broke.error?.message.includes("no_credits"), errMsg(broke.error));
+    const cRows = await C.from("credit_ledger").select("id");
+    result("14c failed publish writes no ledger row", !cRows.error && cRows.data.length === 0, cRows.error ? errMsg(cRows.error) : `rows=${cRows.data.length}`);
+
+    await fillProfile(B, userB);
+    const missing = await publish(B, listing(`${userB.id}/${crypto.randomUUID()}.jpg`));
+    result("14d photo not uploaded -> photo_missing", !!missing.error?.message.includes("photo_missing"), errMsg(missing.error));
+    const badPrice = await publish(B, listing(await photo(B, userB), { p_price: 500 }));
+    result("14e price below Rp1.000 -> 23514", badPrice.error?.code === "23514", errMsg(badPrice.error));
+    const afterBad = await creditsOf(B);
+    result("14f rejected publish keeps credits (3)", afterBad === 3, `credits=${afterBad}`);
+
+    const down = await A.rpc("admin_adjust_credits", { target: userB.id, delta: -2, note: "rls-check: leave 1" });
+    if (down.error) throw new Error(`adjust: ${errMsg(down.error)}`);
+    const [p1, p2] = await Promise.all([publish(B, listing(await photo(B, userB))), publish(B, listing(await photo(B, userB)))]);
+    const wins = [p1, p2].filter((r) => !r.error);
+    const lost = [p1, p2].find((r) => r.error);
+    result("14g two concurrent publishes with 1 credit -> exactly one listing", wins.length === 1 && !!lost?.error.message.includes("no_credits"),
+      `ok=${wins.length} err=${errMsg(lost?.error)}`);
+    const left = await creditsOf(B);
+    result("14h credits end at 0", left === 0, `credits=${left}`);
+    const listingId = wins[0]?.data;
+    const entry = await B.from("credit_ledger").select("delta,reason,listing_id").eq("reason", "listing_publish");
+    const ok = !entry.error && entry.data.length === 1 && entry.data[0].delta === -1 && entry.data[0].listing_id === listingId;
+    result("14i one -1 listing_publish entry linked to the listing", ok, entry.error ? errMsg(entry.error) : JSON.stringify(entry.data));
+
+    const direct = await B.from("listings").insert({ seller_id: userB.id, type: "donation", title: "Direct", category: "other",
+      condition: "used", description: "x", image_path: `${userB.id}/direct.jpg`, campus: "online" }).select();
+    result("14j direct insert into listings -> error", !!direct.error, direct.error ? errMsg(direct.error) : "insert succeeded");
+
+    const anon = newAnon();
+    const pubRead = await anon.from("listings").select("id,title,price,campus,status").eq("id", listingId);
+    result("14k anon reads the listing", !pubRead.error && pubRead.data.length === 1, pubRead.error ? errMsg(pubRead.error) : `rows=${pubRead.data.length}`);
+    const anonNote = await anon.from("listings").select("meetup_note").eq("id", listingId);
+    result("14l anon cannot read meetup_note", !!anonNote.error, anonNote.error ? errMsg(anonNote.error) : JSON.stringify(anonNote.data));
+    const anonSeller = await anon.from("listings").select("seller_id").eq("id", listingId);
+    result("14m anon cannot read seller_id", !!anonSeller.error, anonSeller.error ? errMsg(anonSeller.error) : JSON.stringify(anonSeller.data));
+    const memberNote = await C.from("listings").select("meetup_note,seller_id").eq("id", listingId);
+    const mOk = !memberNote.error && memberNote.data[0]?.meetup_note === "Lobby" && memberNote.data[0]?.seller_id === userB.id;
+    result("14n Member reads meetup_note and seller_id", mOk, memberNote.error ? errMsg(memberNote.error) : JSON.stringify(memberNote.data));
+    const anonPublish = await publish(anon, listing(cPhoto));
+    result("14o anon publish -> error", !!anonPublish.error, anonPublish.error ? errMsg(anonPublish.error) : "anon publish succeeded");
   });
 
   await Promise.all([A, B, C].map((c) => c.auth.signOut().catch(() => {})));

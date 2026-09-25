@@ -44,6 +44,7 @@ Migrasi dijalankan manual lewat SQL Editor, berurutan sesuai nomor berkas di `su
 2. `0002_majors_campuses.sql`: daftar kampus final, daftar jurusan, jurusan wajib untuk mahasiswa (diisi bersama BINUSIAN).
 3. `0003_credit_ledger.sql`: buku besar kuota, `get_my_credits`, `admin_adjust_credits`, `admin_find_members`, dan grant kolom `profiles` untuk `service_role` yang dipakai `rls-check`.
 4. `0004_listing_photos.sql`: bucket `listing-photos` dan policy unggah foto listing (lihat bagian Storage).
+5. `0005_listings.sql`: tabel `listings` (baca publik, kecuali `seller_id` dan `meetup_note` yang hanya untuk pengguna login), kolom `credit_ledger.listing_id`, dan `publish_listing`.
 
 Setelah menjalankan migrasi, jalankan `node --env-file=.env.local scripts/rls-check.mjs` untuk memastikan RLS berjalan. Skrip ini membutuhkan `SUPABASE_SERVICE_ROLE_KEY` di `.env.local`.
 
