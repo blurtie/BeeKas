@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { expect, it } from "vitest";
 import { ALLOWED_EMAIL_DOMAINS } from "./campus-email";
 import { CAMPUSES, MAJOR_GROUPS, majorCodes } from "./profile";
+import { CREDIT_REASONS } from "./credits";
 
 const readSql = (file: string) => readFileSync(resolve(__dirname, "../../../supabase/migrations", file), "utf8");
 
@@ -29,4 +30,8 @@ it("SQL campus check matches CAMPUSES", () => {
 
 it("SQL major check matches MAJOR_GROUPS plus OTHER_MAJOR", () => {
   expect(quotedCodes(readSql("0002_majors_campuses.sql"), "MAJORS")).toEqual(majorCodes(MAJOR_GROUPS));
+});
+
+it("SQL ledger reason check matches CREDIT_REASONS", () => {
+  expect(quotedCodes(readSql("0003_credit_ledger.sql"), "CREDIT_REASONS")).toEqual([...CREDIT_REASONS]);
 });

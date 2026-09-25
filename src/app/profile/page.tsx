@@ -4,6 +4,8 @@ import { CAMPUSES, MAJOR_GROUPS, OTHER_MAJOR, type CampusCode } from "@/lib/doma
 import { isProfileComplete } from "@/lib/domain/profile-completeness";
 import { PROFILE_COLUMNS, type OwnProfileRow } from "@/lib/supabase/profile-row";
 import { createClient, getUserId } from "@/lib/supabase/server";
+import { CREDIT_REASONS, type CreditReason } from "@/lib/domain/credits";
+import { CreditSummary } from "@/ui/credit-summary";
 import { EmptyState } from "@/ui/empty-state";
 import { ProfileSummary } from "@/ui/profile-summary";
 
@@ -14,6 +16,8 @@ function majorName(code: string | null) {
 }
 
 const isCampus = (code: string): code is CampusCode => (CAMPUSES as readonly string[]).includes(code);
+const isReason = (r: string): r is CreditReason => (CREDIT_REASONS as readonly string[]).includes(r);
+
 const campusName = (code: string | null) =>
   code === null ? null : isCampus(code) ? copy.profile.campuses[code] : code;
 
@@ -47,16 +51,43 @@ export default async function ProfilePage() {
       : []),
   ];
 
+  const [{ data: credits }, { data: ledger }] = await Promise.all([
+    supabase.rpc("get_my_credits"),
+    supabase
+      .from("credit_ledger")
+      .select("id, delta, reason, note, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  const c = copy.credits;
+  const entries = (ledger ?? []).map((e) => ({
+    id: e.id,
+    delta: e.delta,
+    label: isReason(e.reason) ? c.reasons[e.reason] : e.reason,
+    note: e.note,
+    date: new Date(e.created_at).toLocaleDateString("id-ID", { dateStyle: "medium" }),
+  }));
+
   return (
-    <ProfileSummary
-      title={copy.profile.summaryTitle}
-      rows={rows}
-      notSet={copy.profile.notSet}
-      incompleteMessage={isProfileComplete(row) ? undefined : copy.profile.incomplete}
-      editHref="/profile/complete"
-      editLabel={copy.profile.edit}
-      signOutAction="/auth/sign-out"
-      signOutLabel={copy.auth.signOut}
-    />
+    <div className="flex flex-col gap-8">
+      <ProfileSummary
+        title={copy.profile.summaryTitle}
+        rows={rows}
+        notSet={copy.profile.notSet}
+        incompleteMessage={isProfileComplete(row) ? undefined : copy.profile.incomplete}
+        editHref="/profile/complete"
+        editLabel={copy.profile.edit}
+        signOutAction="/auth/sign-out"
+        signOutLabel={copy.auth.signOut}
+      />
+      <CreditSummary
+        title={c.title}
+        count={c.count(credits ?? 0)}
+        rule={c.rule}
+        historyTitle={c.historyTitle}
+        historyEmpty={c.historyEmpty}
+        entries={entries}
+      />
+    </div>
   );
 }

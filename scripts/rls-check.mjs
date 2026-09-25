@@ -1,7 +1,7 @@
 // scripts/rls-check.mjs
-// Proves profile RLS, campus-domain rejection and 0002 value lists against the real Supabase project.
+// Proves profile RLS, campus-domain rejection, 0002 value lists and 0003 credit ledger rules against the real Supabase project.
 // Run: node --env-file=.env.local scripts/rls-check.mjs
-// service_role is used ONLY to create/delete test accounts and mint sign-in OTPs.
+// service_role is used ONLY to create/delete test accounts, mint sign-in OTPs and flag the test admin.
 // Every RLS check runs as a test account via an ANON-key client + that account's session.
 // Never imported from src/.
 
@@ -215,6 +215,52 @@ async function main() {
     result("11b student with binusian but no major -> 23514", noMajor.error?.code === "23514", errMsg(noMajor.error));
     const staffMajor = await C.from("profiles").update({ major: "computer_science" }).eq("id", userC.id).select();
     result("11c staff with major -> 23514", staffMajor.error?.code === "23514", errMsg(staffMajor.error));
+  });
+
+  // 12 (0003: credit ledger; A is made admin via service_role, B stays a Member)
+  await check("12 credit ledger", async () => {
+    const flag = await admin.from("profiles").update({ is_admin: true }).eq("id", userA.id);
+    if (flag.error) throw new Error(`flag admin: ${errMsg(flag.error)}`);
+    const adjust = (client, target, delta, note) => client.rpc("admin_adjust_credits", { target, delta, note });
+    const creditsOf = async (client) => (await client.rpc("get_my_credits")).data;
+
+    const nonAdmin = await adjust(B, userB.id, 5, "self grant");
+    result("12a non-admin adjust -> not_admin", !!nonAdmin.error?.message.includes("not_admin"), errMsg(nonAdmin.error));
+    const grant = await adjust(A, userB.id, 3, "Tester");
+    result("12b admin grants 3 -> returns 3", !grant.error && grant.data === 3, grant.error ? errMsg(grant.error) : `data=${grant.data}`);
+    const noNote = await adjust(A, userB.id, 1, "   ");
+    result("12c empty note -> note_required", !!noNote.error?.message.includes("note_required"), errMsg(noNote.error));
+    const below = await adjust(A, userB.id, -4, "too much");
+    result("12d below zero -> credits_below_zero", !!below.error?.message.includes("credits_below_zero"), errMsg(below.error));
+    const b = await creditsOf(B);
+    result("12e B has 3 credits (sum of entries)", b === 3, `credits=${b}`);
+
+    const own = await B.from("credit_ledger").select("delta,reason,note,created_by");
+    const row = own.data?.[0];
+    const ok = !own.error && own.data.length === 1 && row.reason === "admin_adjustment" && row.note === "Tester" && row.created_by === userA.id;
+    result("12f B reads own entry with note and created_by", ok, own.error ? errMsg(own.error) : JSON.stringify(own.data));
+    const other = await C.from("credit_ledger").select("id").eq("user_id", userB.id);
+    result("12g C cannot read B's entries", !other.error && other.data.length === 0, other.error ? errMsg(other.error) : `rows=${other.data.length}`);
+
+    const ins = await B.from("credit_ledger").insert({ user_id: userB.id, delta: 100, reason: "purchase" }).select();
+    result("12h B direct insert -> error", !!ins.error, ins.error ? errMsg(ins.error) : "insert succeeded");
+    const upd = await B.from("credit_ledger").update({ delta: 100 }).eq("user_id", userB.id).select();
+    result("12i B direct update -> error or 0 rows", !!upd.error || upd.data.length === 0, upd.error ? errMsg(upd.error) : `rows=${upd.data.length}`);
+    const del = await B.from("credit_ledger").delete().eq("user_id", userB.id).select();
+    result("12j B direct delete -> error or 0 rows", !!del.error || del.data.length === 0, del.error ? errMsg(del.error) : `rows=${del.data.length}`);
+    const after = await creditsOf(B);
+    result("12k B still has 3 credits", after === 3, `credits=${after}`);
+
+    const found = await A.rpc("admin_find_members", { search: "rls-b" });
+    const hit = found.data?.find((m) => m.id === userB.id);
+    result("12l admin finds B with 3 credits", !found.error && hit?.credits === 3, found.error ? errMsg(found.error) : JSON.stringify(found.data));
+    const findAsB = await B.rpc("admin_find_members", { search: "rls" });
+    result("12m non-admin find -> not_admin", !!findAsB.error?.message.includes("not_admin"), errMsg(findAsB.error));
+    const anon = newAnon();
+    const anonCredits = await anon.rpc("get_my_credits");
+    result("12n anon get_my_credits -> error", !!anonCredits.error, anonCredits.error ? errMsg(anonCredits.error) : `data=${anonCredits.data}`);
+    const anonAdjust = await adjust(anon, userB.id, 1, "x");
+    result("12o anon adjust -> error", !!anonAdjust.error, anonAdjust.error ? errMsg(anonAdjust.error) : "anon adjust succeeded");
   });
 
   await Promise.all([A, B, C].map((c) => c.auth.signOut().catch(() => {})));
