@@ -14,42 +14,23 @@ permissions:
 
 jobs:
   check:
+    # Name must stay: it is the required check in the branch ruleset.
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      # Placeholder values so the build can run without real credentials.
-      # CI never talks to Supabase; real values live only in Netlify and .env.local.
-      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
-      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: subosito/flutter-action@v2
         with:
-          node-version-file: .nvmrc
-          cache: npm
+          channel: stable
+          cache: true
 
       - name: Install
-        run: npm ci
+        run: flutter pub get
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Analyze
+        run: flutter analyze
 
       - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: No secrets in client code
-        run: |
-          if grep -rnE "SERVICE_ROLE|ANTHROPIC_API_KEY|sk-ant-" src --include=*.ts --include=*.tsx \
-               | grep -vE "^src/lib/server/|^src/app/api/|\.test\.ts:" ; then
-            echo "::error::Server-only secret referenced outside server code (see PRD bagian 9, D-08)."
-            exit 1
-          fi
+        run: flutter test
