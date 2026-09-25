@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PhotoPicker } from "@/ui/photo-picker";
 
 type ErrorKey = keyof typeof copy.listingPhoto.errors;
-type Props = { userId: string; name?: string };
+type Props = { userId: string; name?: string; initialPath?: string };
 
 // Decodes via <img> (works for every format the browser can show, e.g. HEIC on
 // iPhone, and applies EXIF orientation), then resizes to fit PHOTO_MAX_SIDE and
@@ -32,14 +32,17 @@ async function compress(file: File): Promise<Blob> {
 }
 
 // Uploads one listing photo and exposes its storage path as a hidden form field.
-export function PhotoUpload({ userId, name = "image_path" }: Props) {
+export function PhotoUpload({ userId, name = "image_path", initialPath = "" }: Props) {
   const t = copy.listingPhoto;
-  const [path, setPath] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
+  const [path, setPath] = useState(initialPath);
+  // A photo kept from an earlier attempt is shown from its public URL.
+  const [preview, setPreview] = useState<string | null>(() =>
+    initialPath ? createClient().storage.from(LISTING_PHOTO_BUCKET).getPublicUrl(initialPath).data.publicUrl : null,
+  );
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ tone: "error" | "info"; text: string }>();
 
-  useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
+  useEffect(() => () => void (preview?.startsWith("blob:") && URL.revokeObjectURL(preview)), [preview]);
 
   async function onChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

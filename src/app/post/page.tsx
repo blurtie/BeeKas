@@ -1,20 +1,23 @@
 import { redirect } from "next/navigation";
 import { copy } from "@/config/copy";
 import { createClient, getUserId } from "@/lib/supabase/server";
-import { FormMessage } from "@/ui/form-controls";
-import { PhotoUpload } from "./photo-upload";
+import { PostListingForm } from "./post-listing-form";
 
 export default async function PostPage() {
-  // Proxy already guards this route; re-check here so the page never renders signed out.
-  const userId = await getUserId(await createClient());
+  // Proxy already guards this route (sign-in and complete profile); re-check sign-in here.
+  const supabase = await createClient();
+  const userId = await getUserId(supabase);
   if (!userId) redirect(`/sign-in?next=${encodeURIComponent("/post")}`);
 
-  const { title, publishSoon } = copy.pages.post;
+  const [{ data: credits }, { data: profile }] = await Promise.all([
+    supabase.rpc("get_my_credits"),
+    supabase.from("profiles").select("campus").eq("id", userId).maybeSingle(),
+  ]);
+
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-      <PhotoUpload userId={userId} />
-      <FormMessage tone="info">{publishSoon}</FormMessage>
+      <h1 className="text-2xl font-semibold text-ink">{copy.pages.post.title}</h1>
+      <PostListingForm userId={userId} credits={credits ?? 0} profileCampus={profile?.campus ?? ""} />
     </section>
   );
 }

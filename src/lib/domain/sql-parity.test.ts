@@ -4,6 +4,17 @@ import { expect, it } from "vitest";
 import { ALLOWED_EMAIL_DOMAINS } from "./campus-email";
 import { CAMPUSES, MAJOR_GROUPS, majorCodes } from "./profile";
 import { CREDIT_REASONS } from "./credits";
+import {
+  DESCRIPTION_MAX,
+  LISTING_CATEGORIES,
+  LISTING_CONDITIONS,
+  LISTING_TYPES,
+  MEETUP_NOTE_MAX,
+  PRICE_MAX,
+  PRICE_MIN,
+  TITLE_MAX,
+  TITLE_MIN,
+} from "./listing";
 import { LISTING_PHOTO_BUCKET, PHOTO_MAX_BYTES } from "./listing-photo";
 
 const readSql = (file: string) => readFileSync(resolve(__dirname, "../../../supabase/migrations", file), "utf8");
@@ -40,4 +51,20 @@ it("SQL ledger reason check matches CREDIT_REASONS", () => {
 it("SQL listing photo bucket matches LISTING_PHOTO_BUCKET and PHOTO_MAX_BYTES", () => {
   const sql = readSql("0004_listing_photos.sql");
   expect(sql).toContain(`values ('${LISTING_PHOTO_BUCKET}', '${LISTING_PHOTO_BUCKET}', true, ${PHOTO_MAX_BYTES},`);
+});
+
+it("SQL listing value lists match listing.ts and CAMPUSES", () => {
+  const sql = readSql("0005_listings.sql");
+  expect(quotedCodes(sql, "LISTING_TYPES")).toEqual([...LISTING_TYPES]);
+  expect(quotedCodes(sql, "LISTING_CATEGORIES")).toEqual([...LISTING_CATEGORIES]);
+  expect(quotedCodes(sql, "LISTING_CONDITIONS")).toEqual([...LISTING_CONDITIONS]);
+  expect(quotedCodes(sql, "LISTING_CAMPUSES")).toEqual([...CAMPUSES]);
+});
+
+it("SQL listing limits match listing.ts", () => {
+  const sql = readSql("0005_listings.sql");
+  expect(sql).toContain(`price between ${PRICE_MIN} and ${PRICE_MAX}`);
+  expect(sql).toContain(`char_length(title) between ${TITLE_MIN} and ${TITLE_MAX}`);
+  expect(sql).toContain(`char_length(description) between 1 and ${DESCRIPTION_MAX}`);
+  expect(sql).toContain(`char_length(meetup_note) between 1 and ${MEETUP_NOTE_MAX}`);
 });
