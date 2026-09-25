@@ -1,5 +1,5 @@
 // scripts/rls-check.mjs
-// Proves profile RLS, campus-domain rejection, 0002 value lists and 0003 credit ledger rules against the real Supabase project.
+// Proves profile RLS, campus-domain rejection, 0002 value lists and 0003 credit ledger and 0004 listing photo rules against the real Supabase project.
 // Run: node --env-file=.env.local scripts/rls-check.mjs
 // service_role is used ONLY to create/delete test accounts, mint sign-in OTPs and flag the test admin.
 // Every RLS check runs as a test account via an ANON-key client + that account's session.
@@ -33,6 +33,7 @@ const EXTRA_CLEANUP = ["rls-other@binus.ac.id", "rls-z@gmail.com"];
 const ALL_TEST_EMAILS = [EMAIL_A, EMAIL_B, EMAIL_C, ...BAD_EMAILS, ...EXTRA_CLEANUP];
 
 let failures = 0;
+const uploadedPhotos = [];
 function result(name, ok, reason) {
   if (!ok) failures++;
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${reason ? ` -- ${reason}` : ""}`);
@@ -263,6 +264,39 @@ async function main() {
     result("12o anon adjust -> error", !!anonAdjust.error, anonAdjust.error ? errMsg(anonAdjust.error) : "anon adjust succeeded");
   });
 
+  // 13 (0004: listing photos; own folder only, no overwrite, anon cannot upload)
+  await check("13 listing photos", async () => {
+    const jpeg = new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: "image/jpeg" });
+    const up = (client, path, opts = {}) =>
+      client.storage.from("listing-photos").upload(path, jpeg, { contentType: "image/jpeg", ...opts });
+    const ownPath = `${userA.id}/${crypto.randomUUID()}.jpg`;
+    uploadedPhotos.push(ownPath);
+
+    const own = await up(A, ownPath);
+    result("13a A uploads to own folder", !own.error, errMsg(own.error));
+    const pub = await fetch(A.storage.from("listing-photos").getPublicUrl(ownPath).data.publicUrl);
+    result("13b photo is publicly readable", pub.ok, `status=${pub.status}`);
+    const again = await up(A, ownPath);
+    result("13c same path again -> error (no overwrite)", !!again.error, errMsg(again.error));
+    const upsert = await up(A, ownPath, { upsert: true });
+    result("13d upsert own photo -> error (no overwrite)", !!upsert.error, errMsg(upsert.error));
+    const otherPath = `${userB.id}/${crypto.randomUUID()}.jpg`;
+    uploadedPhotos.push(otherPath);
+    const other = await up(A, otherPath);
+    result("13e A uploads to B's folder -> error", !!other.error, errMsg(other.error));
+    const rootPath = `${crypto.randomUUID()}.jpg`;
+    uploadedPhotos.push(rootPath);
+    const root = await up(A, rootPath);
+    result("13f A uploads outside any folder -> error", !!root.error, errMsg(root.error));
+    const anonPath = `${userA.id}/${crypto.randomUUID()}.jpg`;
+    uploadedPhotos.push(anonPath);
+    const anon = await up(newAnon(), anonPath);
+    result("13g anon upload -> error", !!anon.error, errMsg(anon.error));
+    const del = await A.storage.from("listing-photos").remove([ownPath]);
+    const still = await fetch(A.storage.from("listing-photos").getPublicUrl(ownPath).data.publicUrl);
+    result("13h A cannot delete own photo", still.ok, del.error ? errMsg(del.error) : `status=${still.status}`);
+  });
+
   await Promise.all([A, B, C].map((c) => c.auth.signOut().catch(() => {})));
 }
 
@@ -273,6 +307,10 @@ try {
   console.error(`FATAL: ${e.message}`);
 } finally {
   try {
+    if (uploadedPhotos.length) {
+      const { error } = await admin.storage.from("listing-photos").remove(uploadedPhotos);
+      console.log(`cleanup: remove test photos ${error ? `FAILED (${error.message})` : "ok"}`);
+    }
     await deleteUsersByEmails(ALL_TEST_EMAILS, "cleanup");
     const left = await findUsersByEmails(ALL_TEST_EMAILS);
     if (left.length) {
