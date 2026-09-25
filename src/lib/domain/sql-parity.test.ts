@@ -4,6 +4,7 @@ import { expect, it } from "vitest";
 import { ALLOWED_EMAIL_DOMAINS } from "./campus-email";
 import { CAMPUSES, MAJOR_GROUPS, majorCodes } from "./profile";
 import { CREDIT_REASONS } from "./credits";
+import { LISTING_PHOTO_BUCKET, PHOTO_MAX_BYTES } from "./listing-photo";
 
 const readSql = (file: string) => readFileSync(resolve(__dirname, "../../../supabase/migrations", file), "utf8");
 
@@ -34,4 +35,9 @@ it("SQL major check matches MAJOR_GROUPS plus OTHER_MAJOR", () => {
 
 it("SQL ledger reason check matches CREDIT_REASONS", () => {
   expect(quotedCodes(readSql("0003_credit_ledger.sql"), "CREDIT_REASONS")).toEqual([...CREDIT_REASONS]);
+});
+
+it("SQL listing photo bucket matches LISTING_PHOTO_BUCKET and PHOTO_MAX_BYTES", () => {
+  const sql = readSql("0004_listing_photos.sql");
+  expect(sql).toContain(`values ('${LISTING_PHOTO_BUCKET}', '${LISTING_PHOTO_BUCKET}', true, ${PHOTO_MAX_BYTES},`);
 });

@@ -42,5 +42,16 @@ Migrasi dijalankan manual lewat SQL Editor, berurutan sesuai nomor berkas di `su
 
 1. `0001_profiles.sql`: tabel `profiles`, validasi domain email kampus, pemblokiran perubahan email, RLS, dan `get_public_profile`.
 2. `0002_majors_campuses.sql`: daftar kampus final, daftar jurusan, jurusan wajib untuk mahasiswa (diisi bersama BINUSIAN).
+3. `0003_credit_ledger.sql`: buku besar kuota, `get_my_credits`, `admin_adjust_credits`, `admin_find_members`, dan grant kolom `profiles` untuk `service_role` yang dipakai `rls-check`.
+4. `0004_listing_photos.sql`: bucket `listing-photos` dan policy unggah foto listing (lihat bagian Storage).
 
 Setelah menjalankan migrasi, jalankan `node --env-file=.env.local scripts/rls-check.mjs` untuk memastikan RLS berjalan. Skrip ini membutuhkan `SUPABASE_SERVICE_ROLE_KEY` di `.env.local`.
+
+## Storage
+
+Bucket dibuat lewat migrasi `0004_listing_photos.sql`, bukan lewat dashboard, supaya project produksi cukup menjalankan migrasi yang sama.
+
+| Bucket | Pengaturan | Alasan |
+|---|---|---|
+| `listing-photos` | Public, batas 2 MB, hanya `image/jpeg` | Foto listing dibaca lewat URL publik agar pratinjau tautan WhatsApp bekerja (D-17.3). Klien selalu mengompres ke JPEG dengan sisi terpanjang 1024 px, jadi 2 MB cukup longgar. |
+| Policy unggah | `authenticated` hanya boleh `insert` ke folder `<user_id>/` | Tidak ada policy `select`, `update`, atau `delete`: daftar berkas tidak dapat dibaca lewat API, dan foto tidak dapat ditimpa. Nama berkas acak dibuat klien. |
