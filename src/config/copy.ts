@@ -128,7 +128,8 @@ export const copy = {
   },
   listingPhoto: {
     label: "Photo",
-    choose: "Choose a photo",
+    camera: "Take photo",
+    choose: "From gallery",
     change: "Change photo",
     warning: "Don't show faces, ID cards, or other personal data in the photo.",
     uploading: "Uploading...",

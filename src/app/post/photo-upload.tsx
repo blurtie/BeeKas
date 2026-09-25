@@ -9,18 +9,26 @@ import { PhotoPicker } from "@/ui/photo-picker";
 type ErrorKey = keyof typeof copy.listingPhoto.errors;
 type Props = { userId: string; name?: string };
 
-// Resizes to fit PHOTO_MAX_SIDE and re-encodes as JPEG (also strips EXIF, e.g. GPS).
+// Decodes via <img> (works for every format the browser can show, e.g. HEIC on
+// iPhone, and applies EXIF orientation), then resizes to fit PHOTO_MAX_SIDE and
+// re-encodes as JPEG, which also strips EXIF such as GPS.
 async function compress(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const { width, height } = fitWithin(bitmap.width, bitmap.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob"))), "image/jpeg", 0.82),
-  );
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const { width, height } = fitWithin(img.naturalWidth, img.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+    return await new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob"))), "image/jpeg", 0.82),
+    );
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Uploads one listing photo and exposes its storage path as a hidden form field.
@@ -38,7 +46,8 @@ export function PhotoUpload({ userId, name = "image_path" }: Props) {
     e.target.value = "";
     if (!file) return;
     const fail = (key: ErrorKey) => setStatus({ tone: "error", text: t.errors[key] });
-    if (!file.type.startsWith("image/")) return fail("not_image");
+    // Some Android pickers report an empty type; let decoding decide then.
+    if (file.type && !file.type.startsWith("image/")) return fail("not_image");
 
     setBusy(true);
     setStatus({ tone: "info", text: t.uploading });
@@ -69,6 +78,7 @@ export function PhotoUpload({ userId, name = "image_path" }: Props) {
     <>
       <PhotoPicker
         label={t.label}
+        cameraLabel={t.camera}
         chooseLabel={path ? t.change : t.choose}
         warning={t.warning}
         previewUrl={preview}
