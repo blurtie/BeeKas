@@ -140,7 +140,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 
 ### L11 Verifikasi Sedang Diproses
 - Teks sesuai frame: tim memeriksa dalam 1×24 jam, dan notifikasi dikirim setelah selesai.
-- Tombol "Bantuan" membuka WhatsApp tim dengan pesan awal (D-14).
+- Tombol "Bantuan" membuka aplikasi email (mailto) ke alamat tim, dengan subjek "Bantuan BeeKas" dan isi awal berisi nama, email akun, dan status akun (D-14). Bila tidak ada aplikasi email, tampil alamat email dengan tombol salin. Alamatnya konstanta konfigurasi di `lib/config/`, sementara `beekas2026@gmail.com`.
 - Tombol "Lihat katalog" mengarah ke katalog dengan akses terbatas (D-06).
 - Tombol Kembali pada frame diganti dengan "Lihat katalog" dan "Keluar".
 
@@ -217,14 +217,16 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 2. Masa simpan foto kartu dan selfie (D-07). Default: 30 hari setelah diperiksa.
 3. Siapa saja admin verifikasi, dan apakah SLA 1×24 jam berlaku di akhir pekan.
 4. Apakah alumni perlu didukung (D-15). Saat ini tidak ada jalur alumni.
-5. Nomor WhatsApp tim untuk Bantuan.
-6. Isi Kebijakan Privasi dan Syarat & Ketentuan, termasuk penanggung jawab data pribadi.
-7. Pengajuan izin SSO ke IT BINUS: siapa yang mengurus dan kapan.
+5. Isi Kebijakan Privasi dan Syarat & Ketentuan, termasuk penanggung jawab data pribadi.
+6. Pengajuan izin SSO ke IT BINUS: siapa yang mengurus dan kapan.
+7. Konfirmasi dua bahasa dengan Inggris sebagai bahasa utama (D-11), karena desain dan notulen berbahasa Indonesia.
+8. Konfirmasi penghapusan kartu digital sementara (D-14), karena notulen menyebutnya.
 
 ## 10. Dicatat untuk sesi berikutnya (di luar lingkup login)
 
 - Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web).
 - Ikon favorit dan notifikasi di header Home.
 - Kartu digital member: ide terbuka, belum punya fungsi (D-14).
+- Sesi katalog: nomor WhatsApp penjual hanya terlihat oleh member `approved` (D-06). Pertimbangkan pengingat bagi penjual bahwa nomornya akan terlihat oleh pembeli.
 - Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri".
 - Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama.

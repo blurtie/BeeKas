@@ -173,13 +173,16 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ---
 
-## D-14 — Kartu digital sementara dihapus; Bantuan lewat WhatsApp
+## D-14 — Kartu digital sementara dihapus; Bantuan lewat email tim
 
-**Status:** Disetujui CTO, 5 Oktober 2026
+**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital menunggu konfirmasi tim
 
-**Keputusan:** Layar "Pendaftaran berhasil + kartu digital" dari notulen tidak dibangun; konfirmasinya digabung ke layar "Verifikasi Sedang Diproses". Tombol "Bantuan" membuka WhatsApp tim BeeKas dengan pesan awal berisi nama dan email.
+**Keputusan:**
+- Layar "Pendaftaran berhasil + kartu digital" dari notulen tidak dibangun. Konfirmasi pendaftaran digabung ke layar "Verifikasi Sedang Diproses".
+- Tombol "Bantuan" membuka aplikasi email (mailto) dengan subjek "Bantuan BeeKas" dan isi awal berisi nama, email akun, dan status akun. Bila tidak ada aplikasi email, alamat email ditampilkan dengan tombol salin.
+- Alamat email Bantuan disimpan sebagai konstanta konfigurasi, sementara `beekas2026@gmail.com`.
 
-**Alasan:** Kartu digital belum punya fungsi. WhatsApp sudah menjadi kanal komunikasi (D-04 versi web).
+**Alasan:** Kartu digital belum punya fungsi. Email tim bisa diakses bersama oleh beberapa anggota tim tanpa membagikan nomor WhatsApp pribadi.
 
 ---
 
