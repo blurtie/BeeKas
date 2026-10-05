@@ -65,13 +65,13 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ---
 
-## D-05 — SSO Microsoft BINUS ditunda
+## D-05 — Tidak ada login SSO Microsoft BINUS
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
-**Keputusan:** Tombol "Masuk dengan SSO" tetap tampil sesuai desain. Di prototype tombol ini menampilkan pesan bahwa SSO segera hadir. SSO dibangun bila IT BINUS memberi izin. Pengguna SSO nantinya tidak perlu OTP email, karena SSO sudah membuktikan kepemilikan email.
+**Keputusan:** BeeKas tidak memakai login SSO Microsoft BINUS. Tombol "Masuk dengan SSO" dan pemisah "atau" di frame Masuk 384:9135 tidak dibangun. Masuk hanya dengan email atau nomor HP + kata sandi (D-04).
 
-**Alasan:** Izin IT BINUS belum ada, dan alur email tidak bergantung padanya.
+**Alasan:** Keputusan CTO, 5 Oktober 2026. Alur email BINUS + OTP sudah membuktikan kepemilikan email tanpa izin IT BINUS.
 
 ---
 
@@ -173,13 +173,16 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ---
 
-## D-14 — Kartu digital sementara dihapus; Bantuan lewat WhatsApp
+## D-14 — Kartu digital sementara dihapus; Bantuan lewat email tim
 
-**Status:** Disetujui CTO, 5 Oktober 2026
+**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital menunggu konfirmasi tim
 
-**Keputusan:** Layar "Pendaftaran berhasil + kartu digital" dari notulen tidak dibangun; konfirmasinya digabung ke layar "Verifikasi Sedang Diproses". Tombol "Bantuan" membuka WhatsApp tim BeeKas dengan pesan awal berisi nama dan email.
+**Keputusan:**
+- Layar "Pendaftaran berhasil + kartu digital" dari notulen tidak dibangun. Konfirmasi pendaftaran digabung ke layar "Verifikasi Sedang Diproses".
+- Tombol "Bantuan" membuka aplikasi email (mailto) dengan subjek "Bantuan BeeKas" dan isi awal berisi nama, email akun, dan status akun. Bila tidak ada aplikasi email, alamat email ditampilkan dengan tombol salin.
+- Alamat email Bantuan disimpan sebagai konstanta konfigurasi, sementara `beekas2026@gmail.com`.
 
-**Alasan:** Kartu digital belum punya fungsi. WhatsApp sudah menjadi kanal komunikasi (D-04 versi web).
+**Alasan:** Kartu digital belum punya fungsi. Email tim bisa diakses bersama oleh beberapa anggota tim tanpa membagikan nomor WhatsApp pribadi.
 
 ---
 
