@@ -17,7 +17,7 @@ BeeKas adalah marketplace jual dan donasi barang bekas untuk komunitas BINUS. Ke
 **Termasuk:** splash dan onboarding, Masuk, Daftar, verifikasi email, buat kata sandi, verifikasi identitas, status menunggu, penolakan dan kirim ulang, lupa kata sandi, layar admin verifikasi, ganti bahasa, serta layar statis Kebijakan Privasi dan Syarat & Ketentuan.
 
 **Tidak termasuk:**
-- SSO sungguhan (D-05).
+- Login SSO Microsoft BINUS (D-05).
 - Kartu digital (D-14).
 - Verifikasi nomor HP.
 - Pencocokan wajah otomatis.
@@ -55,7 +55,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 |---|---|---|
 | L1 | Splash | 372:305 |
 | L2 | Onboarding (4 slide) | 384:8943, 384:8978, 384:9061, 384:9095 |
-| L3 | Masuk | 384:9135 |
+| L3 | Masuk | 384:9135 (tanpa tombol SSO) |
 | L4 | Daftar: isi data diri | 405:9246 (ditambah pilihan Dosen/Staf untuk `@binus.edu`) |
 | L5 | Verifikasi email (OTP) | Tanpa desain |
 | L6 | Buat kata sandi | Tanpa desain |
@@ -78,7 +78,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 ### L3 Masuk
 - Isian: "Email atau nomor HP" dan "Kata sandi" (bisa ditampilkan atau disembunyikan).
 - "Ingat saya" tercentang secara default (D-04).
-- Tautan "Lupa kata sandi?", tombol Masuk, dan tombol "Masuk dengan SSO". Tombol SSO menampilkan pesan bahwa SSO segera hadir (D-05).
+- Tautan "Lupa kata sandi?" dan tombol Masuk. Tombol "Masuk dengan SSO" dan pemisah "atau" di frame tidak dibangun (D-05).
 - Tautan Daftar dan tautan "Lihat katalog sebagai tamu". Tautan tamu belum ada di desain.
 - Teks persetujuan dengan tautan ke Syarat & Ketentuan dan Kebijakan Privasi.
 - Error ditampilkan di bawah isian:
@@ -194,7 +194,6 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 | Auth, database, storage | Supabase lokal (Docker) di laptop |
 | Email OTP dan email keputusan | Asli, ditangkap mail server lokal Supabase |
 | Pemeriksaan admin | Asli, lewat L14–L15 di HP kedua |
-| SSO | Disimulasikan: pesan "segera hadir" |
 | Verifikasi wajah | Manual oleh admin, tidak ada otomasi |
 | Penghapusan foto setelah 30 hari | Fungsi terjadwal di backend; di lokal diuji dengan menjalankannya manual |
 | Kebijakan Privasi dan S&K | Teks draf |
@@ -218,9 +217,7 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 3. Siapa saja admin verifikasi, dan apakah SLA 1×24 jam berlaku di akhir pekan.
 4. Apakah alumni perlu didukung (D-15). Saat ini tidak ada jalur alumni.
 5. Isi Kebijakan Privasi dan Syarat & Ketentuan, termasuk penanggung jawab data pribadi.
-6. Pengajuan izin SSO ke IT BINUS: siapa yang mengurus dan kapan.
-7. Konfirmasi dua bahasa dengan Inggris sebagai bahasa utama (D-11), karena desain dan notulen berbahasa Indonesia.
-8. Konfirmasi penghapusan kartu digital sementara (D-14), karena notulen menyebutnya.
+6. Konfirmasi penghapusan kartu digital sementara (D-14), karena notulen menyebutnya.
 
 ## 10. Dicatat untuk sesi berikutnya (di luar lingkup login)
 

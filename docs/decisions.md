@@ -65,13 +65,13 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ---
 
-## D-05 — SSO Microsoft BINUS ditunda
+## D-05 — Tidak ada login SSO Microsoft BINUS
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
-**Keputusan:** Tombol "Masuk dengan SSO" tetap tampil sesuai desain. Di prototype tombol ini menampilkan pesan bahwa SSO segera hadir. SSO dibangun bila IT BINUS memberi izin. Pengguna SSO nantinya tidak perlu OTP email, karena SSO sudah membuktikan kepemilikan email.
+**Keputusan:** BeeKas tidak memakai login SSO Microsoft BINUS. Tombol "Masuk dengan SSO" dan pemisah "atau" di frame Masuk 384:9135 tidak dibangun. Masuk hanya dengan email atau nomor HP + kata sandi (D-04).
 
-**Alasan:** Izin IT BINUS belum ada, dan alur email tidak bergantung padanya.
+**Alasan:** Keputusan CTO, 5 Oktober 2026. Alur email BINUS + OTP sudah membuktikan kepemilikan email tanpa izin IT BINUS.
 
 ---
 
