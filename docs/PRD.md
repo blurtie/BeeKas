@@ -206,6 +206,7 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
   - HP 1 lalu menerima email di mail server lokal dan bisa memakai semua fitur.
 - Jalur penolakan: menolak dengan alasan, alasan terlihat di HP 1, kirim ulang berhasil, dan status kembali `pending`.
 - Tamu, `incomplete`, `pending`, dan `rejected` tidak bisa menghubungi penjual atau memasang barang, baik di aplikasi maupun langsung lewat API (RLS).
+  - Uji RLS untuk menghubungi penjual dan memasang barang ditunda ke PRD katalog, karena tabel listing belum ada. Di bagian ini aturannya diuji di `lib/domain/` saja, dan tombol "Lihat katalog" serta beranda `approved` mengarah ke layar placeholder.
 - Foto kartu dan selfie tidak bisa dibaca oleh akun non-admin.
 - Semua aturan di bagian 6 punya unit test di `test/domain/`.
 - Bahasa bisa diganti EN/ID di L1–L3 dan pilihan diingat.
