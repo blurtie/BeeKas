@@ -166,10 +166,11 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
-**Keputusan:** Tiga dependency ditambahkan:
+**Keputusan:** Empat dependency ditambahkan:
 - `supabase_flutter` untuk auth, database, dan storage.
 - `shared_preferences` untuk bahasa dan status onboarding.
 - `image_picker` hanya dengan `ImageSource.camera`: kamera belakang untuk kartu, kamera depan untuk selfie.
+- `url_launcher` untuk membuka aplikasi email (mailto) dari tombol Bantuan (D-14). Ditambahkan 5 Oktober 2026.
 
 ---
 
