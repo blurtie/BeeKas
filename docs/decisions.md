@@ -57,8 +57,11 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 - Lupa kata sandi hanya lewat email: OTP, lalu sandi baru.
 - "Ingat saya" (default tercentang) membuat sesi bertahan setelah aplikasi ditutup. Bila tidak dicentang, pengguna keluar saat aplikasi ditutup.
 - Penguncian setelah salah berulang kali diserahkan ke rate limit Supabase.
+- Admin memeriksa nomor HP saat verifikasi identitas; nomor tampil di detail berkas. Bila pemilik asli tidak bisa mendaftar karena nomornya sudah dipakai, ia menghubungi Bantuan dan admin bisa melepas nomor itu dari akun lain.
 
 **Alasan:** Mengikuti frame Masuk. OTP SMS membutuhkan layanan berbayar.
+
+**Risiko:** Karena nomor HP unik tetapi tidak diverifikasi, orang lain bisa mendaftar dengan nomor milik seseorang dan memblokir pemilik aslinya. Mitigasinya pemeriksaan admin dan pelepasan nomor lewat Bantuan, yang bergantung pada tindakan manual.
 
 ---
 
@@ -156,8 +159,6 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 **Status:** Disetujui tim, 24 September 2026 (dibawa dari D-16 versi web)
 
 **Keputusan:** Kode kampus: `kemanggisan`, `senayan`, `alam_sutera`, `base`, `bekasi`, `bandung`, `malang`, `semarang`, `online`. Kampus yang berdekatan digabung per area (Kemanggisan: Anggrek, Syahdan, Kijang; Senayan: JWC, fX). BINUS Online tidak punya kampus fisik. Label tampilan mengikuti format desain, misalnya "Kampus Binus Alam Sutera".
-
-**Konsekuensi:** Bila daftar jurusan dibutuhkan, diambil dari tag yang sama. Empat poin terbukanya masuk kuesioner.
 
 ---
 

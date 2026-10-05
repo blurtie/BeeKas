@@ -22,7 +22,7 @@ BeeKas adalah marketplace jual dan donasi barang bekas untuk komunitas BINUS. Ke
 - Verifikasi nomor HP.
 - Pencocokan wajah otomatis.
 - Fitur katalog itu sendiri. Bagian ini hanya mengatur siapa yang boleh mengaksesnya.
-- Angkatan (BINUSIAN), jurusan, dan NIM tidak dikumpulkan. Verifikasi hanya memastikan pengguna adalah Binusian.
+- Jurusan dan NIM tidak dikumpulkan. Angkatan (BINUSIAN) tidak dikumpulkan saat pendaftaran atau verifikasi, tetapi member boleh mengisinya sendiri di Edit Profil dari daftar label BINUSIAN (misalnya B28). Isian ini opsional dan tidak diverifikasi. Verifikasi hanya memastikan pengguna adalah Binusian.
 
 ## 4. Alur
 
@@ -158,9 +158,11 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 - Detail berkas menampilkan:
   - data diri;
   - tipe akun dan jenis kartu;
+  - nomor HP, untuk diperiksa admin karena nomor tidak diverifikasi (D-04);
   - foto kartu dan selfie berdampingan.
 - Tombol Setujui, atau Tolak dengan alasan wajib.
 - Setelah keputusan, email dikirim ke pendaftar dan statusnya berubah.
+- Admin bisa melepas nomor HP dari sebuah akun, bila pemilik asli nomor itu menghubungi Bantuan karena tidak bisa mendaftar (D-04). Akun yang nomornya dilepas tidak bisa masuk dengan nomor HP sampai mengisi nomor baru.
 
 ### L16 Layar teks statis
 - Kebijakan Privasi dan Syarat & Ketentuan, dalam dua bahasa.
@@ -224,3 +226,5 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 - Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web).
 - Ikon favorit dan notifikasi di header Home.
 - Kartu digital member: ide terbuka, belum punya fungsi (D-14).
+- Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri".
+- Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama.
