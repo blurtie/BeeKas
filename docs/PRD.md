@@ -176,7 +176,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 ## 6. Aturan domain (`lib/domain/`, Dart murni, dengan tes)
 
 1. **Email BINUS:** domain `binus.ac.id` atau `binus.edu`, tidak peka huruf besar-kecil, spasi di awal dan akhir dibuang.
-2. **Nomor HP:** normalisasi ke `+628…`, panjang 10–13 digit setelah `+62`.
+2. **Nomor HP:** normalisasi ke `+628` diikuti 8–11 digit (10–13 digit termasuk 08 di depan).
 3. **Sign-in identifier:** bila mengandung `@`, diperlakukan sebagai email; selain itu nomor HP.
 4. **Kata sandi:** minimal 8 karakter, ada huruf dan angka, sama dengan konfirmasinya.
 5. **Tipe akun dari domain** (D-15): `binus.ac.id` → mahasiswa; `binus.edu` → dosen atau staf, wajib dipilih. Tipe akun menentukan jenis kartu.
