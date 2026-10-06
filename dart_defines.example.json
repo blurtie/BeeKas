@@ -1,0 +1,4 @@
+{
+  "SUPABASE_URL": "http://<IP-LAN-LAPTOP>:54321",
+  "SUPABASE_PUBLISHABLE_KEY": "<salin Publishable key dari output supabase status>"
+}
