@@ -123,9 +123,9 @@ void main() {
       );
       expect(r.errors, isEmpty);
       expect(r.registration!.email, 'ana@binus.ac.id');
+      expect(r.registration!.phone, '+6281234567890');
       expect(r.registration!.metadata, {
         'full_name': 'Ana',
-        'phone': '+6281234567890',
         'campus': 'alam_sutera',
       });
     });

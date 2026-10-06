@@ -102,19 +102,15 @@ void main() {
     await _fill(tester);
     await _next(tester);
     expect(done!.phone, '+6281234567890');
+    expect(repo.sent!.metadata.containsKey('phone'), isFalse);
     expect(repo.sent!.campus, Campus.senayan);
   });
 
-  testWidgets('phone taken from backend shows on the phone field', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      _FakeRepo(const SignupException(SignupError.phoneTaken)),
-    );
+  testWidgets('a backend unknown error shows above Lanjut', (tester) async {
+    await _pump(tester, _FakeRepo(const SignupException(SignupError.unknown)));
     await _fill(tester);
     await _next(tester);
-    expect(find.text(t('errorPhoneTaken')), findsOneWidget);
+    expect(find.text(t('errorSignupUnknown')), findsOneWidget);
   });
 
   testWidgets('no connection shows the network message', (tester) async {

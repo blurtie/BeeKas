@@ -69,10 +69,11 @@ class Registration {
   final Campus campus;
 
   /// Sign-up metadata read by handle_new_user. account_type is only sent for
-  /// binus.edu; the trigger rejects it for binus.ac.id.
+  /// binus.edu; the trigger rejects it for binus.ac.id. [phone] is not sent:
+  /// the OTP step (#27) saves it with set_phone, where a taken number can be
+  /// reported.
   Map<String, String> get metadata => {
     'full_name': fullName,
-    'phone': phone,
     'campus': campus.code,
     if (accountType != AccountType.student) 'account_type': accountType.name,
   };

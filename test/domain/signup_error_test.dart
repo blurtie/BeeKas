@@ -25,10 +25,6 @@ void main() {
       SignupError.invalidCampus,
     );
     expect(
-      signupErrorFrom('23502', 'phone_required'),
-      SignupError.phoneRequired,
-    );
-    expect(
       signupErrorFrom(
         '23505',
         'duplicate key value violates unique constraint "profiles_phone_key"',

@@ -200,7 +200,4 @@ const _errorField = {
   SignupError.accountTypeRequired: RegistrationField.accountType,
   SignupError.fullNameRequired: RegistrationField.fullName,
   SignupError.invalidCampus: RegistrationField.campus,
-  SignupError.phoneRequired: RegistrationField.phone,
-  SignupError.invalidPhone: RegistrationField.phone,
-  SignupError.phoneTaken: RegistrationField.phone,
 };

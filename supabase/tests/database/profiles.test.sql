@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(44);
+select plan(45);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -58,32 +58,31 @@ select lives_ok(
        '{"full_name": "Budi", "phone": "+6281298765432", "campus": "senayan", "account_type": "lecturer"}') $$,
   'lecturer signs up'
 );
-select throws_ok(
-  $$ select pg_temp.sign_up(gen_random_uuid(), 'y@binus.ac.id',
-       '{"full_name": "Y", "phone": "081234567890", "campus": "online"}') $$,
-  '23514', null, 'phone must be stored as +628...'
+select results_eq(
+  $$ select count(*)::int from public.profiles
+     where id in ('aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001')
+       and phone is null $$,
+  $$ values (2) $$,
+  'new profiles have no phone; metadata phone is ignored'
 );
+
+-- Phone after OTP (set_phone) ------------------------------------------------
+
+select pg_temp.act_as(:a);
+select throws_ok($$ select public.set_phone('081234567890') $$, '23514', null,
+  'phone must be stored as +628...');
+select lives_ok($$ select public.set_phone('+6281234567890') $$, 'first phone via set_phone');
+reset role;
+select pg_temp.act_as(:b);
+select throws_ok($$ select public.set_phone('+6281234567890') $$, '23505',
+  'duplicate key value violates unique constraint "profiles_phone_key"',
+  'taken phone fails with a mappable code and message');
 -- Length counts the national form: 0812 3456 78 (10 digits) ... 13 digits.
-select lives_ok(
-  $$ select pg_temp.sign_up(gen_random_uuid(), 'ten@binus.ac.id',
-       '{"full_name": "Ten", "phone": "+62812345678", "campus": "online"}') $$,
-  '10-digit number (08 + 8) is accepted'
-);
-select throws_ok(
-  $$ select pg_temp.sign_up(gen_random_uuid(), 'fourteen@binus.ac.id',
-       '{"full_name": "Fourteen", "phone": "+628123456789012", "campus": "online"}') $$,
-  '23514', null, '14-digit number (08 + 12) is rejected'
-);
-select throws_ok(
-  $$ select pg_temp.sign_up(gen_random_uuid(), 'z@binus.ac.id',
-       '{"full_name": "Z", "phone": "+6281234567890", "campus": "online"}') $$,
-  '23505', null, 'phone is unique'
-);
-select throws_ok(
-  $$ select pg_temp.sign_up(gen_random_uuid(), 'w@binus.ac.id',
-       '{"full_name": "W", "campus": "online"}') $$,
-  '23502', 'phone_required', 'phone is required at sign-up'
-);
+select throws_ok($$ select public.set_phone('+628123456789012') $$, '23514', null,
+  '14-digit number (08 + 12) is rejected');
+select lives_ok($$ select public.set_phone('+62812345678') $$,
+  '10-digit number (08 + 8) is accepted');
+reset role;
 
 select throws_ok(
   $$ select pg_temp.sign_up(gen_random_uuid(), 'v@binus.ac.id', '{"phone": "+6281200000004", "campus": "online"}') $$,
@@ -184,7 +183,7 @@ select is(pg_temp.status_of(:a), 'approved', 'admin approves pending');
 select pg_temp.act_as(:a);
 select throws_ok($$ select public.set_phone('081111111111') $$, '23514', null,
   'set_phone keeps the +628 format');
-select throws_ok($$ select public.set_phone('+6281298765432') $$, '23505', null,
+select throws_ok($$ select public.set_phone('+62812345678') $$, '23505', null,
   'set_phone keeps numbers unique');
 select lives_ok($$ select public.set_phone('+6281111111111') $$, 'set_phone after release');
 select throws_ok($$ select public.update_identity('X', 'online') $$, '23514', 'identity_locked',

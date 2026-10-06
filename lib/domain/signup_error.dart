@@ -1,13 +1,13 @@
 /// Why the backend refused a sign-up. Messages and constraint names must match
-/// handle_new_user and the profiles table in supabase/migrations; [copyKey]
-/// points into lib/config/copy.dart.
+/// handle_new_user, set_phone and the profiles table in supabase/migrations;
+/// [copyKey] points into lib/config/copy.dart. The phone errors come from
+/// set_phone after OTP (#27); GoTrue hides trigger errors from the app.
 enum SignupError {
   invalidEmailDomain('errorInvalidEmailDomain'),
   accountTypeNotAllowed('errorAccountTypeNotAllowed'),
   accountTypeRequired('errorAccountTypeRequired'),
   fullNameRequired('fullNameRequired'),
   invalidCampus('errorInvalidCampus'),
-  phoneRequired('errorPhoneRequired'),
   invalidPhone('errorInvalidPhone'),
   phoneTaken('errorPhoneTaken'),
   unknown('errorSignupUnknown');
@@ -25,7 +25,6 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'account_type_required') => SignupError.accountTypeRequired,
     ('23502', 'full_name_required') => SignupError.fullNameRequired,
     ('23514', 'invalid_campus') => SignupError.invalidCampus,
-    ('23502', 'phone_required') => SignupError.phoneRequired,
     ('23514', _) when message.contains('profiles_phone_check') =>
       SignupError.invalidPhone,
     ('23505', _) when message.contains('profiles_phone_key') =>
