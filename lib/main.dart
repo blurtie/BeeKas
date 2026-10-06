@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/copy.dart';
+import 'data/camera.dart';
 import 'data/signup_repository.dart';
+import 'domain/registration.dart';
+import 'screens/card_photo_screen.dart';
+import 'screens/consent_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/password_screen.dart';
 import 'screens/phone_screen.dart';
@@ -47,13 +51,21 @@ class BeeKasApp extends StatelessWidget {
                 onSignIn: () =>
                     Navigator.popUntil(context, (route) => route.isFirst),
                 onVerified: (result) => result.phoneError == null
-                    ? _toPassword(context, result.keptPhone)
+                    ? _toPassword(
+                        context,
+                        result.keptPhone,
+                        registration.accountType,
+                      )
                     : _replace(
                         context,
                         (context) => PhoneScreen(
                           repository: _repository,
                           initialError: result.phoneError!,
-                          onSaved: () => _toPassword(context, null),
+                          onSaved: () => _toPassword(
+                            context,
+                            null,
+                            registration.accountType,
+                          ),
                         ),
                       ),
               ),
@@ -71,14 +83,34 @@ final _repository = SupabaseSignupRepository(Supabase.instance.client);
 void _replace(BuildContext context, WidgetBuilder builder) =>
     Navigator.pushReplacement(context, MaterialPageRoute(builder: builder));
 
-void _toPassword(BuildContext context, String? keptPhone) => _replace(
+void _toPassword(
+  BuildContext context,
+  String? keptPhone,
+  AccountType accountType,
+) => _replace(
   context,
   (context) => PasswordScreen(
     repository: _repository,
     keptPhone: keptPhone,
-    // ponytail: Kartu (step 2) is the next ticket; until then a snackbar.
-    onDone: () =>
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(t('passwordSaved')))),
+    onDone: () => _replace(
+      context,
+      (context) => ConsentScreen(
+        repository: _repository,
+        onAgreed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CardPhotoScreen(
+              accountType: accountType,
+              takePhoto: takeCardPhoto,
+              openSettings: openAppSettings,
+              // ponytail: Selfie (L10) is #29, which uploads this photo; until
+              // then a snackbar.
+              onUse: (_) => ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(t('cardPhotoReady')))),
+            ),
+          ),
+        ),
+      ),
+    ),
   ),
 );

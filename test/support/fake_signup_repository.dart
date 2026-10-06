@@ -16,6 +16,7 @@ class FakeSignupRepository implements SignupRepository {
   final calls = <String>[];
   Registration? sent;
   String? password;
+  String? consentVersion;
 
   Future<void> _call(String name) async {
     calls.add(name);
@@ -51,6 +52,12 @@ class FakeSignupRepository implements SignupRepository {
   Future<void> setPassword(String p) async {
     await _call('setPassword');
     password = p;
+  }
+
+  @override
+  Future<void> recordConsent(String version) async {
+    await _call('recordConsent');
+    consentVersion = version;
   }
 
   @override

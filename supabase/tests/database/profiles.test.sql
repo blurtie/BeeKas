@@ -136,8 +136,10 @@ select results_eq(
   $$ select full_name, campus::text from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
   $$ values ('Ani Wijaya', 'kemanggisan') $$, 'B calling update_identity does not touch A');
 
--- Storage: <uid>/<attempt>/card|selfie, own folder only, while incomplete or rejected.
+-- Storage: <uid>/<attempt>/card|selfie, own folder only, while incomplete or rejected,
+-- after consent (consent.test.sql).
 select pg_temp.act_as(:a);
+select public.record_consent('2026-10-07');
 select lives_ok(
   $$ insert into storage.objects (bucket_id, name, owner_id)
      values ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/1/card.jpg', 'aaaaaaaa-0000-4000-8000-000000000001'),
@@ -193,6 +195,7 @@ reset role;
 -- Rejection and resubmission (D-08): old photos are not enough.
 
 select pg_temp.act_as(:b);
+select public.record_consent('2026-10-07');
 insert into storage.objects (bucket_id, name, owner_id) values
   ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/1/card.jpg', 'bbbbbbbb-0000-4000-8000-000000000001'),
   ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/1/selfie.jpg', 'bbbbbbbb-0000-4000-8000-000000000001');
@@ -220,6 +223,7 @@ select is(pg_temp.status_of(:b), 'pending', 'B is pending again');
 select pg_temp.sign_up('cccccccc-0000-4000-8000-000000000001', 'cici@binus.ac.id',
   '{"full_name": "Cici", "campus": "malang"}');
 select pg_temp.act_as('cccccccc-0000-4000-8000-000000000001');
+select public.record_consent('2026-10-07');
 insert into storage.objects (bucket_id, name, owner_id) values
   ('verification', 'cccccccc-0000-4000-8000-000000000001/1/card.jpg', 'cccccccc-0000-4000-8000-000000000001'),
   ('verification', 'cccccccc-0000-4000-8000-000000000001/1/selfie.jpg', 'cccccccc-0000-4000-8000-000000000001');

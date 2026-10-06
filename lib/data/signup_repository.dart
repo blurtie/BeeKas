@@ -31,6 +31,9 @@ abstract interface class SignupRepository {
 
   Future<void> setPassword(String password);
 
+  /// record_consent: stores when the member agreed to L7 and to which text.
+  Future<void> recordConsent(String version);
+
   Future<void> signOut();
 }
 
@@ -82,6 +85,11 @@ class SupabaseSignupRepository implements SignupRepository {
   @override
   Future<void> setPassword(String password) =>
       _guard(() => _auth.updateUser(UserAttributes(password: password)));
+
+  @override
+  Future<void> recordConsent(String version) => _guard(
+    () => _client.rpc<void>('record_consent', params: {'p_version': version}),
+  );
 
   @override
   Future<void> signOut() => _guard(_auth.signOut);
