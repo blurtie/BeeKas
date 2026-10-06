@@ -13,8 +13,9 @@ create table public.profiles (
   id uuid primary key references auth.users on delete cascade deferrable initially immediate,
   full_name text not null check (btrim(full_name) <> ''),
   email text not null unique check (email = lower(btrim(email))),
-  -- Rule 2: +62 then 10-13 digits starting with 8. Null after an admin releases it (D-04).
-  phone text unique check (phone ~ '^\+628[0-9]{9,12}$'),
+  -- Rule 2: Indonesian mobile, 10-13 digits counting the leading 08, stored as +628 then 8-11 digits.
+  -- Null after an admin releases it (D-04).
+  phone text unique check (phone ~ '^\+628[0-9]{8,11}$'),
   account_type public.account_type,
   campus public.campus,
   status public.account_status not null default 'incomplete',

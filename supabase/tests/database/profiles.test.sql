@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(42);
+select plan(44);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -62,6 +62,17 @@ select throws_ok(
   $$ select pg_temp.sign_up(gen_random_uuid(), 'y@binus.ac.id',
        '{"full_name": "Y", "phone": "081234567890", "campus": "online"}') $$,
   '23514', null, 'phone must be stored as +628...'
+);
+-- Length counts the national form: 0812 3456 78 (10 digits) ... 13 digits.
+select lives_ok(
+  $$ select pg_temp.sign_up(gen_random_uuid(), 'ten@binus.ac.id',
+       '{"full_name": "Ten", "phone": "+62812345678", "campus": "online"}') $$,
+  '10-digit number (08 + 8) is accepted'
+);
+select throws_ok(
+  $$ select pg_temp.sign_up(gen_random_uuid(), 'fourteen@binus.ac.id',
+       '{"full_name": "Fourteen", "phone": "+628123456789012", "campus": "online"}') $$,
+  '23514', null, '14-digit number (08 + 12) is rejected'
 );
 select throws_ok(
   $$ select pg_temp.sign_up(gen_random_uuid(), 'z@binus.ac.id',
