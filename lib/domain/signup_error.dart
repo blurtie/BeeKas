@@ -12,6 +12,10 @@ enum SignupError {
   phoneTaken('errorPhoneTaken'),
   // From submit_for_review: no phone saved yet (D-04).
   phoneMissing('errorPhoneMissing'),
+  // From GoTrue (OTP and password steps).
+  invalidCode('errorInvalidCode'),
+  tooSoon('errorTooSoon'),
+  weakPassword('errorWeakPassword'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -19,7 +23,8 @@ enum SignupError {
   final String copyKey;
 }
 
-/// [code] is the Postgres SQLSTATE the auth API returns, [message] its message.
+/// [code] is the Postgres SQLSTATE or the GoTrue error code, [message] its
+/// message.
 SignupError signupErrorFrom(String? code, String message) {
   return switch ((code, message)) {
     ('23514', 'invalid_email_domain') => SignupError.invalidEmailDomain,
@@ -32,6 +37,15 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23505', _) when message.contains('profiles_phone_key') =>
       SignupError.phoneTaken,
     ('23514', 'phone_missing') => SignupError.phoneMissing,
+    ('otp_expired', _) => SignupError.invalidCode,
+    ('over_email_send_rate_limit', _) => SignupError.tooSoon,
+    ('weak_password', _) => SignupError.weakPassword,
     _ => SignupError.unknown,
   };
+}
+
+/// The wait in GoTrue's "…only request this after N seconds." message.
+int? retryAfterSeconds(String message) {
+  final match = RegExp(r'after (\d+) seconds?').firstMatch(message);
+  return match == null ? null : int.parse(match[1]!);
 }

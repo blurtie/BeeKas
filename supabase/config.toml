@@ -245,6 +245,17 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 # Uncomment to customize email template
+# L5 (#27): the app asks for the 6-digit code, so both emails carry {{ .Token }} instead of a
+# link. signInWithOtp sends "confirmation" to a new user and "magic_link" to an existing one.
+# The cloud project needs the same templates set in its dashboard.
+[auth.email.template.confirmation]
+subject = "BeeKas verification code / Kode verifikasi BeeKas"
+content_path = "./supabase/templates/otp.html"
+
+[auth.email.template.magic_link]
+subject = "BeeKas verification code / Kode verifikasi BeeKas"
+content_path = "./supabase/templates/otp.html"
+
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"

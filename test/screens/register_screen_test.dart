@@ -8,17 +8,7 @@ import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _FakeRepo implements SignupRepository {
-  _FakeRepo([this.error]);
-  final SignupException? error;
-  Registration? sent;
-
-  @override
-  Future<void> sendCode(Registration r) async {
-    sent = r;
-    if (error != null) throw error!;
-  }
-}
+import '../support/fake_signup_repository.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -69,7 +59,7 @@ void main() {
   testWidgets('empty Lanjut shows every required error, sends nothing', (
     tester,
   ) async {
-    final repo = _FakeRepo();
+    final repo = FakeSignupRepository();
     await _pump(tester, repo);
     await _next(tester);
     for (final key in [
@@ -84,7 +74,7 @@ void main() {
   });
 
   testWidgets('binus.edu asks for Lecturer or Staff', (tester) async {
-    final repo = _FakeRepo();
+    final repo = FakeSignupRepository();
     await _pump(tester, repo);
     expect(find.text(t('accountType')), findsNothing);
     await _fill(tester, email: 'b@binus.edu');
@@ -96,7 +86,7 @@ void main() {
   });
 
   testWidgets('valid form sends normalised data', (tester) async {
-    final repo = _FakeRepo();
+    final repo = FakeSignupRepository();
     Registration? done;
     await _pump(tester, repo, (r) => done = r);
     await _fill(tester);
@@ -107,14 +97,28 @@ void main() {
   });
 
   testWidgets('a backend unknown error shows above Lanjut', (tester) async {
-    await _pump(tester, _FakeRepo(const SignupException(SignupError.unknown)));
+    await _pump(
+      tester,
+      FakeSignupRepository(
+        errors: {
+          'sendCode': [const SignupException(SignupError.unknown)],
+        },
+      ),
+    );
     await _fill(tester);
     await _next(tester);
     expect(find.text(t('errorSignupUnknown')), findsOneWidget);
   });
 
   testWidgets('no connection shows the network message', (tester) async {
-    await _pump(tester, _FakeRepo(const SignupException(null)));
+    await _pump(
+      tester,
+      FakeSignupRepository(
+        errors: {
+          'sendCode': [const SignupException(null)],
+        },
+      ),
+    );
     await _fill(tester);
     await _next(tester);
     expect(find.text(t('errorNetwork')), findsOneWidget);

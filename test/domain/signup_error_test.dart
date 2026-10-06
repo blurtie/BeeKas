@@ -44,6 +44,29 @@ void main() {
     expect(signupErrorFrom('23514', 'phone_missing'), SignupError.phoneMissing);
   });
 
+  test('maps GoTrue errors from the OTP and password steps', () {
+    // GoTrue gives a wrong and an expired code the same error.
+    expect(
+      signupErrorFrom('otp_expired', 'Token has expired or is invalid'),
+      SignupError.invalidCode,
+    );
+    expect(
+      signupErrorFrom('over_email_send_rate_limit', 'x'),
+      SignupError.tooSoon,
+    );
+    expect(signupErrorFrom('weak_password', 'x'), SignupError.weakPassword);
+  });
+
+  test('reads the wait from a rate-limit message', () {
+    expect(
+      retryAfterSeconds(
+        'For security purposes, you can only request this after 42 seconds.',
+      ),
+      42,
+    );
+    expect(retryAfterSeconds('Too many requests'), isNull);
+  });
+
   test('anything else is unknown', () {
     expect(signupErrorFrom(null, 'Network down'), SignupError.unknown);
     expect(signupErrorFrom('23514', 'something_new'), SignupError.unknown);

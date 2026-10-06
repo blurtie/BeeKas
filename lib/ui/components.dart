@@ -16,6 +16,7 @@ class BeeTextField extends StatefulWidget {
     this.password = false,
     this.keyboardType,
     this.errorText,
+    this.helperText,
     this.onChanged,
     this.textInputAction,
     this.autofillHints,
@@ -27,6 +28,7 @@ class BeeTextField extends StatefulWidget {
   final bool password;
   final TextInputType? keyboardType;
   final String? errorText;
+  final String? helperText;
   final ValueChanged<String>? onChanged;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
@@ -63,6 +65,8 @@ class _BeeTextFieldState extends State<BeeTextField> {
             decoration: InputDecoration(
               hintText: widget.hint,
               errorText: widget.errorText,
+              helperText: widget.helperText,
+              helperMaxLines: 3,
               suffixIcon: widget.password
                   ? IconButton(
                       tooltip: t(_obscured ? 'showPassword' : 'hidePassword'),
@@ -108,6 +112,27 @@ class BeeWarningBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A form-level error above the submit button, announced when it appears.
+class BeeFormError extends StatelessWidget {
+  const BeeFormError(this.message, {super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        message,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.error,
+        ),
       ),
     );
   }
@@ -235,4 +260,60 @@ class BeeStepper extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Daftar step layout: stepper header, title, subtitle, then [children].
+/// The steps after L4 (OTP, phone, password) have no frame yet and reuse it.
+class BeeSignupPage extends StatelessWidget {
+  const BeeSignupPage({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Scaffold(
+      appBar: const BeeHeader(title: BeeStepper(current: 0)),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            BeeSpacing.screenX,
+            24,
+            BeeSpacing.screenX,
+            24,
+          ),
+          children: [
+            Text(title, style: textTheme.headlineLarge),
+            const SizedBox(height: 8),
+            Text(subtitle, style: textTheme.bodyMedium),
+            const SizedBox(height: 24),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary button label that turns into a spinner while [loading].
+class BeeButtonLabel extends StatelessWidget {
+  const BeeButtonLabel(this.label, {super.key, this.loading = false});
+
+  final String label;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) => loading
+      ? const SizedBox.square(
+          dimension: 24,
+          child: CircularProgressIndicator(strokeWidth: 3),
+        )
+      : Text(label);
 }
