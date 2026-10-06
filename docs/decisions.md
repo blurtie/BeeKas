@@ -77,7 +77,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-06 — Status akun dan aksesnya
 
-**Status:** Default, menunggu tim (akses selama menunggu mengubah notulen)
+**Status:** Disetujui tim, 7 Oktober 2026 (akses selama menunggu mengubah notulen)
 
 Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
@@ -101,7 +101,7 @@ Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
 ## D-07 — Perlakuan data kartu dan selfie (UU PDP)
 
-**Status:** Disetujui CTO; masa simpan menunggu tim
+**Status:** Disetujui CTO; masa simpan disetujui tim, 7 Oktober 2026
 
 Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
@@ -180,7 +180,7 @@ Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
 ## D-14 — Kartu digital sementara dihapus; Bantuan lewat email tim
 
-**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital menunggu konfirmasi tim
+**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital disetujui tim, 7 Oktober 2026
 
 Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
@@ -195,7 +195,7 @@ Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
 ## D-15 — Tipe akun dari domain email, tanpa jalur alumni
 
-**Status:** Disetujui (dibawa dari versi web: PRD F1.3, F2.2, dan D-03 lama); dukungan alumni menjadi pertanyaan terbuka untuk tim
+**Status:** Disetujui (dibawa dari versi web: PRD F1.3, F2.2, dan D-03 lama); tanpa jalur alumni disetujui tim, 7 Oktober 2026
 
 Dikonfirmasi tim lewat kuesioner, 7 Oktober 2026
 
