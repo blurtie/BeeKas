@@ -16,7 +16,10 @@ flutter --version
 
 ## Menjalankan
 
+Butuh Supabase lokal (Docker). Langkah lengkapnya, termasuk HP di jaringan yang sama, ada di [docs/local-setup.md](docs/local-setup.md).
+
 ```sh
 flutter pub get
-flutter run
+supabase start
+flutter run --dart-define-from-file=dart_defines.json
 ```
