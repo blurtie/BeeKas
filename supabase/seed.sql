@@ -7,8 +7,8 @@ begin;
 -- The profile goes in first (deferred FK) so handle_new_user skips this user.
 set constraints all deferred;
 
-insert into public.profiles (id, full_name, email, role, status)
-values ('00000000-0000-4000-8000-000000000001', 'Admin BeeKas', 'admin@beekas.test', 'admin', 'approved');
+insert into public.profiles (id, full_name, email, role, status, password_set_at)
+values ('00000000-0000-4000-8000-000000000001', 'Admin BeeKas', 'admin@beekas.test', 'admin', 'approved', now());
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,

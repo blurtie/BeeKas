@@ -166,18 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 32),
             BeeWarningBanner(t('registerDataWarning')),
             const SizedBox(height: 32),
-            if (formError != null) ...[
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  t(formError),
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ),
-              gap,
-            ],
+            if (formError != null) ...[BeeFormError(t(formError)), gap],
             FilledButton(
               onPressed: _loading ? null : _next,
               child: _loading

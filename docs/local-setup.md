@@ -1,6 +1,6 @@
 # Menjalankan BeeKas secara lokal (Windows)
 
-Backend selama pengembangan adalah Supabase lokal di Docker, di laptop (D-10). Emulator tersambung lewat `adb reverse` (bagian 5). HP fisik tersambung ke laptop lewat hotspot yang sama (bagian 4).
+Backend selama pengembangan adalah Supabase lokal di Docker, di laptop (D-10). Langkah saat pindah ke Supabase cloud ada di [cloud-checklist.md](cloud-checklist.md). Emulator tersambung lewat `adb reverse` (bagian 5). HP fisik tersambung ke laptop lewat hotspot yang sama (bagian 4).
 
 ## 1. Pasang alat
 
