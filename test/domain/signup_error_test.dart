@@ -25,10 +25,6 @@ void main() {
       SignupError.invalidCampus,
     );
     expect(
-      signupErrorFrom('23502', 'phone_required'),
-      SignupError.phoneRequired,
-    );
-    expect(
       signupErrorFrom(
         '23505',
         'duplicate key value violates unique constraint "profiles_phone_key"',
@@ -42,6 +38,10 @@ void main() {
       ),
       SignupError.invalidPhone,
     );
+  });
+
+  test('maps submit_for_review without a phone', () {
+    expect(signupErrorFrom('23514', 'phone_missing'), SignupError.phoneMissing);
   });
 
   test('anything else is unknown', () {

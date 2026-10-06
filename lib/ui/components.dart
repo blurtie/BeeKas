@@ -103,9 +103,8 @@ class BeeWarningBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: BeeColors.textMuted),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: BeeColors.textMuted),
             ),
           ),
         ],
@@ -134,6 +133,106 @@ class BeeHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: title,
       centerTitle: true,
+    );
+  }
+}
+
+/// Labelled dropdown styled like [BeeTextField] (Kampus Asal in Daftar).
+class BeeDropdownField<T> extends StatelessWidget {
+  const BeeDropdownField({
+    super.key,
+    required this.label,
+    required this.items,
+    required this.itemLabel,
+    required this.onChanged,
+    this.value,
+    this.hint,
+    this.errorText,
+  });
+
+  final String label;
+  final List<T> items;
+  final String Function(T) itemLabel;
+  final ValueChanged<T?> onChanged;
+  final T? value;
+  final String? hint;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ExcludeSemantics(
+          child: Text(label, style: theme.textTheme.labelMedium),
+        ),
+        const SizedBox(height: 8),
+        Semantics(
+          label: label,
+          child: DropdownButtonFormField<T>(
+            initialValue: value,
+            isExpanded: true,
+            style: theme.textTheme.bodyLarge,
+            hint: hint == null
+                ? null
+                : Text(hint!, style: theme.inputDecorationTheme.hintStyle),
+            // FormField overrides decoration.errorText; this is the way in.
+            forceErrorText: errorText,
+            items: [
+              for (final item in items)
+                DropdownMenuItem(value: item, child: Text(itemLabel(item))),
+            ],
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Daftar progress: [count] dots joined by lines, the first [current] + 1
+/// filled.
+class BeeStepper extends StatelessWidget {
+  const BeeStepper({super.key, required this.current, this.count = 3});
+
+  final int current;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget dot(int i) => Container(
+      width: 16,
+      height: 16,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: i <= current ? BeeColors.brandPrimary : BeeColors.surface,
+        border: Border.all(
+          color: i <= current
+              ? BeeColors.brandPrimary
+              : BeeColors.stepperInactive,
+          width: 2,
+        ),
+      ),
+    );
+    return Semantics(
+      label: t('registerStep').replaceFirst('{n}', '${current + 1}'),
+      child: ExcludeSemantics(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < count; i++) ...[
+              if (i > 0)
+                Container(
+                  width: 24,
+                  height: 2,
+                  color: BeeColors.stepperInactive,
+                ),
+              dot(i),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,6 +1,6 @@
 # Menjalankan BeeKas secara lokal (Windows)
 
-Backend selama pengembangan adalah Supabase lokal di Docker, di laptop (D-10). HP atau emulator tersambung ke laptop lewat Wi-Fi atau hotspot yang sama.
+Backend selama pengembangan adalah Supabase lokal di Docker, di laptop (D-10). Emulator tersambung lewat `adb reverse` (bagian 5). HP fisik tersambung ke laptop lewat hotspot yang sama (bagian 4).
 
 ## 1. Pasang alat
 
@@ -49,9 +49,9 @@ Studio (tampilan tabel) ada di http://127.0.0.1:54323.
 
 Hindari perintah yang menjalankan `seed.sql` ke project cloud: `supabase db reset --linked` (tanpa `--no-seed`), `supabase db push --include-seed`, dan versi `--db-url` dari keduanya.
 
-## 4. Cari IP LAN laptop
+## 4. HP fisik: cari IP LAN laptop
 
-HP tidak bisa memakai `localhost`, karena `localhost` di HP berarti HP itu sendiri. Pakai IP laptop di jaringan Wi-Fi/hotspot:
+Bagian ini hanya untuk HP fisik; emulator memakai `adb reverse` (bagian 5). HP tidak bisa memakai `localhost`, karena `localhost` di HP berarti HP itu sendiri. Pakai IP laptop di jaringan Wi-Fi/hotspot:
 
 ```powershell
 ipconfig
@@ -59,7 +59,7 @@ ipconfig
 
 Cari adapter yang sedang dipakai (misalnya "Wireless LAN adapter Wi-Fi") dan salin **IPv4 Address**, misalnya `192.168.1.23`. IP ini bisa berubah saat ganti jaringan; ulangi langkah ini dan perbarui `dart_defines.json`.
 
-Wi-Fi kampus sering memblokir koneksi antarperangkat. Bila HP tidak bisa menjangkau laptop, pakai hotspot dari HP atau laptop.
+Uji HP lewat **hotspot sendiri** (dari HP atau laptop) yang di Windows diatur sebagai jaringan **Private**. Jangan memakai Wi-Fi kos, kampus, atau Wi-Fi umum: port Supabase akan terlihat oleh perangkat lain di jaringan itu, dan Wi-Fi kampus juga sering memblokir koneksi antarperangkat.
 
 ### Windows Firewall
 
@@ -71,10 +71,33 @@ New-NetFirewallRule -DisplayName "BeeKas Supabase API (54321)" -Direction Inboun
 
 Pastikan jaringan Wi-Fi/hotspot di Windows bertipe **Private** (Settings → Network & internet → Wi-Fi → properti jaringan).
 
+### Peringatan: aturan firewall Docker Desktop
+
+Docker Desktop membuat aturan inbound `com.docker.backend.exe` yang juga berlaku untuk profil **Public**. Aturan itu membuka **semua** port Supabase ke jaringan tempat laptop tersambung, termasuk Postgres (54322) dan Studio (54323), sehingga siapa pun di Wi-Fi umum bisa menjangkaunya.
+
+Cek di PowerShell:
+
+```powershell
+Get-NetFirewallRule -DisplayName "com.docker.backend.exe" | Select-Object DisplayName, Enabled, Profile, Direction, Action
+```
+
+Bila ada baris yang `Enabled` = `True`, matikan semuanya (PowerShell **sebagai Administrator**):
+
+```powershell
+Get-NetFirewallRule -DisplayName "com.docker.backend.exe" | Disable-NetFirewallRule
+```
+
+Docker tetap jalan normal untuk akses dari laptop sendiri dan emulator. HP fisik memakai aturan port 54321 khusus Private di atas. **Cek ulang setiap kali Docker Desktop diperbarui**, karena update bisa membuat aturan itu lagi.
+
 ## 5. Jalankan aplikasi
 
 1. Salin `dart_defines.example.json` menjadi `dart_defines.json` (sudah di `.gitignore`, jangan di-commit).
-2. Isi `SUPABASE_URL` dengan `http://<IP-LAN>:54321` dan `SUPABASE_PUBLISHABLE_KEY` dengan nilai "Publishable key", disalin dari output `supabase status`.
+2. Isi `SUPABASE_PUBLISHABLE_KEY` dengan nilai "Publishable key", disalin dari output `supabase status`, lalu isi `SUPABASE_URL`:
+   - **Emulator:** `http://127.0.0.1:54321`. Sebelum menjalankan aplikasi, teruskan port dari emulator ke laptop (ulangi setiap kali emulator dinyalakan ulang):
+     ```powershell
+     adb reverse tcp:54321 tcp:54321
+     ```
+   - **HP fisik:** `http://<IP-LAN>:54321` (bagian 4).
 3. Jalankan:
    ```powershell
    flutter run --dart-define-from-file=dart_defines.json

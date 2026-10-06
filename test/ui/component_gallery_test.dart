@@ -1,16 +1,17 @@
-import 'package:beekas/main.dart';
+import 'package:beekas/ui/component_gallery.dart';
 import 'package:beekas/ui/components.dart';
+import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('debug app opens the gallery with every component', (
-    tester,
-  ) async {
+  testWidgets('gallery shows every component', (tester) async {
     // Phone-sized surface so the lazy ListView builds every item.
     tester.view.physicalSize = const Size(1080, 2400);
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const BeeKasApp());
+    await tester.pumpWidget(
+      MaterialApp(theme: beeTheme(), home: const ComponentGallery()),
+    );
     expect(find.byType(BeeHeader), findsOneWidget);
     expect(find.byType(BeeTextField), findsNWidgets(3));
     expect(find.byType(BeeWarningBanner), findsOneWidget);

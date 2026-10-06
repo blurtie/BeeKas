@@ -92,6 +92,11 @@ ThemeData beeTheme() {
         ),
       ),
     ),
+    // brandPrimary is 1.85:1 on white; the caret and handles need ≥ 3:1.
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: BeeColors.focusBorder,
+      selectionHandleColor: BeeColors.focusBorder,
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: BeeColors.surface,
@@ -108,6 +113,7 @@ ThemeData beeTheme() {
         borderSide: const BorderSide(color: BeeColors.error, width: 2),
       ),
       errorStyle: const TextStyle(fontSize: 12, color: BeeColors.error),
+      errorMaxLines: 3,
     ),
   );
 }

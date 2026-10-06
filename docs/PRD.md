@@ -89,20 +89,21 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 - Isian:
   - Nama lengkap.
   - Email BINUS: `@binus.ac.id` atau `@binus.edu`, tidak peka huruf besar-kecil.
-  - Nomor HP: diterima `08…`, `628…`, atau `+628…`, lalu disimpan sebagai `+628…`.
+  - Nomor HP: diterima `08…`, `628…`, atau `+628…`, lalu dinormalisasi ke `+628…` dan disimpan setelah OTP terverifikasi (L5).
   - Tipe akun, diturunkan dari domain email (D-15): `@binus.ac.id` otomatis Mahasiswa tanpa pilihan; `@binus.edu` menampilkan pilihan wajib Dosen / Staf setelah email valid diketik.
   - Kampus asal: dropdown D-12.
 - Banner "Pastikan data sudah benar dan sesuai identitas BINUS."
 - Validasi saat menekan Lanjut:
   - Semua isian wajib.
   - Email harus berdomain BINUS.
-  - Nomor HP harus valid dan belum dipakai.
-  - Email belum terdaftar. Bila sudah, tampil pesan dengan tautan Masuk.
+  - Nomor HP harus valid. Nomor yang sudah dipakai ditolak setelah OTP terverifikasi, dengan pesan 'Nomor HP ini sudah terdaftar' dan kesempatan mengganti nomor.
+  - Email yang sudah terdaftar tidak diperiksa saat Lanjut, untuk mencegah enumerasi email (D-07); pesan "Email ini sudah terdaftar" dengan tautan Masuk ditampilkan setelah OTP terverifikasi.
 
 ### L5 Verifikasi email
 - Kode 6 digit dikirim ke email BINUS.
 - Tombol kirim ulang aktif setelah 60 detik.
 - Kode berlaku sesuai bawaan Supabase. Kode salah atau kedaluwarsa menampilkan pesan dan pilihan kirim ulang.
+- Setelah kode benar, nomor HP dari L4 disimpan. Bila nomor sudah dipakai, pengguna diminta memasukkan nomor lain sebelum lanjut.
 - Akun dibuat setelah kode benar, dengan status `incomplete` setelah L6.
 
 ### L6 Buat kata sandi
