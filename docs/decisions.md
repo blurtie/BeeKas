@@ -199,3 +199,50 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 **Alasan:** Domain email sudah membedakan mahasiswa dari dosen/staf, sehingga pilihan bebas hanya membuka ruang salah isi. Keputusan versi web dibawa ulang.
 
 **Konsekuensi:** Pilihan Dosen/Staf untuk `@binus.edu` menambah satu isian yang belum ada di frame Daftar 405:9246.
+
+---
+
+## D-16 — Perubahan profil oleh member hanya lewat fungsi backend
+
+**Status:** Disetujui CTO, 6 Oktober 2026
+
+**Implementasi:** PR #44.
+
+**Keputusan:** Member tidak punya akses UPDATE langsung ke tabel profil. Perubahan oleh member lewat fungsi backend yang hanya bekerja pada profil miliknya sendiri:
+1. `submit_for_review()`: `incomplete`/`rejected` → `pending`, hanya bila foto kartu dan selfie sudah ada.
+2. `set_phone(nomor)`: hanya bila nomor HP sedang kosong (dilepas admin, L14–L15); tetap unik dan formatnya sama dengan saat daftar.
+3. `update_identity(nama, kampus)`: hanya selama `incomplete` atau `rejected`; terkunci saat `pending`/`approved`.
+
+Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` hanya oleh admin.
+
+---
+
+## D-17 — Profil dibentuk oleh backend saat akun dibuat
+
+**Status:** Disetujui CTO, 6 Oktober 2026
+
+**Implementasi:** PR #44.
+
+**Keputusan:** Profil dibuat trigger database dari data pendaftaran. Peran selalu member dan status selalu `incomplete`, apa pun isi data yang dikirim. Tipe akun ditentukan dari domain email (D-15); data hanya boleh memilih Dosen/Staf untuk `@binus.edu`.
+
+---
+
+## D-18 — Admin lokal dibuat lewat seed khusus lokal
+
+**Status:** Disetujui CTO, 6 Oktober 2026
+
+**Implementasi:** PR #44.
+
+**Keputusan:** `supabase/seed.sql` membuat `admin@beekas.test` dengan kata sandi tetap, hanya untuk Supabase lokal. Admin cloud dibuat terpisah dengan kata sandi yang tidak ada di repo.
+
+---
+
+## D-19 — Foto verifikasi per percobaan
+
+**Status:** Disetujui CTO, 6 Oktober 2026
+
+**Implementasi:** PR #44.
+
+**Keputusan:** Setiap pengiriman foto memakai folder baru `<user id>/<attempt>/`. Member hanya bisa mengunggah, tidak bisa membaca, mengganti, atau menghapus fotonya. Kirim ulang setelah ditolak hanya diterima bila kartu dan selfie diunggah setelah penolakan terakhir. Bucket menerima JPEG/PNG sampai 5 MB.
+
+**Alasan:** Storage butuh izin baca untuk menimpa file, sedangkan D-07 hanya mengizinkan admin membaca.

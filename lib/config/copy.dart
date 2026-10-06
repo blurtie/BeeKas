@@ -21,6 +21,16 @@ const copy = <Lang, Map<String, String>>{
     'fullNameRequired': 'Enter your full name.',
     'registerDataWarning':
         'Make sure your details are correct and match your BINUS identity.',
+    'errorInvalidEmailDomain':
+        'Use your BINUS email (@binus.ac.id or @binus.edu).',
+    'errorAccountTypeNotAllowed':
+        'Account type is set automatically for @binus.ac.id.',
+    'errorAccountTypeRequired': 'Choose Lecturer or Staff.',
+    'errorInvalidCampus': 'Choose your campus.',
+    'errorPhoneRequired': 'Enter your phone number.',
+    'errorInvalidPhone': 'Enter a valid phone number.',
+    'errorPhoneTaken': 'This phone number is already registered.',
+    'errorSignupUnknown': 'Registration failed. Please try again.',
   },
   Lang.id: {
     'back': 'Kembali',
@@ -36,5 +46,15 @@ const copy = <Lang, Map<String, String>>{
     'fullNameRequired': 'Isi nama lengkap.',
     'registerDataWarning':
         'Pastikan data sudah benar dan sesuai identitas BINUS.',
+    'errorInvalidEmailDomain':
+        'Gunakan email BINUS (@binus.ac.id atau @binus.edu).',
+    'errorAccountTypeNotAllowed':
+        'Tipe akun untuk @binus.ac.id ditentukan otomatis.',
+    'errorAccountTypeRequired': 'Pilih Dosen atau Staf.',
+    'errorInvalidCampus': 'Pilih kampus asal.',
+    'errorPhoneRequired': 'Isi nomor HP.',
+    'errorInvalidPhone': 'Masukkan nomor HP yang valid.',
+    'errorPhoneTaken': 'Nomor HP ini sudah terdaftar.',
+    'errorSignupUnknown': 'Pendaftaran gagal. Coba lagi.',
   },
 };
