@@ -97,7 +97,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
   - Semua isian wajib.
   - Email harus berdomain BINUS.
   - Nomor HP harus valid dan belum dipakai.
-  - Email belum terdaftar. Bila sudah, tampil pesan dengan tautan Masuk.
+  - Email yang sudah terdaftar tidak diperiksa saat Lanjut, untuk mencegah enumerasi email (D-07); pesan "Email ini sudah terdaftar" dengan tautan Masuk ditampilkan setelah OTP terverifikasi.
 
 ### L5 Verifikasi email
 - Kode 6 digit dikirim ke email BINUS.

@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'ui/component_gallery.dart';
+import 'config/copy.dart';
+import 'data/signup_repository.dart';
+import 'screens/register_screen.dart';
 import 'ui/theme.dart';
 
 // Public values only, passed with --dart-define-from-file (docs/local-setup.md).
@@ -29,8 +30,16 @@ class BeeKasApp extends StatelessWidget {
     return MaterialApp(
       title: 'BeeKas',
       theme: beeTheme(),
-      // Gallery is debug-only; real screens replace this in the login tickets.
-      home: kDebugMode ? const ComponentGallery() : const Scaffold(),
+      // ponytail: Daftar is the only screen so far; Masuk (#31) becomes home.
+      home: Builder(
+        builder: (context) => RegisterScreen(
+          repository: SupabaseSignupRepository(Supabase.instance.client.auth),
+          // The OTP screen (#27) replaces this snackbar.
+          onCodeSent: (_) =>
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(t('codeSent')))),
+        ),
+      ),
     );
   }
 }
