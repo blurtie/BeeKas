@@ -246,3 +246,15 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 **Keputusan:** Setiap pengiriman foto memakai folder baru `<user id>/<attempt>/`. Member hanya bisa mengunggah, tidak bisa membaca, mengganti, atau menghapus fotonya. Kirim ulang setelah ditolak hanya diterima bila kartu dan selfie diunggah setelah penolakan terakhir. Bucket menerima JPEG/PNG sampai 5 MB.
 
 **Alasan:** Storage butuh izin baca untuk menimpa file, sedangkan D-07 hanya mengizinkan admin membaca.
+
+---
+
+## D-20 — Bukti persetujuan data disimpan
+
+**Status:** Disetujui CTO, 7 Oktober 2026
+
+**Implementasi:** PR untuk #28.
+
+**Keputusan:** Persetujuan di L7 (D-07) disimpan di profil sebagai waktu (`consent_at`) dan versi teks persetujuan (`consent_version`). Versi adalah konstanta di aplikasi yang diganti setiap kali teks persetujuan di `lib/config/copy.dart` berubah. Member hanya bisa mengisinya lewat `record_consent` saat status `incomplete` atau `rejected`, tidak lewat UPDATE langsung. Storage menolak unggahan foto verifikasi sebelum ada persetujuan. Penarikan persetujuan belum diatur.
+
+**Alasan:** UU PDP meminta bukti persetujuan untuk data biometrik; centang di UI saja tidak meninggalkan jejak.

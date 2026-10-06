@@ -121,6 +121,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
   - Masa simpan: dihapus paling lambat 30 hari setelah diperiksa.
 - Tautan ke Kebijakan Privasi.
 - Checkbox wajib. Tombol Lanjut nonaktif sampai checkbox dicentang.
+- Waktu persetujuan dan versi teks persetujuan disimpan sebagai bukti (D-20).
 
 ### L8–L9 Foto kartu dan konfirmasi
 - Jenis kartu yang diminta mengikuti tipe akun (D-15).
