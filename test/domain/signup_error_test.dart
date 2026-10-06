@@ -17,6 +17,14 @@ void main() {
       SignupError.accountTypeRequired,
     );
     expect(
+      signupErrorFrom('23502', 'full_name_required'),
+      SignupError.fullNameRequired,
+    );
+    expect(
+      signupErrorFrom('23514', 'invalid_campus'),
+      SignupError.invalidCampus,
+    );
+    expect(
       signupErrorFrom('23502', 'phone_required'),
       SignupError.phoneRequired,
     );
