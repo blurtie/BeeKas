@@ -40,6 +40,10 @@ void main() {
     );
   });
 
+  test('maps submit_for_review without a phone', () {
+    expect(signupErrorFrom('23514', 'phone_missing'), SignupError.phoneMissing);
+  });
+
   test('anything else is unknown', () {
     expect(signupErrorFrom(null, 'Network down'), SignupError.unknown);
     expect(signupErrorFrom('23514', 'something_new'), SignupError.unknown);

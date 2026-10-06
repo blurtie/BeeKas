@@ -10,6 +10,8 @@ enum SignupError {
   invalidCampus('errorInvalidCampus'),
   invalidPhone('errorInvalidPhone'),
   phoneTaken('errorPhoneTaken'),
+  // From submit_for_review: no phone saved yet (D-04).
+  phoneMissing('errorPhoneMissing'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -29,6 +31,7 @@ SignupError signupErrorFrom(String? code, String message) {
       SignupError.invalidPhone,
     ('23505', _) when message.contains('profiles_phone_key') =>
       SignupError.phoneTaken,
+    ('23514', 'phone_missing') => SignupError.phoneMissing,
     _ => SignupError.unknown,
   };
 }

@@ -30,6 +30,7 @@ const copy = <Lang, Map<String, String>>{
     'errorPhoneRequired': 'Enter your phone number.',
     'errorInvalidPhone': 'Enter a valid phone number.',
     'errorPhoneTaken': 'This phone number is already registered.',
+    'errorPhoneMissing': 'Add your phone number before sending for review.',
     'errorSignupUnknown': 'Registration failed. Please try again.',
     'registerTitle': 'Your details',
     'registerSubtitle': 'Fill in the details below to continue registering.',
@@ -82,6 +83,7 @@ const copy = <Lang, Map<String, String>>{
     'errorPhoneRequired': 'Isi nomor HP.',
     'errorInvalidPhone': 'Masukkan nomor HP yang valid.',
     'errorPhoneTaken': 'Nomor HP ini sudah terdaftar.',
+    'errorPhoneMissing': 'Isi nomor HP sebelum mengirim untuk diperiksa.',
     'errorSignupUnknown': 'Pendaftaran gagal. Coba lagi.',
     'registerTitle': 'Isi Data Diri',
     'registerSubtitle':
