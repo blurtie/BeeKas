@@ -34,6 +34,7 @@ void main() {
       (BeeColors.placeholder, BeeColors.surface),
       (BeeColors.textHeading, BeeColors.surface),
       (BeeColors.textBody, BeeColors.surface),
+      (BeeColors.error, BeeColors.surface),
     ];
     for (final (fg, bg) in pairs) {
       expect(
@@ -90,6 +91,38 @@ void main() {
     expect(find.text('Full name'), findsOneWidget);
     expect(find.text('John Doe'), findsOneWidget);
     expect(find.byType(IconButton), findsNothing);
+  });
+
+  testWidgets('text field shows errorText in the error colour', (tester) async {
+    await _pump(
+      tester,
+      const BeeTextField(
+        label: 'Full name',
+        errorText: 'Enter your full name.',
+      ),
+    );
+    final error = tester.widget<Text>(find.text('Enter your full name.'));
+    expect(error.style?.color, BeeColors.error);
+  });
+
+  testWidgets('text field forwards onChanged and input options', (
+    tester,
+  ) async {
+    String? typed;
+    await _pump(
+      tester,
+      BeeTextField(
+        label: 'Email',
+        onChanged: (v) => typed = v,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.email],
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'a@binus.ac.id');
+    expect(typed, 'a@binus.ac.id');
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.textInputAction, TextInputAction.next);
+    expect(field.autofillHints, [AutofillHints.email]);
   });
 
   testWidgets('password field toggles visibility', (tester) async {

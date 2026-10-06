@@ -15,6 +15,10 @@ class BeeTextField extends StatefulWidget {
     this.controller,
     this.password = false,
     this.keyboardType,
+    this.errorText,
+    this.onChanged,
+    this.textInputAction,
+    this.autofillHints,
   });
 
   final String label;
@@ -22,6 +26,10 @@ class BeeTextField extends StatefulWidget {
   final TextEditingController? controller;
   final bool password;
   final TextInputType? keyboardType;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
 
   @override
   State<BeeTextField> createState() => _BeeTextFieldState();
@@ -49,8 +57,12 @@ class _BeeTextFieldState extends State<BeeTextField> {
             controller: widget.controller,
             obscureText: _obscured,
             keyboardType: widget.keyboardType,
+            onChanged: widget.onChanged,
+            textInputAction: widget.textInputAction,
+            autofillHints: widget.autofillHints,
             decoration: InputDecoration(
               hintText: widget.hint,
+              errorText: widget.errorText,
               suffixIcon: widget.password
                   ? IconButton(
                       tooltip: t(_obscured ? 'showPassword' : 'hidePassword'),

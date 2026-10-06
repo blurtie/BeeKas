@@ -18,6 +18,7 @@ const copy = <Lang, Map<String, String>>{
     'password': 'Password',
     'fullName': 'Full name',
     'fullNameHint': 'John Doe',
+    'fullNameRequired': 'Enter your full name.',
     'registerDataWarning':
         'Make sure your details are correct and match your BINUS identity.',
   },
@@ -32,6 +33,7 @@ const copy = <Lang, Map<String, String>>{
     'password': 'Kata sandi',
     'fullName': 'Nama lengkap',
     'fullNameHint': 'John Doe',
+    'fullNameRequired': 'Isi nama lengkap.',
     'registerDataWarning':
         'Pastikan data sudah benar dan sesuai identitas BINUS.',
   },

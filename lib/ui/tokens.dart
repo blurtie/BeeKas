@@ -20,6 +20,7 @@ abstract final class BeeColors {
   static const link = Color(0xFFBB4902); // design: designYellowText, 1.73:1
   static const textMuted = textLabel; // design: designGrayText / designSubtle
   static const placeholder = Color(0xFF767676); // design: designPlaceholder
+  static const error = Color(0xFFB3261E); // not in tokens.md; 6.54:1 on surface
   static const focusBorder =
       link; // brandPrimary is 1.85:1, below WCAG 1.4.11's 3:1
 

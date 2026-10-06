@@ -24,6 +24,12 @@ class ComponentGallery extends StatelessWidget {
           BeeTextField(label: t('fullName'), hint: t('fullNameHint')),
           gap,
           BeeTextField(
+            label: t('fullName'),
+            hint: t('fullNameHint'),
+            errorText: t('fullNameRequired'),
+          ),
+          gap,
+          BeeTextField(
             label: t('password'),
             hint: t('password'),
             password: true,

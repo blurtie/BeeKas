@@ -14,6 +14,7 @@ ThemeData beeTheme() {
         onSurfaceVariant: BeeColors.textLabel,
         outline: BeeColors.border,
         outlineVariant: BeeColors.border,
+        error: BeeColors.error,
       );
   final fieldBorder = OutlineInputBorder(
     borderRadius: BorderRadius.circular(BeeRadius.field),
@@ -98,6 +99,13 @@ ThemeData beeTheme() {
       focusedBorder: fieldBorder.copyWith(
         borderSide: const BorderSide(color: BeeColors.focusBorder, width: 2),
       ),
+      errorBorder: fieldBorder.copyWith(
+        borderSide: const BorderSide(color: BeeColors.error),
+      ),
+      focusedErrorBorder: fieldBorder.copyWith(
+        borderSide: const BorderSide(color: BeeColors.error, width: 2),
+      ),
+      errorStyle: const TextStyle(fontSize: 12, color: BeeColors.error),
     ),
   );
 }
