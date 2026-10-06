@@ -77,7 +77,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-06 — Status akun dan aksesnya
 
-**Status:** Default, menunggu tim (akses selama menunggu mengubah notulen)
+**Status:** Disetujui tim, 7 Oktober 2026 (akses selama menunggu mengubah notulen)
 
 **Keputusan:**
 
@@ -99,7 +99,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-07 — Perlakuan data kartu dan selfie (UU PDP)
 
-**Status:** Disetujui CTO; masa simpan menunggu tim
+**Status:** Disetujui CTO; masa simpan disetujui tim, 7 Oktober 2026
 
 **Keputusan:**
 - **Persetujuan:** layar persetujuan eksplisit sebelum foto kartu. Isinya data apa yang diambil, tujuannya, siapa yang melihat, dan masa simpannya. Tanpa centang, pendaftaran tidak bisa lanjut.
@@ -176,7 +176,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-14 — Kartu digital sementara dihapus; Bantuan lewat email tim
 
-**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital menunggu konfirmasi tim
+**Status:** Bantuan disetujui CTO, 5 Oktober 2026; penghapusan kartu digital disetujui tim, 7 Oktober 2026
 
 **Keputusan:**
 - Layar "Pendaftaran berhasil + kartu digital" dari notulen tidak dibangun. Konfirmasi pendaftaran digabung ke layar "Verifikasi Sedang Diproses".
@@ -189,7 +189,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-15 — Tipe akun dari domain email, tanpa jalur alumni
 
-**Status:** Disetujui (dibawa dari versi web: PRD F1.3, F2.2, dan D-03 lama); dukungan alumni menjadi pertanyaan terbuka untuk tim
+**Status:** Disetujui (dibawa dari versi web: PRD F1.3, F2.2, dan D-03 lama); tanpa jalur alumni disetujui tim, 7 Oktober 2026
 
 **Keputusan:**
 - Tipe akun diturunkan dari domain email, tidak dipilih bebas. `@binus.ac.id` = mahasiswa, tanpa pilihan. `@binus.edu` = dosen atau staf, pengguna wajib memilih salah satu.
@@ -258,3 +258,19 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 **Keputusan:** Persetujuan di L7 (D-07) disimpan di profil sebagai waktu (`consent_at`) dan versi teks persetujuan (`consent_version`). Versi adalah konstanta di aplikasi yang diganti setiap kali teks persetujuan di `lib/config/copy.dart` berubah. Member hanya bisa mengisinya lewat `record_consent` saat status `incomplete` atau `rejected`, tidak lewat UPDATE langsung. Storage menolak unggahan foto verifikasi sebelum ada persetujuan. Penarikan persetujuan belum diatur.
 
 **Alasan:** UU PDP meminta bukti persetujuan untuk data biometrik; centang di UI saja tidak meninggalkan jejak.
+
+---
+
+## D-21 — Penanggung jawab data, pemeriksa verifikasi, dan penulis Kebijakan Privasi
+
+**Status:** Disetujui tim lewat kuesioner, 7 Oktober 2026
+
+**Keputusan:**
+- **Penanggung jawab data pribadi pengguna:** CTO, sebagai kontak yang disebut di Kebijakan Privasi.
+- **Pemeriksa verifikasi:** kelima anggota tim, masing-masing dengan akun admin sendiri. Tidak ada akun admin bersama.
+- **Janji 1×24 jam** (D-02) berlaku juga di akhir pekan dan hari libur.
+- **Kebijakan Privasi dan Syarat & Ketentuan:** draf ditulis CTO, ditinjau tim. Sampai selesai, aplikasi memakai teks draf yang ditandai jelas (D-07).
+
+**Alasan:** UU PDP meminta pihak yang bisa dihubungi pengguna soal data pribadinya. Akun admin per orang membuat catatan "disetujui/ditolak oleh siapa" akurat.
+
+**Konsekuensi:** Perlu lima akun admin: lokal lewat seed (D-18, saat ini satu), cloud dibuat terpisah.
