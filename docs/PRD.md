@@ -215,12 +215,12 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 
 ## 9. Keputusan terbuka (untuk /to-questionnaire)
 
-1. Akses lihat katalog untuk tamu dan akun yang belum disetujui (D-06), karena mengubah notulen. Default: boleh.
-2. Masa simpan foto kartu dan selfie (D-07). Default: 30 hari setelah diperiksa.
-3. Siapa saja admin verifikasi, dan apakah SLA 1×24 jam berlaku di akhir pekan.
-4. Apakah alumni perlu didukung (D-15). Saat ini tidak ada jalur alumni.
-5. Isi Kebijakan Privasi dan Syarat & Ketentuan, termasuk penanggung jawab data pribadi.
-6. Konfirmasi penghapusan kartu digital sementara (D-14), karena notulen menyebutnya.
+1. Akses lihat katalog untuk tamu dan akun yang belum disetujui (D-06), karena mengubah notulen. Default: boleh. **Terjawab:** Boleh (D-06).
+2. Masa simpan foto kartu dan selfie (D-07). Default: 30 hari setelah diperiksa. **Terjawab:** 30 hari setelah diperiksa (D-07).
+3. Siapa saja admin verifikasi, dan apakah SLA 1×24 jam berlaku di akhir pekan. **Terjawab:** Kelima anggota tim dengan akun admin masing-masing; SLA berlaku juga di akhir pekan dan hari libur (D-21).
+4. Apakah alumni perlu didukung (D-15). Saat ini tidak ada jalur alumni. **Terjawab:** Tidak; alumni dengan email aktif mendaftar sebagai mahasiswa (D-15).
+5. Isi Kebijakan Privasi dan Syarat & Ketentuan, termasuk penanggung jawab data pribadi. **Terjawab:** Penanggung jawab CTO; draf ditulis CTO dan ditinjau tim (D-21).
+6. Konfirmasi penghapusan kartu digital sementara (D-14), karena notulen menyebutnya. **Terjawab:** Dihapus, disimpan sebagai ide (D-14).
 
 ## 10. Dicatat untuk sesi berikutnya (di luar lingkup login)
 
