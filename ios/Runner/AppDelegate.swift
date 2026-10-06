@@ -12,5 +12,16 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // lib/data/camera.dart: opens this app's page in Settings after a camera refusal.
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "BeeKasSettings") {
+      FlutterMethodChannel(name: "beekas/settings", binaryMessenger: registrar.messenger())
+        .setMethodCallHandler { call, result in
+          guard call.method == "openAppSettings",
+            let url = URL(string: UIApplication.openSettingsURLString)
+          else { return result(FlutterMethodNotImplemented) }
+          UIApplication.shared.open(url)
+          result(nil)
+        }
+    }
   }
 }

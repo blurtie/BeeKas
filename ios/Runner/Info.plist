@@ -6,6 +6,8 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>BeeKas uses the camera to photograph your BINUS card and face for account verification.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Beekas</string>
 	<key>CFBundleExecutable</key>
