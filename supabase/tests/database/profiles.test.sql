@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(45);
+select plan(46);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -214,6 +214,18 @@ insert into storage.objects (bucket_id, name, owner_id, created_at) values
 select lives_ok($$ select public.submit_for_review() $$, 'resubmit with new photos');
 reset role;
 select is(pg_temp.status_of(:b), 'pending', 'B is pending again');
+
+-- Submit needs a phone (D-04): profiles start without one since phone_after_otp.
+
+select pg_temp.sign_up('cccccccc-0000-4000-8000-000000000001', 'cici@binus.ac.id',
+  '{"full_name": "Cici", "campus": "malang"}');
+select pg_temp.act_as('cccccccc-0000-4000-8000-000000000001');
+insert into storage.objects (bucket_id, name, owner_id) values
+  ('verification', 'cccccccc-0000-4000-8000-000000000001/1/card.jpg', 'cccccccc-0000-4000-8000-000000000001'),
+  ('verification', 'cccccccc-0000-4000-8000-000000000001/1/selfie.jpg', 'cccccccc-0000-4000-8000-000000000001');
+select throws_ok($$ select public.submit_for_review() $$, '23514', 'phone_missing',
+  'submit with both photos but no phone is rejected');
+reset role;
 
 select * from finish();
 rollback;
