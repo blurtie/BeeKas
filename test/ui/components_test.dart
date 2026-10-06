@@ -44,6 +44,16 @@ void main() {
     }
   });
 
+  test('focus border reaches 3:1 (WCAG 1.4.11)', () {
+    final border = beeTheme().inputDecorationTheme.focusedBorder!;
+    expect(border.borderSide.color, BeeColors.focusBorder);
+    expect(border.borderSide.width, 2);
+    expect(
+      _contrast(BeeColors.focusBorder, BeeColors.surface),
+      greaterThanOrEqualTo(3),
+    );
+  });
+
   for (final (name, button) in [
     ('primary', FilledButton(onPressed: () {}, child: const Text('Go'))),
     ('secondary', OutlinedButton(onPressed: () {}, child: const Text('Go'))),

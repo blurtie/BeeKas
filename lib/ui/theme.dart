@@ -95,6 +95,9 @@ ThemeData beeTheme() {
       hintStyle: const TextStyle(fontSize: 14, color: BeeColors.placeholder),
       border: fieldBorder,
       enabledBorder: fieldBorder,
+      focusedBorder: fieldBorder.copyWith(
+        borderSide: const BorderSide(color: BeeColors.focusBorder, width: 2),
+      ),
     ),
   );
 }
