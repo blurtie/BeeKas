@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(37);
+select plan(42);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -126,16 +126,20 @@ select results_eq(
   $$ select full_name, campus::text from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001' $$,
   $$ values ('Ani Wijaya', 'kemanggisan') $$, 'B calling update_identity does not touch A');
 
--- Storage: uploads into own folder only, while incomplete or rejected.
+-- Storage: <uid>/<attempt>/card|selfie, own folder only, while incomplete or rejected.
 select pg_temp.act_as(:a);
 select lives_ok(
   $$ insert into storage.objects (bucket_id, name, owner_id)
-     values ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/card.jpg', 'aaaaaaaa-0000-4000-8000-000000000001'),
-            ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/selfie.jpg', 'aaaaaaaa-0000-4000-8000-000000000001') $$,
+     values ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/1/card.jpg', 'aaaaaaaa-0000-4000-8000-000000000001'),
+            ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/1/selfie.jpg', 'aaaaaaaa-0000-4000-8000-000000000001') $$,
   'member uploads own card and selfie');
 select throws_ok(
-  $$ insert into storage.objects (bucket_id, name) values ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/card.jpg') $$,
+  $$ insert into storage.objects (bucket_id, name) values ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/1/card.jpg') $$,
   '42501', null, 'member cannot upload into another folder');
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('verification', 'aaaaaaaa-0000-4000-8000-000000000001/card.jpg') $$,
+  '42501', null, 'upload needs an attempt folder');
+update storage.objects set name = 'aaaaaaaa-0000-4000-8000-000000000001/1/x.jpg' where bucket_id = 'verification';
 select is((select count(*)::int from storage.objects where bucket_id = 'verification'), 0,
   'member cannot read photos, not even their own');
 select lives_ok($$ select public.submit_for_review() $$, 'submit with both photos');
@@ -154,8 +158,10 @@ reset role;
 -- Admin ------------------------------------------------------------------------
 
 select pg_temp.act_as(:admin);
-select is((select count(*)::int from storage.objects where bucket_id = 'verification'), 2,
-  'admin reads photos');
+select results_eq(
+  $$ select name from storage.objects where bucket_id = 'verification' order by name $$,
+  $$ values ('aaaaaaaa-0000-4000-8000-000000000001/1/card.jpg'), ('aaaaaaaa-0000-4000-8000-000000000001/1/selfie.jpg') $$,
+  'admin reads photos; the member could not rename them');
 select throws_ok($$ update public.profiles set status = 'incomplete' where email = 'ani@binus.ac.id' $$,
   '23514', null, 'pending -> incomplete is illegal');
 select throws_ok($$ update public.profiles set status = 'approved' where email = 'budi@binus.edu' $$,
@@ -173,6 +179,31 @@ select lives_ok($$ select public.set_phone('+6281111111111') $$, 'set_phone afte
 select throws_ok($$ select public.update_identity('X', 'online') $$, '23514', 'identity_locked',
   'identity locked while approved');
 reset role;
+
+-- Rejection and resubmission (D-08): old photos are not enough.
+
+select pg_temp.act_as(:b);
+insert into storage.objects (bucket_id, name, owner_id) values
+  ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/1/card.jpg', 'bbbbbbbb-0000-4000-8000-000000000001'),
+  ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/1/selfie.jpg', 'bbbbbbbb-0000-4000-8000-000000000001');
+select public.submit_for_review();
+reset role;
+select pg_temp.act_as(:admin);
+update public.profiles set status = 'rejected' where email = 'budi@binus.edu';
+reset role;
+select ok((select last_rejected_at is not null from public.profiles where email = 'budi@binus.edu'),
+  'rejection records last_rejected_at');
+
+select pg_temp.act_as(:b);
+select throws_ok($$ select public.submit_for_review() $$, '23514', 'photos_missing',
+  'resubmit with only old photos is rejected');
+-- created_at is set ahead because now() is fixed inside this test transaction.
+insert into storage.objects (bucket_id, name, owner_id, created_at) values
+  ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/2/card.jpg', 'bbbbbbbb-0000-4000-8000-000000000001', now() + interval '1 second'),
+  ('verification', 'bbbbbbbb-0000-4000-8000-000000000001/2/selfie.jpg', 'bbbbbbbb-0000-4000-8000-000000000001', now() + interval '1 second');
+select lives_ok($$ select public.submit_for_review() $$, 'resubmit with new photos');
+reset role;
+select is(pg_temp.status_of(:b), 'pending', 'B is pending again');
 
 select * from finish();
 rollback;

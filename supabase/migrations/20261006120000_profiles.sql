@@ -20,6 +20,8 @@ create table public.profiles (
   status public.account_status not null default 'incomplete',
   role public.user_role not null default 'member',
   created_at timestamptz not null default now(),
+  -- Set by guard_status_transition; photos must be newer than this to resubmit (D-08).
+  last_rejected_at timestamptz,
   -- Rule 1 and D-15: members have a BINUS email whose domain fixes the account type.
   -- The seeded admin (D-09) is exempt.
   constraint member_identity check (
@@ -48,6 +50,9 @@ begin
   then
     raise exception 'illegal_status_transition: % -> %', old.status, new.status
       using errcode = 'check_violation';
+  end if;
+  if new.status = 'rejected' and old.status is distinct from 'rejected' then
+    new.last_rejected_at := now();
   end if;
   return new;
 end;
@@ -158,9 +163,16 @@ begin
   if uid is null then
     raise exception 'not_authenticated' using errcode = 'insufficient_privilege';
   end if;
+  -- Both photos must be uploaded by this member after the last rejection.
   if (
-    select count(*) from storage.objects
-    where bucket_id = 'verification' and name in (uid::text || '/card.jpg', uid::text || '/selfie.jpg')
+    select count(distinct storage.filename(o.name))
+    from storage.objects o, public.profiles p
+    where p.id = uid
+      and o.bucket_id = 'verification'
+      and o.owner_id = uid::text
+      and (storage.foldername(o.name))[1] = uid::text
+      and storage.filename(o.name) ~ '^(card|selfie)\.'
+      and o.created_at > coalesce(p.last_rejected_at, '-infinity')
   ) < 2 then
     raise exception 'photos_missing' using errcode = 'check_violation';
   end if;
@@ -220,35 +232,23 @@ grant execute on function
   public.update_identity(text, public.campus)
   to authenticated;
 
--- Private bucket for ID card photos and selfies (D-07): <user id>/card.jpg and <user id>/selfie.jpg.
-insert into storage.buckets (id, name, public) values ('verification', 'verification', false);
+-- Private bucket for ID card photos and selfies (D-07). Each attempt gets its own folder,
+-- <user id>/<attempt>/card.jpg and selfie.jpg, because members cannot overwrite: Storage
+-- needs read access for that and only admins read (D-07).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('verification', 'verification', false, 5242880, array['image/jpeg', 'image/png']);
 
 create policy "verification: member uploads own photos"
   on storage.objects for insert to authenticated
   with check (
     bucket_id = 'verification'
     and (storage.foldername(name))[1] = (select auth.uid())::text
-    and storage.filename(name) in ('card.jpg', 'selfie.jpg')
+    and array_length(storage.foldername(name), 1) = 2
+    and storage.filename(name) ~ '^(card|selfie)\.(jpg|png)$'
     and exists (
       select 1 from public.profiles
       where id = (select auth.uid()) and status in ('incomplete', 'rejected')
     )
-  );
-
-create policy "verification: member replaces own photos"
-  on storage.objects for update to authenticated
-  using (
-    bucket_id = 'verification'
-    and (storage.foldername(name))[1] = (select auth.uid())::text
-    and exists (
-      select 1 from public.profiles
-      where id = (select auth.uid()) and status in ('incomplete', 'rejected')
-    )
-  )
-  with check (
-    bucket_id = 'verification'
-    and (storage.foldername(name))[1] = (select auth.uid())::text
-    and storage.filename(name) in ('card.jpg', 'selfie.jpg')
   );
 
 create policy "verification: admin reads photos"
