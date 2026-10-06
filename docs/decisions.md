@@ -223,7 +223,7 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 
 **Implementasi:** PR #44.
 
-**Keputusan:** Profil dibuat trigger database dari data pendaftaran. Peran selalu member dan status selalu `incomplete`, apa pun isi data yang dikirim. Tipe akun ditentukan dari domain email (D-15); data hanya boleh memilih Dosen/Staf untuk `@binus.edu`.
+**Keputusan:** Profil dibuat trigger database dari data pendaftaran (nama, email, tipe akun, kampus). Nomor HP tidak ikut di data pendaftaran; nomor disimpan lewat `set_phone` setelah OTP terverifikasi, karena error dari trigger tidak sampai ke aplikasi. Peran selalu member dan status selalu `incomplete`, apa pun isi data yang dikirim. Tipe akun ditentukan dari domain email (D-15); data hanya boleh memilih Dosen/Staf untuk `@binus.edu`.
 
 ---
 
