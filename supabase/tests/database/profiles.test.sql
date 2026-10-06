@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(37);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -74,6 +74,16 @@ select throws_ok(
   '23502', 'phone_required', 'phone is required at sign-up'
 );
 
+select throws_ok(
+  $$ select pg_temp.sign_up(gen_random_uuid(), 'v@binus.ac.id', '{"phone": "+6281200000004", "campus": "online"}') $$,
+  '23502', 'full_name_required', 'full name is required at sign-up'
+);
+select throws_ok(
+  $$ select pg_temp.sign_up(gen_random_uuid(), 'u@binus.ac.id',
+       '{"full_name": "U", "phone": "+6281200000005", "campus": "jakarta"}') $$,
+  '23514', 'invalid_campus', 'campus must be a D-12 code'
+);
+
 -- RLS: reading ----------------------------------------------------------------
 
 select pg_temp.act_as(:a);
@@ -95,7 +105,9 @@ select pg_temp.act_as(:a);
 select throws_ok($$ update public.profiles set full_name = 'Hacked' $$, '42501', null,
   'member cannot update name directly');
 update public.profiles set status = 'approved';
+update public.profiles set status = 'pending' where id = 'bbbbbbbb-0000-4000-8000-000000000001';
 reset role;
+select is(pg_temp.status_of(:b), 'incomplete', 'member cannot update another profile');
 select is(pg_temp.status_of(:a), 'incomplete', 'member cannot update status directly');
 
 -- Member functions ------------------------------------------------------------
@@ -153,6 +165,10 @@ reset role;
 select is(pg_temp.status_of(:a), 'approved', 'admin approves pending');
 
 select pg_temp.act_as(:a);
+select throws_ok($$ select public.set_phone('081111111111') $$, '23514', null,
+  'set_phone keeps the +628 format');
+select throws_ok($$ select public.set_phone('+6281298765432') $$, '23505', null,
+  'set_phone keeps numbers unique');
 select lives_ok($$ select public.set_phone('+6281111111111') $$, 'set_phone after release');
 select throws_ok($$ select public.update_identity('X', 'online') $$, '23514', 'identity_locked',
   'identity locked while approved');

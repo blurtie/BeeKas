@@ -26,6 +26,7 @@ const copy = <Lang, Map<String, String>>{
     'errorAccountTypeNotAllowed':
         'Account type is set automatically for @binus.ac.id.',
     'errorAccountTypeRequired': 'Choose Lecturer or Staff.',
+    'errorInvalidCampus': 'Choose your campus.',
     'errorPhoneRequired': 'Enter your phone number.',
     'errorInvalidPhone': 'Enter a valid phone number.',
     'errorPhoneTaken': 'This phone number is already registered.',
@@ -50,6 +51,7 @@ const copy = <Lang, Map<String, String>>{
     'errorAccountTypeNotAllowed':
         'Tipe akun untuk @binus.ac.id ditentukan otomatis.',
     'errorAccountTypeRequired': 'Pilih Dosen atau Staf.',
+    'errorInvalidCampus': 'Pilih kampus asal.',
     'errorPhoneRequired': 'Isi nomor HP.',
     'errorInvalidPhone': 'Masukkan nomor HP yang valid.',
     'errorPhoneTaken': 'Nomor HP ini sudah terdaftar.',

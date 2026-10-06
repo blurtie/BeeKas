@@ -89,6 +89,14 @@ begin
     raise exception 'invalid_email_domain' using errcode = 'check_violation';
   end if;
 
+  if nullif(btrim(meta ->> 'full_name'), '') is null then
+    raise exception 'full_name_required' using errcode = 'not_null_violation';
+  end if;
+  -- Checked here because a failed enum cast reaches the app only as a generic auth error.
+  if coalesce(meta ->> 'campus', '') not in (select unnest(enum_range(null::public.campus))::text) then
+    raise exception 'invalid_campus' using errcode = 'check_violation';
+  end if;
+
   if nullif(btrim(meta ->> 'phone'), '') is null then
     raise exception 'phone_required' using errcode = 'not_null_violation';
   end if;

@@ -1,9 +1,12 @@
-/// Why the backend refused a sign-up (handle_new_user trigger and profile
-/// constraints, supabase/migrations). [copyKey] points into lib/config/copy.dart.
+/// Why the backend refused a sign-up. Messages and constraint names must match
+/// handle_new_user and the profiles table in supabase/migrations; [copyKey]
+/// points into lib/config/copy.dart.
 enum SignupError {
   invalidEmailDomain('errorInvalidEmailDomain'),
   accountTypeNotAllowed('errorAccountTypeNotAllowed'),
   accountTypeRequired('errorAccountTypeRequired'),
+  fullNameRequired('fullNameRequired'),
+  invalidCampus('errorInvalidCampus'),
   phoneRequired('errorPhoneRequired'),
   invalidPhone('errorInvalidPhone'),
   phoneTaken('errorPhoneTaken'),
@@ -20,6 +23,8 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'invalid_email_domain') => SignupError.invalidEmailDomain,
     ('23514', 'account_type_not_allowed') => SignupError.accountTypeNotAllowed,
     ('23514', 'account_type_required') => SignupError.accountTypeRequired,
+    ('23502', 'full_name_required') => SignupError.fullNameRequired,
+    ('23514', 'invalid_campus') => SignupError.invalidCampus,
     ('23502', 'phone_required') => SignupError.phoneRequired,
     ('23514', _) when message.contains('profiles_phone_check') =>
       SignupError.invalidPhone,
