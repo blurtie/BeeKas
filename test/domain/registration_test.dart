@@ -178,5 +178,14 @@ void main() {
       );
       expect(r, (next: AfterOtp.continueSignup, phoneChanged: false));
     });
+
+    test('a released (null) phone is not reported as kept', () {
+      final r = afterOtp(
+        hasPassword: false,
+        storedPhone: null,
+        submitted: submitted,
+      );
+      expect(r.phoneChanged, isFalse);
+    });
   });
 }

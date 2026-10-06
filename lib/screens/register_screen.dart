@@ -77,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return key == null ? null : t(key);
     }
 
-    final general = _backendError == null || backendField != null
+    final formError = _backendError == null || backendField != null
         ? null
         : (backend?.copyKey ?? 'errorNetwork');
     final types = accountTypesFor(_email.text);
@@ -132,10 +132,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 value: types.contains(_type) ? _type : null,
                 itemLabel: (type) => t('accountType_${type.name}'),
                 errorText: errorFor(RegistrationField.accountType),
-                onChanged: (type) => setState(() {
+                onChanged: (type) {
                   _type = type;
-                  _backendError = null;
-                }),
+                  _changed();
+                },
               ),
             ],
             gap,
@@ -158,19 +158,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               value: _campus,
               itemLabel: (campus) => t(campus.copyKey),
               errorText: errorFor(RegistrationField.campus),
-              onChanged: (campus) => setState(() {
+              onChanged: (campus) {
                 _campus = campus;
-                _backendError = null;
-              }),
+                _changed();
+              },
             ),
             const SizedBox(height: 32),
             BeeWarningBanner(t('registerDataWarning')),
             const SizedBox(height: 32),
-            if (general != null) ...[
+            if (formError != null) ...[
               Semantics(
                 liveRegion: true,
                 child: Text(
-                  t(general),
+                  t(formError),
                   style: textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                   ),

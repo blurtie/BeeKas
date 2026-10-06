@@ -141,12 +141,14 @@ enum AfterOtp {
 }
 
 /// [storedPhone] is the profile's phone; [phoneChanged] tells the user an
-/// abandoned sign-up keeps its old number instead of the one just typed.
+/// abandoned sign-up keeps its old number instead of the one just typed. A
+/// null phone was released by an admin (D-04), so nothing was kept.
 ({AfterOtp next, bool phoneChanged}) afterOtp({
   required bool hasPassword,
   required String? storedPhone,
   required Registration submitted,
 }) => (
   next: hasPassword ? AfterOtp.alreadyRegistered : AfterOtp.continueSignup,
-  phoneChanged: !hasPassword && storedPhone != submitted.phone,
+  phoneChanged:
+      !hasPassword && storedPhone != null && storedPhone != submitted.phone,
 );
