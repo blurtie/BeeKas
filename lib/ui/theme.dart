@@ -32,6 +32,8 @@ ThemeData beeTheme() {
         height: 1.2,
         color: BeeColors.textHeading,
       ),
+      // Typed field text; matches the 14 dp placeholder.
+      bodyLarge: TextStyle(fontSize: 14, color: BeeColors.textBody),
       bodyMedium: TextStyle(
         fontSize: 14,
         height: 1.5,

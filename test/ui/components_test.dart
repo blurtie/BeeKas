@@ -105,6 +105,12 @@ void main() {
     expect(error.style?.color, BeeColors.error);
   });
 
+  test('typed text matches the placeholder size', () {
+    final theme = beeTheme();
+    expect(theme.textTheme.bodyLarge?.fontSize, 14);
+    expect(theme.inputDecorationTheme.hintStyle?.fontSize, 14);
+  });
+
   testWidgets('text field forwards onChanged and input options', (
     tester,
   ) async {
