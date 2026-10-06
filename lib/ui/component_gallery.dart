@@ -21,7 +21,7 @@ class ComponentGallery extends StatelessWidget {
         children: [
           Text(t('register'), style: Theme.of(context).textTheme.headlineLarge),
           gap,
-          BeeTextField(label: t('fullName'), hint: 'John Doe'),
+          BeeTextField(label: t('fullName'), hint: t('fullNameHint')),
           gap,
           BeeTextField(
             label: t('password'),
