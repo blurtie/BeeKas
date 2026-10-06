@@ -4,7 +4,6 @@ import '../config/copy.dart';
 import '../data/signup_repository.dart';
 import '../domain/password.dart';
 import '../ui/components.dart';
-import '../ui/tokens.dart';
 
 /// L6 Buat kata sandi (no frame yet). The account stays `incomplete`.
 class PasswordScreen extends StatefulWidget {
@@ -56,26 +55,6 @@ class _PasswordScreenState extends State<PasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final check = checkPassword(_password.text, _confirm.text);
-    final textTheme = Theme.of(context).textTheme;
-    Widget rule(String key, bool met) => MergeSemantics(
-      child: Semantics(
-        checked: met,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(
-            children: [
-              Icon(
-                met ? Icons.check_circle : Icons.radio_button_unchecked,
-                size: 20,
-                color: met ? BeeColors.success : BeeColors.textMuted,
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: Text(t(key), style: textTheme.bodyMedium)),
-            ],
-          ),
-        ),
-      ),
-    );
     void changed(String _) => setState(() => _error = null);
 
     return BeeSignupPage(
@@ -106,10 +85,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
           autofillHints: const [AutofillHints.newPassword],
         ),
         const SizedBox(height: 8),
-        rule('ruleMinLength', check.minLength),
-        rule('ruleLetter', check.hasLetter),
-        rule('ruleDigit', check.hasDigit),
-        rule('ruleMatch', check.matches),
+        BeeChecklistItem(t('ruleMinLength'), met: check.minLength),
+        BeeChecklistItem(t('ruleLetter'), met: check.hasLetter),
+        BeeChecklistItem(t('ruleDigit'), met: check.hasDigit),
+        BeeChecklistItem(t('ruleMatch'), met: check.matches),
         const SizedBox(height: 32),
         if (_error != null) ...[
           BeeFormError(t(_error!.error?.copyKey ?? 'errorNetwork')),

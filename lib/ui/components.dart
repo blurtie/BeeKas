@@ -317,3 +317,34 @@ class BeeButtonLabel extends StatelessWidget {
         )
       : Text(label);
 }
+
+/// One rule in a live checklist (Buat kata sandi), announced as checked.
+class BeeChecklistItem extends StatelessWidget {
+  const BeeChecklistItem(this.label, {super.key, required this.met});
+
+  final String label;
+  final bool met;
+
+  @override
+  Widget build(BuildContext context) => MergeSemantics(
+    child: Semantics(
+      checked: met,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            Icon(
+              met ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 20,
+              color: met ? BeeColors.success : BeeColors.textMuted,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
