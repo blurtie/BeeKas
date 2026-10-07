@@ -77,6 +77,7 @@ const copy = <Lang, Map<String, String>>{
     'emailRegistered': 'This email is already registered. Sign in instead.',
     'phoneTitle': 'Phone number',
     'phoneSubtitle': "Your phone number hasn't been saved yet. Enter another number to continue.",
+    'phoneSubtitleMissing': 'Add your phone number to continue.',
     'phoneKept': 'The phone number {phone} from your earlier registration is kept, not the one you just entered.',
     'passwordTitle': 'Create a password',
     'passwordSubtitle': "You'll use this password to sign in to BeeKas.",
@@ -220,6 +221,7 @@ const copy = <Lang, Map<String, String>>{
     'phoneTitle': 'Nomor Handphone',
     'phoneSubtitle':
         'Nomor HP kamu belum tersimpan. Masukkan nomor lain untuk melanjutkan.',
+    'phoneSubtitleMissing': 'Tambahkan nomor HP untuk melanjutkan.',
     'phoneKept': 'Nomor HP {phone} dari pendaftaran sebelumnya tetap dipakai, bukan nomor yang baru diisi.',
     'passwordTitle': 'Buat Kata Sandi',
     'passwordSubtitle': 'Kata sandi ini dipakai untuk masuk ke BeeKas.',

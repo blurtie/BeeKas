@@ -106,6 +106,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
         builder: (context) => PhoneScreen(
           repository: widget.repository,
           initialError: SignupError.phoneMissing,
+          mode: PhoneScreenMode.missing,
           onSaved: () => Navigator.pop(context, true),
         ),
       ),

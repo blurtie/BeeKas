@@ -141,6 +141,7 @@ void main() {
     await tester.tap(find.text(t('addPhone')));
     await tester.pumpAndSettle();
     expect(find.byType(PhoneScreen), findsOneWidget);
+    expect(find.text(t('phoneSubtitleMissing')), findsOneWidget);
     await tester.enterText(find.byType(TextField), '0813-1111-2222');
     await tester.tap(find.text(t('next')));
     // Not pumpAndSettle: Kirim keeps spinning after success, as L11 replaces
@@ -153,6 +154,25 @@ void main() {
     expect(repo.uploads, ['a1/card.jpg', 'a1/selfie.jpg']);
     expect(repo.calls.where((c) => c == 'submitForReview'), hasLength(2));
     expect(sent, isTrue);
+  });
+
+  testWidgets('the phone step subtitle follows its mode', (tester) async {
+    for (final (mode, key) in [
+      (PhoneScreenMode.rejected, 'phoneSubtitle'),
+      (PhoneScreenMode.missing, 'phoneSubtitleMissing'),
+    ]) {
+      await _pump(
+        tester,
+        PhoneScreen(
+          key: ValueKey(mode),
+          repository: FakeSignupRepository(),
+          initialError: SignupError.phoneTaken,
+          onSaved: () {},
+          mode: mode,
+        ),
+      );
+      expect(find.text(t(key)), findsOneWidget);
+    }
   });
 
   testWidgets('L11 offers Lihat katalog and Keluar', (tester) async {
