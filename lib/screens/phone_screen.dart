@@ -11,7 +11,8 @@ enum PhoneScreenMode {
   /// After OTP, set_phone refused the Daftar number (taken or invalid).
   rejected('phoneSubtitle'),
 
-  /// L10 Kirim: submit_for_review found no phone (phone_missing).
+  /// L10 Kirim: submit_for_review found no phone (phone_missing). The
+  /// subtitle carries the message, so no error and no stepper.
   missing('phoneSubtitleMissing');
 
   const PhoneScreenMode(this.subtitleKey);
@@ -41,7 +42,9 @@ class PhoneScreen extends StatefulWidget {
 
 class _PhoneScreenState extends State<PhoneScreen> {
   final _phone = TextEditingController();
-  late SignupException? _error = SignupException(widget.initialError);
+  late SignupException? _error = widget.mode == PhoneScreenMode.missing
+      ? null
+      : SignupException(widget.initialError);
   bool _submitted = false;
   bool _loading = false;
 
@@ -86,6 +89,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
     return BeeSignupPage(
       title: t('phoneTitle'),
+      step: widget.mode == PhoneScreenMode.missing ? null : 0,
       subtitle: t(widget.mode.subtitleKey),
       children: [
         BeeTextField(

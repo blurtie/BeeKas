@@ -9,6 +9,7 @@ import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/pending_screen.dart';
 import 'package:beekas/screens/phone_screen.dart';
 import 'package:beekas/screens/selfie_screen.dart';
+import 'package:beekas/ui/components.dart';
 import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -156,23 +157,48 @@ void main() {
     expect(sent, isTrue);
   });
 
-  testWidgets('the phone step subtitle follows its mode', (tester) async {
-    for (final (mode, key) in [
-      (PhoneScreenMode.rejected, 'phoneSubtitle'),
-      (PhoneScreenMode.missing, 'phoneSubtitleMissing'),
-    ]) {
-      await _pump(
-        tester,
-        PhoneScreen(
-          key: ValueKey(mode),
-          repository: FakeSignupRepository(),
-          initialError: SignupError.phoneTaken,
-          onSaved: () {},
-          mode: mode,
-        ),
-      );
-      expect(find.text(t(key)), findsOneWidget);
-    }
+  testWidgets('phone step, rejected mode: stepper and the error', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PhoneScreen(
+        repository: FakeSignupRepository(),
+        initialError: SignupError.phoneTaken,
+        onSaved: () {},
+      ),
+    );
+    expect(find.text(t('phoneSubtitle')), findsOneWidget);
+    expect(find.text(t('errorPhoneTaken')), findsOneWidget);
+    expect(find.byType(BeeStepper), findsOneWidget);
+  });
+
+  testWidgets('phone step, missing mode: only the subtitle, no stepper', (
+    tester,
+  ) async {
+    final repo = FakeSignupRepository(
+      errors: {
+        'setPhone': [const SignupException(null)],
+      },
+    );
+    await _pump(
+      tester,
+      PhoneScreen(
+        repository: repo,
+        initialError: SignupError.phoneMissing,
+        onSaved: () {},
+        mode: PhoneScreenMode.missing,
+      ),
+    );
+    expect(find.text(t('phoneSubtitleMissing')), findsOneWidget);
+    expect(find.text(t('errorPhoneMissing')), findsNothing);
+    expect(find.byType(BeeStepper), findsNothing);
+
+    // A failed save still shows its error.
+    await tester.enterText(find.byType(TextField), '0813-1111-2222');
+    await tester.tap(find.text(t('next')));
+    await tester.pump();
+    expect(find.text(t('errorNetwork')), findsOneWidget);
   });
 
   testWidgets('L11 offers Lihat katalog and Keluar', (tester) async {
