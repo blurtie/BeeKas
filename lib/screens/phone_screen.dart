@@ -6,19 +6,35 @@ import '../domain/registration.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
 
+/// Why the phone step is shown; picks the subtitle.
+enum PhoneScreenMode {
+  /// After OTP, set_phone refused the Daftar number (taken or invalid).
+  rejected('phoneSubtitle'),
+
+  /// L10 Kirim: submit_for_review found no phone (phone_missing). The
+  /// subtitle carries the message, so no error and no stepper.
+  missing('phoneSubtitleMissing');
+
+  const PhoneScreenMode(this.subtitleKey);
+  final String subtitleKey;
+}
+
 /// L5, after OTP: set_phone refused the Daftar number (taken or invalid), so
-/// another one is needed before the password step. No frame yet.
+/// another one is needed before the password step. Also opened from L10 when
+/// no phone is saved. No frame yet.
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({
     super.key,
     required this.repository,
     required this.initialError,
     required this.onSaved,
+    this.mode = PhoneScreenMode.rejected,
   });
 
   final SignupRepository repository;
   final SignupError initialError;
   final VoidCallback onSaved;
+  final PhoneScreenMode mode;
 
   @override
   State<PhoneScreen> createState() => _PhoneScreenState();
@@ -26,7 +42,9 @@ class PhoneScreen extends StatefulWidget {
 
 class _PhoneScreenState extends State<PhoneScreen> {
   final _phone = TextEditingController();
-  late SignupException? _error = SignupException(widget.initialError);
+  late SignupException? _error = widget.mode == PhoneScreenMode.missing
+      ? null
+      : SignupException(widget.initialError);
   bool _submitted = false;
   bool _loading = false;
 
@@ -71,7 +89,8 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
     return BeeSignupPage(
       title: t('phoneTitle'),
-      subtitle: t('phoneSubtitle'),
+      step: widget.mode == PhoneScreenMode.missing ? null : 0,
+      subtitle: t(widget.mode.subtitleKey),
       children: [
         BeeTextField(
           label: t('phone'),
