@@ -1,4 +1,4 @@
-# BeeKas
+# BeeKas -> aplikasi Venture Creation
 
 Marketplace barang preloved dan donasi khusus sivitas BINUS University, dibangun dengan Flutter (Android dan iOS).
 
