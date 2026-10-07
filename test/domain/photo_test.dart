@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:beekas/domain/photo.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,9 +106,9 @@ void main() {
       expect(contains(out, segment(0xE1, exif(orientation: 6))), isFalse);
     });
 
-    test('keeps JFIF, the colour profile, image data and the scan', () {
+    test('keeps the colour profile, image data and the scan', () {
       expect(out.sublist(0, 2), [0xFF, 0xD8]);
-      expect(contains(out, jfif), isTrue);
+      expect(contains(out, jfif), isFalse);
       expect(contains(out, icc), isTrue);
       expect(contains(out, quant), isTrue);
       expect(out.sublist(out.length - scan.length), scan);
@@ -160,6 +161,86 @@ void main() {
       expect(
         () => stripJpegMetadata(
           Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE1, 0, 40]),
+        ),
+        throwsFormatException,
+      );
+    });
+  });
+
+  group('a second image after the main one (MPF, Ultra HDR gain map)', () {
+    // A real 2×2 JPEG (Pillow), so the result can be decoded.
+    final real = base64Decode(
+      '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDTooor+cj99P/Z',
+    );
+
+    /// [real] with [segments] inserted right after SOI.
+    List<int> withSegments(List<List<int>> segments) => [
+      0xFF,
+      0xD8,
+      for (final s in segments) ...s,
+      ...real.sublist(2),
+    ];
+
+    final mpf = segment(0xE2, [...ascii.encode('MPF\x00MM'), ...u16(42)]);
+    final iso21496 = segment(
+      0xE2,
+      ascii.encode('urn:iso:std:iso:ts:21496:-1\x00'),
+    );
+    final gainMapXmp = segment(
+      0xE1,
+      ascii.encode('http://ns.adobe.com/xap/1.0/\x00<hdrgm:Version/>'),
+    );
+    // The gain map, carrying its own EXIF with GPS.
+    final secondImage = withSegments([segment(0xE1, exif(orientation: 1))]);
+    final input = Uint8List.fromList([
+      ...withSegments([
+        segment(0xE1, exif(orientation: 6)),
+        gainMapXmp,
+        mpf,
+        iso21496,
+        icc,
+      ]),
+      ...secondImage,
+    ]);
+    final out = stripJpegMetadata(input);
+
+    test('cuts the file after the main image', () {
+      expect(out.sublist(out.length - 2), [0xFF, 0xD9]);
+      expect(contains(out, real.sublist(real.length - 40)), isTrue);
+      // Only one SOI: the second image is gone.
+      var sois = 0;
+      for (var i = 0; i + 1 < out.length; i++) {
+        if (out[i] == 0xFF && out[i + 1] == 0xD8) sois++;
+      }
+      expect(sois, 1);
+    });
+
+    test('no GPS and nothing pointing to a second image', () {
+      expect(contains(out, ascii.encode('Cam')), isFalse);
+      expect(contains(out, u16(0x8825)), isFalse);
+      expect(contains(out, ascii.encode('MPF')), isFalse);
+      expect(contains(out, ascii.encode('21496')), isFalse);
+      expect(contains(out, ascii.encode('hdrgm')), isFalse);
+    });
+
+    test('keeps the colour profile and the orientation', () {
+      expect(contains(out, icc), isTrue);
+      expect(jpegOrientation(out), 6);
+    });
+
+    testWidgets('still decodes', (tester) async {
+      final size = await tester.runAsync(() async {
+        final codec = await ui.instantiateImageCodec(out);
+        final frame = await codec.getNextFrame();
+        return (frame.image.width, frame.image.height);
+      });
+      expect(size, (2, 2));
+    });
+
+    test('a scan without an end is refused', () {
+      expect(
+        () => stripJpegMetadata(
+          Uint8List.fromList(real.sublist(0, real.length - 2)),
         ),
         throwsFormatException,
       );
