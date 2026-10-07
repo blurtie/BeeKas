@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/registration.dart';
@@ -33,6 +35,13 @@ abstract interface class SignupRepository {
 
   /// record_consent: stores when the member agreed to L7 and to which text.
   Future<void> recordConsent(String version);
+
+  /// Uploads a JPEG to the verification bucket at `<uid>/[path]` (D-19).
+  /// Members can only insert: an existing path is refused, never replaced.
+  Future<void> uploadPhoto(String path, Uint8List bytes);
+
+  /// submit_for_review: incomplete or rejected → pending.
+  Future<void> submitForReview();
 
   Future<void> signOut();
 }
@@ -92,6 +101,21 @@ class SupabaseSignupRepository implements SignupRepository {
   );
 
   @override
+  Future<void> uploadPhoto(String path, Uint8List bytes) => _guard(
+    () => _client.storage
+        .from('verification')
+        .uploadBinary(
+          '${_auth.currentUser!.id}/$path',
+          bytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        ),
+  );
+
+  @override
+  Future<void> submitForReview() =>
+      _guard(() => _client.rpc<void>('submit_for_review'));
+
+  @override
   Future<void> signOut() => _guard(_auth.signOut);
 
   Future<T> _guard<T>(Future<T> Function() call) async {
@@ -108,6 +132,9 @@ class SupabaseSignupRepository implements SignupRepository {
       );
     } on PostgrestException catch (e) {
       throw SignupException(signupErrorFrom(e.code, e.message));
+    } on StorageException {
+      // Refused by the bucket policy or limits; the app never sends such files.
+      throw const SignupException(SignupError.unknown);
     } on Exception {
       // PostgREST calls throw the http client's exceptions when offline.
       throw const SignupException(null);
@@ -158,4 +185,34 @@ Future<OtpResult> finishOtp(
     phoneError: phoneError,
     keptPhone: result.phoneChanged ? account.phone : null,
   );
+}
+
+/// L10 Kirim: card.jpg and selfie.jpg into a new `<attempt>/` folder, then
+/// submit_for_review. Members cannot overwrite, so after a failed upload the
+/// next try starts a new folder; when only the submit failed, it is retried
+/// alone.
+class PhotoSubmission {
+  PhotoSubmission(this._repository, {String Function()? newAttempt})
+    : _newAttempt = newAttempt ?? _timestamp;
+
+  final SignupRepository _repository;
+  final String Function() _newAttempt;
+  ({Uint8List card, Uint8List selfie})? _uploaded;
+
+  static String _timestamp() =>
+      DateTime.now().toUtc().millisecondsSinceEpoch.toString();
+
+  Future<void> send(Uint8List card, Uint8List selfie) async {
+    final done = _uploaded;
+    if (done == null ||
+        !identical(done.card, card) ||
+        !identical(done.selfie, selfie)) {
+      _uploaded = null;
+      final attempt = _newAttempt();
+      await _repository.uploadPhoto('$attempt/card.jpg', card);
+      await _repository.uploadPhoto('$attempt/selfie.jpg', selfie);
+      _uploaded = (card: card, selfie: selfie);
+    }
+    await _repository.submitForReview();
+  }
 }

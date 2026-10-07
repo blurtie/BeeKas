@@ -12,6 +12,9 @@ enum SignupError {
   phoneTaken('errorPhoneTaken'),
   // From submit_for_review: no phone saved yet (D-04).
   phoneMissing('errorPhoneMissing'),
+  // From submit_for_review: card or selfie not uploaded since the last
+  // rejection.
+  photosMissing('errorPhotosMissing'),
   // From GoTrue (OTP and password steps).
   invalidCode('errorInvalidCode'),
   tooSoon('errorTooSoon'),
@@ -37,6 +40,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23505', _) when message.contains('profiles_phone_key') =>
       SignupError.phoneTaken,
     ('23514', 'phone_missing') => SignupError.phoneMissing,
+    ('23514', 'photos_missing') => SignupError.photosMissing,
     ('otp_expired', _) => SignupError.invalidCode,
     ('over_email_send_rate_limit', _) => SignupError.tooSoon,
     ('weak_password', _) => SignupError.weakPassword,
