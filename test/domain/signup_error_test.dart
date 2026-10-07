@@ -42,6 +42,10 @@ void main() {
 
   test('maps submit_for_review without a phone', () {
     expect(signupErrorFrom('23514', 'phone_missing'), SignupError.phoneMissing);
+    expect(
+      signupErrorFrom('23514', 'photos_missing'),
+      SignupError.photosMissing,
+    );
   });
 
   test('maps GoTrue errors from the OTP and password steps', () {

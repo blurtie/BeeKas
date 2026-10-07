@@ -213,6 +213,12 @@ class PhotoSubmission {
       await _repository.uploadPhoto('$attempt/selfie.jpg', selfie);
       _uploaded = (card: card, selfie: selfie);
     }
-    await _repository.submitForReview();
+    try {
+      await _repository.submitForReview();
+    } on SignupException catch (e) {
+      // The server did not see both photos: upload again into a new folder.
+      if (e.error == SignupError.photosMissing) _uploaded = null;
+      rethrow;
+    }
   }
 }

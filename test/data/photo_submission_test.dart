@@ -84,11 +84,24 @@ void main() {
     ]);
   });
 
-  test('submit_for_review errors map to copy keys', () {
-    expect(
-      signupErrorFrom('23514', 'photos_missing'),
-      SignupError.photosMissing,
+  test('after photos_missing the retry uploads again', () async {
+    final repo = FakeSignupRepository(
+      errors: {
+        'submitForReview': [const SignupException(SignupError.photosMissing)],
+      },
     );
-    expect(signupErrorFrom('23514', 'phone_missing'), SignupError.phoneMissing);
+    final submission = _submission(repo);
+    await expectLater(
+      submission.send(_card, _selfie),
+      throwsA(isA<SignupException>()),
+    );
+    await submission.send(_card, _selfie);
+
+    expect(repo.uploads, [
+      'a1/card.jpg',
+      'a1/selfie.jpg',
+      'a2/card.jpg',
+      'a2/selfie.jpg',
+    ]);
   });
 }
