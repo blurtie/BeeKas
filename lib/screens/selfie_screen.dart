@@ -81,9 +81,8 @@ class _SelfieScreenState extends State<SelfieScreen> {
       setState(
         () => _error = switch (e.error) {
           null => 'errorNetwork',
-          SignupError.phoneMissing ||
-          SignupError.photosMissing => e.error!.copyKey,
-          _ => 'errorSendFailed',
+          SignupError.unknown => 'errorSendFailed',
+          final error => error.copyKey,
         },
       );
     }

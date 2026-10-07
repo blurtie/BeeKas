@@ -15,6 +15,7 @@ PhotoSubmission _submission(FakeSignupRepository repo) {
 }
 
 void main() {
+  _illegalTransitionTests();
   test(
     'uploads card and selfie into one attempt folder, then submits',
     () async {
@@ -103,5 +104,41 @@ void main() {
       'a2/card.jpg',
       'a2/selfie.jpg',
     ]);
+  });
+}
+
+void _illegalTransitionTests() {
+  group('illegal_status_transition re-reads the status', () {
+    FakeSignupRepository repo(String status) => FakeSignupRepository(
+      errors: {
+        'submitForReview': [
+          const SignupException(SignupError.illegalTransition),
+        ],
+      },
+    )..profileStatus = status;
+
+    test(
+      'pending: an earlier submit went through, so it counts as sent',
+      () async {
+        final r = repo('pending');
+        await _submission(r).send(_card, _selfie);
+        expect(r.calls.last, 'status');
+      },
+    );
+
+    for (final (status, error) in [
+      ('approved', SignupError.alreadyApproved),
+      ('rejected', SignupError.statusRejected),
+      ('incomplete', SignupError.statusIncomplete),
+    ]) {
+      test('$status: shows its own message', () async {
+        await expectLater(
+          _submission(repo(status)).send(_card, _selfie),
+          throwsA(
+            isA<SignupException>().having((e) => e.error, 'error', error),
+          ),
+        );
+      });
+    }
   });
 }

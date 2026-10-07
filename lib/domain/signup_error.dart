@@ -15,6 +15,12 @@ enum SignupError {
   // From submit_for_review: card or selfie not uploaded since the last
   // rejection.
   photosMissing('errorPhotosMissing'),
+  // submit_for_review refused because the status is no longer incomplete or
+  // rejected; PhotoSubmission re-reads it. pending counts as sent.
+  illegalTransition('errorSendFailed'),
+  alreadyApproved('errorAlreadyApproved'),
+  statusRejected('errorStatusRejected'),
+  statusIncomplete('errorStatusIncomplete'),
   // From GoTrue (OTP and password steps).
   invalidCode('errorInvalidCode'),
   tooSoon('errorTooSoon'),
@@ -41,6 +47,7 @@ SignupError signupErrorFrom(String? code, String message) {
       SignupError.phoneTaken,
     ('23514', 'phone_missing') => SignupError.phoneMissing,
     ('23514', 'photos_missing') => SignupError.photosMissing,
+    ('23514', 'illegal_status_transition') => SignupError.illegalTransition,
     ('otp_expired', _) => SignupError.invalidCode,
     ('over_email_send_rate_limit', _) => SignupError.tooSoon,
     ('weak_password', _) => SignupError.weakPassword,

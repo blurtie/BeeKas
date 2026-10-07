@@ -46,6 +46,10 @@ void main() {
       signupErrorFrom('23514', 'photos_missing'),
       SignupError.photosMissing,
     );
+    expect(
+      signupErrorFrom('23514', 'illegal_status_transition'),
+      SignupError.illegalTransition,
+    );
   });
 
   test('maps GoTrue errors from the OTP and password steps', () {

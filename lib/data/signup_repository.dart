@@ -43,6 +43,9 @@ abstract interface class SignupRepository {
   /// submit_for_review: incomplete or rejected → pending.
   Future<void> submitForReview();
 
+  /// The profile's status: incomplete, pending, approved or rejected.
+  Future<String> status();
+
   Future<void> signOut();
 }
 
@@ -114,6 +117,16 @@ class SupabaseSignupRepository implements SignupRepository {
   @override
   Future<void> submitForReview() =>
       _guard(() => _client.rpc<void>('submit_for_review'));
+
+  @override
+  Future<String> status() => _guard(() async {
+    final profile = await _client
+        .from('profiles')
+        .select('status')
+        .eq('id', _auth.currentUser!.id)
+        .single();
+    return profile['status'] as String;
+  });
 
   @override
   Future<void> signOut() => _guard(_auth.signOut);
@@ -218,7 +231,16 @@ class PhotoSubmission {
     } on SignupException catch (e) {
       // The server did not see both photos: upload again into a new folder.
       if (e.error == SignupError.photosMissing) _uploaded = null;
-      rethrow;
+      if (e.error != SignupError.illegalTransition) rethrow;
+      // An earlier submit may have gone through with its response lost.
+      final status = await _repository.status();
+      if (status == 'pending') return;
+      throw SignupException(switch (status) {
+        'approved' => SignupError.alreadyApproved,
+        'rejected' => SignupError.statusRejected,
+        'incomplete' => SignupError.statusIncomplete,
+        _ => SignupError.unknown,
+      });
     }
   }
 }

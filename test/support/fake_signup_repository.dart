@@ -81,6 +81,15 @@ class FakeSignupRepository implements SignupRepository {
   @override
   Future<void> submitForReview() => _call('submitForReview');
 
+  /// What status() returns.
+  String profileStatus = 'incomplete';
+
+  @override
+  Future<String> status() async {
+    await _call('status');
+    return profileStatus;
+  }
+
   @override
   Future<void> signOut() => _call('signOut');
 }
