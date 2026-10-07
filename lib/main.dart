@@ -104,7 +104,7 @@ void _toPassword(
                   builder: (context) => SelfieScreen(
                     accountType: accountType,
                     card: card,
-                    submission: PhotoSubmission(_repository),
+                    repository: _repository,
                     takePhoto: () => takePhoto(CameraDevice.front),
                     openSettings: openAppSettings,
                     onSent: () => _pending(context),

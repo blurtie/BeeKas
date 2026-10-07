@@ -7,6 +7,7 @@ import 'package:beekas/domain/photo.dart';
 import 'package:beekas/domain/registration.dart';
 import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/pending_screen.dart';
+import 'package:beekas/screens/phone_screen.dart';
 import 'package:beekas/screens/selfie_screen.dart';
 import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,8 @@ Future<void> _pumpSelfie(
     SelfieScreen(
       accountType: AccountType.student,
       card: _photo,
-      submission: PhotoSubmission(repo, newAttempt: () => 'a${++attempts}'),
+      repository: repo,
+      newAttempt: () => 'a${++attempts}',
       takePhoto: takePhoto ?? () async => _photo,
       openSettings: () async {},
       onSent: onSent ?? () {},
@@ -119,6 +121,38 @@ void main() {
     await tester.pump();
     expect(find.text(t('errorCameraDenied')), findsOneWidget);
     expect(find.text(t('openSettings')), findsOneWidget);
+  });
+
+  testWidgets('phone_missing opens the #27 phone step, then sends the same '
+      'photos again', (tester) async {
+    final repo = FakeSignupRepository(
+      errors: {
+        'submitForReview': [const SignupException(SignupError.phoneMissing)],
+      },
+    );
+    var sent = false;
+    await _pumpSelfie(tester, repo, onSent: () => sent = true);
+    await tester.tap(find.text(t('startVerification')));
+    await tester.pump();
+    await tester.tap(find.text(t('send')));
+    await tester.pump();
+    expect(find.text(t('errorPhoneMissing')), findsOneWidget);
+
+    await tester.tap(find.text(t('addPhone')));
+    await tester.pumpAndSettle();
+    expect(find.byType(PhoneScreen), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '0813-1111-2222');
+    await tester.tap(find.text(t('next')));
+    // Not pumpAndSettle: Kirim keeps spinning after success, as L11 replaces
+    // the route in the app.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(repo.phone, '+6281311112222');
+    expect(find.byType(SelfieScreen), findsOneWidget);
+    expect(repo.uploads, ['a1/card.jpg', 'a1/selfie.jpg']);
+    expect(repo.calls.where((c) => c == 'submitForReview'), hasLength(2));
+    expect(sent, isTrue);
   });
 
   testWidgets('L11 offers Lihat katalog and Keluar', (tester) async {

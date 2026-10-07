@@ -8,6 +8,7 @@ import '../domain/photo.dart';
 import '../domain/registration.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
+import 'phone_screen.dart';
 import '../ui/tokens.dart';
 
 /// L10 Verifikasi wajah, frame 416:507, with the PRD's four tips. The frame's
@@ -19,7 +20,8 @@ class SelfieScreen extends StatefulWidget {
     super.key,
     required this.accountType,
     required this.card,
-    required this.submission,
+    required this.repository,
+    this.newAttempt,
     required this.takePhoto,
     required this.openSettings,
     required this.onSent,
@@ -27,7 +29,10 @@ class SelfieScreen extends StatefulWidget {
 
   final AccountType accountType;
   final Uint8List card;
-  final PhotoSubmission submission;
+  final SignupRepository repository;
+
+  /// Attempt folder names for tests; a timestamp otherwise.
+  final String Function()? newAttempt;
 
   /// Front camera; see CardPhotoScreen.takePhoto.
   final Future<Uint8List?> Function() takePhoto;
@@ -39,6 +44,10 @@ class SelfieScreen extends StatefulWidget {
 }
 
 class _SelfieScreenState extends State<SelfieScreen> {
+  late final _submission = PhotoSubmission(
+    widget.repository,
+    newAttempt: widget.newAttempt,
+  );
   Uint8List? _selfie;
   String? _error;
   bool _cameraDenied = false;
@@ -72,7 +81,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       _sending = true;
     });
     try {
-      await widget.submission.send(widget.card, _selfie!);
+      await _submission.send(widget.card, _selfie!);
       // The photos leave memory with this route.
       if (mounted) widget.onSent();
       return;
@@ -87,6 +96,21 @@ class _SelfieScreenState extends State<SelfieScreen> {
       );
     }
     if (mounted) setState(() => _sending = false);
+  }
+
+  /// phone_missing: the #27 phone step, then Kirim again with the same photos.
+  Future<void> _addPhone() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhoneScreen(
+          repository: widget.repository,
+          initialError: SignupError.phoneMissing,
+          onSaved: () => Navigator.pop(context, true),
+        ),
+      ),
+    );
+    if (saved == true && mounted) await _send();
   }
 
   @override
@@ -152,6 +176,14 @@ class _SelfieScreenState extends State<SelfieScreen> {
         const SizedBox(height: 20),
         if (_error != null) ...[
           BeeFormError(t(_error!)),
+          if (_error == SignupError.phoneMissing.copyKey)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: idle ? _addPhone : null,
+                child: Text(t('addPhone')),
+              ),
+            ),
           if (_cameraDenied)
             Align(
               alignment: Alignment.centerLeft,

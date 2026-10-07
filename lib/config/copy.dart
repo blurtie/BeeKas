@@ -135,6 +135,7 @@ const copy = <Lang, Map<String, String>>{
     'send': 'Send',
     'errorSendFailed': "Couldn't send your photos. Try again.",
     'errorPhotosMissing': "Your photos didn't arrive. Tap Send to try again.",
+    'addPhone': 'Add phone number',
     'errorAlreadyApproved':
         'Your account is already verified. Sign in again to continue.',
     'errorStatusRejected': 'Your earlier submission was rejected. Sign in again to see why and resend.',
@@ -277,6 +278,7 @@ const copy = <Lang, Map<String, String>>{
     'send': 'Kirim',
     'errorSendFailed': 'Foto gagal dikirim. Coba lagi.',
     'errorPhotosMissing': 'Foto belum sampai. Ketuk Kirim untuk mencoba lagi.',
+    'addPhone': 'Isi nomor HP',
     'errorAlreadyApproved':
         'Akunmu sudah terverifikasi. Masuk ulang untuk melanjutkan.',
     'errorStatusRejected': 'Kiriman sebelumnya ditolak. Masuk ulang untuk melihat alasannya dan kirim ulang.',
