@@ -14,6 +14,7 @@ Future<List<String>> _pump(WidgetTester tester, Rejection? rejection) async {
         rejection: rejection,
         onResend: () => taps.add('resend'),
         onBrowse: () => taps.add('browse'),
+        onHelp: () => taps.add('help'),
         onSignOut: () => taps.add('signOut'),
       ),
     ),
@@ -47,16 +48,18 @@ void main() {
     expect(find.text(t('rejectedNote')), findsNothing);
   });
 
-  testWidgets('L12 buttons: Kirim ulang, Lihat katalog, Keluar', (
+  testWidgets('L12 buttons: Kirim ulang, Lihat katalog, Bantuan, Keluar', (
     tester,
   ) async {
     final taps = await _pump(tester, null);
     await tester.tap(find.text(t('resendVerification')));
     await tester.ensureVisible(find.text(t('browseCatalog')));
     await tester.tap(find.text(t('browseCatalog')));
+    await tester.ensureVisible(find.text(t('help')));
+    await tester.tap(find.text(t('help')));
     await tester.ensureVisible(find.text(t('signOut')));
     await tester.tap(find.text(t('signOut')));
-    expect(taps, ['resend', 'browse', 'signOut']);
+    expect(taps, ['resend', 'browse', 'help', 'signOut']);
     for (final button in tester.widgetList<ButtonStyleButton>(
       find.bySubtype<ButtonStyleButton>(),
     )) {

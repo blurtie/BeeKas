@@ -5,14 +5,15 @@ import '../domain/rejection.dart';
 import '../ui/tokens.dart';
 
 /// L12 Verifikasi ditolak (no design; laid out like L11): the admin's reasons
-/// and note, Kirim ulang (back to L8, D-08), Lihat katalog and Keluar.
-/// Bantuan comes with T12.
+/// and note, Kirim ulang (back to L8, D-08), Lihat katalog, Bantuan (D-14)
+/// and Keluar.
 class RejectedScreen extends StatelessWidget {
   const RejectedScreen({
     super.key,
     required this.rejection,
     required this.onResend,
     required this.onBrowse,
+    required this.onHelp,
     required this.onSignOut,
   });
 
@@ -20,6 +21,7 @@ class RejectedScreen extends StatelessWidget {
   final Rejection? rejection;
   final VoidCallback onResend;
   final VoidCallback onBrowse;
+  final VoidCallback onHelp;
   final VoidCallback onSignOut;
 
   @override
@@ -100,6 +102,7 @@ class RejectedScreen extends StatelessWidget {
               child: Text(t('browseCatalog')),
             ),
             const SizedBox(height: 16),
+            TextButton(onPressed: onHelp, child: Text(t('help'))),
             TextButton(onPressed: onSignOut, child: Text(t('signOut'))),
           ],
         ),

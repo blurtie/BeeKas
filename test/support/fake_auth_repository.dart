@@ -7,6 +7,8 @@ import 'package:beekas/domain/registration.dart';
 import 'package:beekas/domain/sign_in.dart';
 
 const Account fakeAdmin = (
+  fullName: 'Admin',
+  email: 'admin@binus.edu',
   role: Role.admin,
   status: AccountStatus.approved,
   accountType: AccountType.staff,

@@ -8,6 +8,8 @@ import 'signup_error.dart';
 
 /// The signed-in account, read by AuthRepository.account().
 typedef Account = ({
+  String fullName,
+  String email,
   Role role,
   AccountStatus status,
   // Null only for seeded admins, who never reach the Daftar steps.

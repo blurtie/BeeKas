@@ -10,6 +10,8 @@ Account _account(
   bool hasPassword = true,
   bool hasConsent = true,
 }) => (
+  fullName: 'Budi',
+  email: 'budi@binus.ac.id',
   role: role,
   status: status,
   accountType: AccountType.student,
