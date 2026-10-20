@@ -1,4 +1,6 @@
 import 'package:beekas/config/copy.dart';
+import 'package:beekas/data/signup_repository.dart';
+import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/onboarding_screen.dart';
 import 'package:beekas/screens/sign_in_screen.dart';
 import 'package:beekas/ui/components.dart';
@@ -19,8 +21,8 @@ Future<void> _pump(WidgetTester tester, Widget home) => tester.pumpWidget(
 Widget _onboarding() =>
     OnboardingScreen(onSignIn: () {}, onRegister: () {}, onSkip: () {});
 
-Widget _signIn() => SignInScreen(
-  repository: FakeAuthRepository(),
+Widget _signIn([FakeAuthRepository? auth]) => SignInScreen(
+  repository: auth ?? FakeAuthRepository(),
   onSignedIn: (_) {},
   onRegister: () {},
   onBrowse: () {},
@@ -58,11 +60,34 @@ void main() {
     });
   }
 
+  testWidgets('Masuk: a shown error switches language too', (tester) async {
+    final auth = FakeAuthRepository()
+      ..fail('signIn', const SignupException(SignupError.invalidCredentials));
+    await _pump(tester, _signIn(auth));
+    await tester.enterText(find.byType(TextField).first, 'a@binus.ac.id');
+    await tester.enterText(find.byType(TextField).last, 'secret123');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(copy[Lang.en]!['errorInvalidCredentials']!),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('ID'));
+    await tester.pump();
+    expect(
+      find.text(copy[Lang.id]!['errorInvalidCredentials']!),
+      findsOneWidget,
+    );
+    expect(find.text(copy[Lang.en]!['errorInvalidCredentials']!), findsNothing);
+  });
+
   testWidgets('toggle is labelled, reports the selection, and is 48 dp', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await _pump(tester, _signIn());
+    expect(find.bySemanticsLabel('Language: Bahasa Indonesia'), findsOneWidget);
     expect(
       tester.getSemantics(find.bySemanticsLabel('Language: English')),
       matchesSemantics(
@@ -79,7 +104,7 @@ void main() {
     );
     await tester.tap(find.text('ID'));
     await tester.pump();
-    expect(find.bySemanticsLabel('Bahasa: Indonesia'), findsOneWidget);
+    expect(find.bySemanticsLabel('Bahasa: Bahasa Indonesia'), findsOneWidget);
     expect(
       tester.getSemantics(find.bySemanticsLabel('Bahasa: English')),
       isNot(matchesSemantics(isSelected: true)),

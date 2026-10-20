@@ -393,7 +393,8 @@ class BeeLanguageToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelMedium;
-    Widget option(Lang lang, String text, String labelKey) {
+    // Each language is named in itself, whatever the current language.
+    Widget option(Lang lang, String text, String name) {
       final selected = language.value == lang;
       return TextButton(
         style: TextButton.styleFrom(
@@ -409,7 +410,10 @@ class BeeLanguageToggle extends StatelessWidget {
         onPressed: () => language.value = lang,
         child: Semantics(
           selected: selected,
-          child: Text(text, semanticsLabel: t(labelKey)),
+          child: Text(
+            text,
+            semanticsLabel: t('languageLabel').replaceFirst('{name}', name),
+          ),
         ),
       );
     }
@@ -417,11 +421,11 @@ class BeeLanguageToggle extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        option(Lang.en, 'EN', 'languageEn'),
+        option(Lang.en, 'EN', 'English'),
         ExcludeSemantics(
           child: Text('|', style: style?.copyWith(color: BeeColors.textMuted)),
         ),
-        option(Lang.id, 'ID', 'languageId'),
+        option(Lang.id, 'ID', 'Bahasa Indonesia'),
       ],
     );
   }
