@@ -28,6 +28,7 @@ void main() {
     await _pump(tester, (
       reasons: [RejectionReason.selfie, RejectionReason.other],
       note: 'Wajah tertutup masker',
+      rejectedAt: DateTime.utc(2026, 10, 20),
     ));
     expect(find.text(t('rejectedTitle')), findsOneWidget);
     expect(find.text('•  ${t('rejectReason_selfie')}'), findsOneWidget);
@@ -37,7 +38,11 @@ void main() {
   });
 
   testWidgets('L12 without a note shows no note heading', (tester) async {
-    await _pump(tester, (reasons: [RejectionReason.card], note: null));
+    await _pump(tester, (
+      reasons: [RejectionReason.card],
+      note: null,
+      rejectedAt: DateTime.utc(2026, 10, 20),
+    ));
     expect(find.text('•  ${t('rejectReason_card')}'), findsOneWidget);
     expect(find.text(t('rejectedNote')), findsNothing);
   });

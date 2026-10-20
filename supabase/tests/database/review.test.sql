@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(37);
+select plan(42);
 
 create function pg_temp.sign_up(p_id uuid, p_email text) returns void
 language sql as $$
@@ -82,7 +82,9 @@ select results_eq(
   'longest waiting first, latest complete attempt only');
 select is((select count(*)::int from public.pending_verifications() where id = :g), 0,
   'incomplete accounts are not listed');
-select is((select count(*)::int from storage.objects where bucket_id = 'verification'), 7,
+-- Only this test's photos: a local database may hold others.
+select is((select count(*)::int from storage.objects where bucket_id = 'verification'
+  and name ~ '^(eeeeeeee|ffffffff|99999999)-0000-4000-8000-000000000001/'), 7,
   'admin reads photos');
 select throws_ok($$ select public.approve_verification('99999999-0000-4000-8000-000000000001') $$,
   '23514', 'not_pending', 'admin cannot approve an incomplete account');
@@ -141,14 +143,22 @@ select throws_ok($$ select public.reject_verification('ffffffff-0000-4000-8000-0
   '23514', 'not_pending', 'cannot reject twice');
 reset role;
 select results_eq(
-  $$ select status::text, rejected_by::text, last_rejected_at = now(), rejection_reasons, rejection_note
-     from public.profiles where id = 'ffffffff-0000-4000-8000-000000000001' $$,
-  $$ values ('rejected', '00000000-0000-4000-8000-000000000001', true, array['card', 'other'], 'Kartu terpotong') $$,
-  'rejection records the admin, time and reasons');
+  $$ select p.status::text, p.last_rejected_at = now(), r.attempt, r.reasons, r.note, r.rejected_by::text,
+       r.rejected_at = now()
+     from public.profiles p join public.verification_rejections r on r.profile_id = p.id
+     where p.id = 'ffffffff-0000-4000-8000-000000000001' $$,
+  $$ values ('rejected', true, '1', array['card', 'other'], 'Kartu terpotong',
+       '00000000-0000-4000-8000-000000000001', true) $$,
+  'rejection records the attempt, reasons, admin and time');
+select pg_temp.act_as(:admin);
+select throws_ok($$ insert into public.verification_rejections (profile_id, reasons)
+  values ('ffffffff-0000-4000-8000-000000000001', array['card']) $$, '42501', null,
+  'not even admins insert rejections directly');
+reset role;
 
 select pg_temp.act_as(:f);
-select results_eq($$ select rejection_reasons, rejection_note from public.profiles $$,
-  $$ values (array['card', 'other'], 'Kartu terpotong') $$, 'member reads their own reasons');
+select results_eq($$ select reasons, note from public.verification_rejections $$,
+  $$ values (array['card', 'other'], 'Kartu terpotong') $$, 'member reads their own rejection');
 -- Resubmit (D-08, D-19): a new attempt folder; created_at is ahead because now() is fixed.
 select pg_temp.upload(:f, '2', now() + interval '1 second');
 select lives_ok($$ select public.submit_for_review() $$, 'member resubmits after a rejection');
@@ -159,8 +169,24 @@ select results_eq(
      where id = 'ffffffff-0000-4000-8000-000000000001' $$,
   $$ values ('ffffffff-0000-4000-8000-000000000001/2/card.jpg', 'ffffffff-0000-4000-8000-000000000001/2/selfie.jpg') $$,
   'resubmission is listed with its newest attempt');
+select results_eq(
+  $$ select jsonb_array_length(rejections), rejections->0->'reasons', rejections->0->>'note'
+     from public.pending_verifications() where id = 'ffffffff-0000-4000-8000-000000000001' $$,
+  $$ values (1, '["card", "other"]'::jsonb, 'Kartu terpotong') $$,
+  'L15 lists the earlier rejection');
+select lives_ok($$ select public.reject_verification('ffffffff-0000-4000-8000-000000000001', array['selfie'], null) $$,
+  'admin rejects the resubmission');
 select is((select count(*)::int from storage.objects where name like 'ffffffff-%/1/%'), 2,
   'the earlier attempt is kept');
+reset role;
+select results_eq(
+  $$ select attempt, reasons, note from public.verification_rejections
+     where profile_id = 'ffffffff-0000-4000-8000-000000000001' order by id $$,
+  $$ values ('1', array['card', 'other'], 'Kartu terpotong'), ('2', array['selfie'], null) $$,
+  'two rejections keep two records, one per attempt');
+select pg_temp.act_as(:e);
+select is((select count(*)::int from public.verification_rejections), 0,
+  'member cannot read another account''s rejections');
 reset role;
 
 -- The record outlives the photos (D-07, #41).
@@ -171,10 +197,9 @@ select results_eq(
      where id = 'eeeeeeee-0000-4000-8000-000000000001' $$,
   $$ values ('approved', true, true) $$, 'approval record stays after the photos are deleted');
 delete from storage.objects where bucket_id = 'verification' and name like 'ffffffff-%';
-select results_eq(
-  $$ select rejected_by is not null, last_rejected_at is not null, rejection_reasons from public.profiles
-     where id = 'ffffffff-0000-4000-8000-000000000001' $$,
-  $$ values (true, true, array['card', 'other']) $$, 'rejection record stays after the photos are deleted');
+select is((select count(*)::int from public.verification_rejections
+  where profile_id = 'ffffffff-0000-4000-8000-000000000001' and rejected_by is not null), 2,
+  'rejection history stays after the photos are deleted');
 
 select * from finish();
 rollback;

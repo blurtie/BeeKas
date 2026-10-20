@@ -173,7 +173,8 @@ reset role;
 
 select pg_temp.act_as(:admin);
 select results_eq(
-  $$ select name from storage.objects where bucket_id = 'verification' order by name $$,
+  $$ select name from storage.objects where bucket_id = 'verification'
+     and name like 'aaaaaaaa-0000-4000-8000-000000000001/%' order by name $$,
   $$ values ('aaaaaaaa-0000-4000-8000-000000000001/1/card.jpg'), ('aaaaaaaa-0000-4000-8000-000000000001/1/selfie.jpg') $$,
   'admin reads photos; the member could not rename them');
 reset role;

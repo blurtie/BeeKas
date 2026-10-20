@@ -44,27 +44,31 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<Account> account() => guardBackend(() async {
     final hasPassword = await _client.rpc<bool>('has_password');
+    final id = _client.auth.currentUser!.id;
     final profile = await _client
         .from('profiles')
-        .select(
-          'role, status, account_type, consent_at, rejection_reasons, rejection_note',
-        )
-        .eq('id', _client.auth.currentUser!.id)
+        .select('role, status, account_type, consent_at')
+        .eq('id', id)
         .single();
+    final status = AccountStatus.values.byName(profile['status'] as String);
+    final rejection = status == AccountStatus.rejected
+        ? await _client
+              .from('verification_rejections')
+              .select('reasons, note, rejected_at')
+              .eq('profile_id', id)
+              .order('rejected_at', ascending: false)
+              .order('id', ascending: false)
+              .limit(1)
+              .maybeSingle()
+        : null;
     return (
       role: Role.values.byName(profile['role'] as String),
-      status: AccountStatus.values.byName(profile['status'] as String),
+      status: status,
       // Null for seeded admins (D-18).
       accountType: AccountType.values.asNameMap()[profile['account_type']],
       hasPassword: hasPassword,
       hasConsent: profile['consent_at'] != null,
-      rejection: switch (profile['rejection_reasons']) {
-        final List<dynamic> codes => (
-          reasons: [for (final c in codes) RejectionReason.values.byName(c)],
-          note: profile['rejection_note'] as String?,
-        ),
-        _ => null,
-      },
+      rejection: rejection == null ? null : rejectionFrom(rejection),
     );
   });
 

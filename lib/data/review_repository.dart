@@ -18,6 +18,8 @@ typedef PendingAccount = ({
   DateTime submittedAt,
   String? cardPath,
   String? selfiePath,
+  // Earlier rejections, newest first (D-25).
+  List<Rejection> rejections,
 });
 
 /// Admin review (D-09); the backend refuses non-admins. Failures are
@@ -56,6 +58,10 @@ class SupabaseReviewRepository implements ReviewRepository {
           submittedAt: DateTime.parse(row['submitted_at'] as String),
           cardPath: row['card_path'] as String?,
           selfiePath: row['selfie_path'] as String?,
+          rejections: [
+            for (final r in row['rejections'] as List<dynamic>)
+              rejectionFrom(r as Map<String, dynamic>),
+          ],
         ),
     ];
   });

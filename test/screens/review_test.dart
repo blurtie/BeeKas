@@ -15,7 +15,12 @@ import 'package:beekas/ui/theme.dart';
 
 final _now = DateTime.utc(2026, 10, 20, 12);
 
-PendingAccount _account(String id, String name, Duration waited) => (
+PendingAccount _account(
+  String id,
+  String name,
+  Duration waited, {
+  List<Rejection> rejections = const [],
+}) => (
   id: id,
   fullName: name,
   email: '$id@binus.ac.id',
@@ -25,6 +30,7 @@ PendingAccount _account(String id, String name, Duration waited) => (
   submittedAt: _now.subtract(waited),
   cardPath: '$id/1/card.jpg',
   selfiePath: '$id/1/selfie.jpg',
+  rejections: rejections,
 );
 
 class _FakeReview implements ReviewRepository {
@@ -244,5 +250,55 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(t('errorNotPending')), findsOneWidget);
     expect(repo.rejected, isEmpty);
+  });
+
+  testWidgets('L15 lists earlier rejections, newest first', (tester) async {
+    final repo = _FakeReview()
+      ..accounts = [
+        _account(
+          'e',
+          'Eka',
+          const Duration(hours: 2),
+          rejections: [
+            (
+              reasons: [RejectionReason.selfie],
+              note: null,
+              rejectedAt: DateTime.utc(2026, 10, 19),
+            ),
+            (
+              reasons: [RejectionReason.card, RejectionReason.other],
+              note: 'Kartu terpotong',
+              rejectedAt: DateTime.utc(2026, 10, 18),
+            ),
+          ],
+        ),
+      ];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    expect(find.text(t('reviewRejections').replaceFirst('{n}', '2')), findsOne);
+    final first = tester.getTopLeft(find.text(t('rejectReason_selfie')));
+    final second = tester.getTopLeft(
+      find.text(
+        '${t('rejectReason_card')} · ${t('rejectReason_other')} · Kartu terpotong',
+      ),
+    );
+    expect(first.dy, lessThan(second.dy));
+  });
+
+  testWidgets('L15 without earlier rejections shows no history', (
+    tester,
+  ) async {
+    final repo = _FakeReview()
+      ..accounts = [_account('e', 'Eka', const Duration(hours: 2))];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining(t('reviewRejections').split(' (').first),
+      findsNothing,
+    );
   });
 }

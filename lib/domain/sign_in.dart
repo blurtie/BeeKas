@@ -14,7 +14,7 @@ typedef Account = ({
   AccountType? accountType,
   bool hasPassword,
   bool hasConsent,
-  // The latest rejection (L12); kept after a resubmission.
+  // The latest rejection, read only while rejected (L12).
   Rejection? rejection,
 });
 

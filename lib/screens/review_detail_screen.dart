@@ -10,8 +10,8 @@ import '../ui/components.dart';
 import '../ui/tokens.dart';
 
 /// L15 Admin: detail berkas (no design). Personal details, account and card
-/// type, phone (unverified, D-04), card and selfie side by side, Setujui and
-/// Tolak with reasons (rule 9). Pops the copy key of the outcome, 'approved'
+/// type, phone (unverified, D-04), card and selfie side by side, earlier
+/// rejections (D-25), Setujui and Tolak with reasons (rule 9). Pops the copy key of the outcome, 'approved'
 /// or 'rejected'.
 class ReviewDetailScreen extends StatefulWidget {
   const ReviewDetailScreen({
@@ -139,6 +139,24 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
             ),
             field(t('reviewCard'), t('card_${account.accountType.name}')),
             field(t('phone'), account.phone ?? t('reviewPhoneMissing')),
+            if (account.rejections.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                t('reviewRejections')
+                    .replaceFirst('{n}', '${account.rejections.length}'),
+                style: textTheme.titleMedium,
+              ),
+              for (final r in account.rejections)
+                field(
+                  MaterialLocalizations.of(context)
+                      .formatMediumDate(r.rejectedAt.toLocal()),
+                  [
+                    for (final reason in r.reasons)
+                      t('rejectReason_${reason.name}'),
+                    ?r.note,
+                  ].join(' · '),
+                ),
+            ],
             const SizedBox(height: 32),
             if (_error != null) ...[
               BeeFormError(t(_error!)),

@@ -217,6 +217,7 @@ const copy = <Lang, Map<String, String>>{
     'reviewPhotoFailed': 'Photo could not be loaded.',
     'reviewPhotoMissing': 'No photo.',
     'reviewPhoneMissing': 'No phone number',
+    'reviewRejections': 'Rejected before ({n})',
     'approve': 'Approve',
     'approveConfirm': 'Approve {name}? They get full access to BeeKas.',
     'cancel': 'Cancel',
@@ -427,6 +428,7 @@ const copy = <Lang, Map<String, String>>{
     'reviewPhotoFailed': 'Foto gagal dimuat.',
     'reviewPhotoMissing': 'Tidak ada foto.',
     'reviewPhoneMissing': 'Belum ada nomor HP',
+    'reviewRejections': 'Pernah ditolak ({n})',
     'approve': 'Setujui',
     'approveConfirm':
         'Setujui {name}? Akun ini akan mendapat akses penuh ke BeeKas.',

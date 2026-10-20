@@ -21,4 +21,15 @@ void main() {
       'other',
     ]);
   });
+
+  test('reads a rejection row', () {
+    final r = rejectionFrom({
+      'reasons': ['card', 'other'],
+      'note': 'Kartu terpotong',
+      'rejected_at': '2026-10-20T08:00:00+00:00',
+    });
+    expect(r.reasons, [RejectionReason.card, RejectionReason.other]);
+    expect(r.note, 'Kartu terpotong');
+    expect(r.rejectedAt, DateTime.utc(2026, 10, 20, 8));
+  });
 }
