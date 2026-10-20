@@ -95,14 +95,14 @@ PNG dari ekspor Figma 20 Oktober 2026. Karena sistem file tidak membedakan huruf
 
 | File | Layar |
 |---|---|
-| `Onboarding.png`, `onboarding-1.png` … `onboarding-4.png` | Onboarding (logo + komunitas), carousel |
+| `onboarding.png`, `onboarding-1.png` … `onboarding-4.png` | Onboarding (logo + komunitas), carousel |
 | `masuk.png` | Masuk (pengecualian D-22 poin 5) |
-| `Daftar.png` | Isi Data Diri |
-| `Daftar-1.png` / `Daftar-2.png` | Upload KTM / Konfirmasi KTM |
-| `Daftar-3.png` / `Daftar-4.png` | Verifikasi Wajah / Verifikasi Sedang Diproses |
-| `Daftar-5.png` / `Daftar-6.png` | Status Booking / Profil |
-| `Daftar-7.png` / `Daftar-8.png` | Checkout / Pesanan Saya (koreksi COD, D-22 poin 3) |
-| `Daftar-9.png` / `Daftar-10.png` | Chat / Notifikasi |
-| `Daftar-11.png` / `Daftar-12.png` | Tambah Barang / Kategori |
-| `Daftar-13.png` / `Daftar-14.png` | Booking Barang / Detail Barang |
+| `daftar.png` | Isi Data Diri |
+| `daftar-1.png` / `daftar-2.png` | Upload KTM / Konfirmasi KTM |
+| `daftar-3.png` / `daftar-4.png` | Verifikasi Wajah / Verifikasi Sedang Diproses |
+| `daftar-5.png` / `daftar-6.png` | Status Booking / Profil |
+| `daftar-7.png` / `daftar-8.png` | Checkout / Pesanan Saya (koreksi COD, D-22 poin 3) |
+| `daftar-9.png` / `daftar-10.png` | Chat / Notifikasi |
+| `daftar-11.png` / `daftar-12.png` | Tambah Barang / Kategori |
+| `daftar-13.png` / `daftar-14.png` | Booking Barang / Detail Barang |
 | `home.png` | Beranda |

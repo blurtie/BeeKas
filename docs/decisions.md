@@ -49,6 +49,8 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-04 — Masuk dengan email atau nomor HP + kata sandi
 
+**Digantikan sebagian oleh D-22 (20 Okt 2026).**
+
 **Status:** Disetujui CTO, 5 Oktober 2026
 
 **Keputusan:**
@@ -66,6 +68,8 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 ---
 
 ## D-05 — Tidak ada login SSO Microsoft BINUS
+
+**Digantikan sebagian oleh D-22 (20 Okt 2026).**
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
