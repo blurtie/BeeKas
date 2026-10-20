@@ -3,13 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:beekas/config/copy.dart';
-import 'package:beekas/data/auth_repository.dart';
 import 'package:beekas/data/review_repository.dart';
 import 'package:beekas/data/signup_repository.dart';
-import 'package:beekas/domain/access.dart';
 import 'package:beekas/domain/registration.dart';
 import 'package:beekas/domain/signup_error.dart';
-import 'package:beekas/screens/debug_sign_in_screen.dart';
 import 'package:beekas/screens/review_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -175,55 +172,4 @@ void main() {
     expect(find.text(t('errorNotPending')), findsOneWidget);
     expect(repo.approved, isEmpty);
   });
-
-  group('debug admin entry', () {
-    Future<(_FakeAuth, List<String>)> signIn(
-      WidgetTester tester,
-      Role role,
-    ) async {
-      final auth = _FakeAuth(role);
-      final opened = <String>[];
-      await _pump(
-        tester,
-        DebugSignInScreen(repository: auth, onAdmin: () => opened.add('L14')),
-      );
-      await tester.enterText(find.byType(TextField).first, 'x@beekas.test');
-      await tester.enterText(find.byType(TextField).last, 'secret123');
-      await tester.tap(find.text(t('signIn')));
-      await tester.pumpAndSettle();
-      return (auth, opened);
-    }
-
-    testWidgets('admin opens L14', (tester) async {
-      final (auth, opened) = await signIn(tester, Role.admin);
-      expect(opened, ['L14']);
-      expect(auth.calls, ['signIn', 'account']);
-    });
-
-    testWidgets('a member opens nothing and is signed out', (tester) async {
-      final (auth, opened) = await signIn(tester, Role.member);
-      expect(opened, isEmpty);
-      expect(auth.calls, ['signIn', 'account', 'signOut']);
-      expect(find.textContaining('Not available yet'), findsOneWidget);
-    });
-  });
-}
-
-class _FakeAuth implements AuthRepository {
-  _FakeAuth(this.role);
-  final Role role;
-  final calls = <String>[];
-
-  @override
-  Future<void> signIn(String email, String password) async =>
-      calls.add('signIn');
-
-  @override
-  Future<({Role role, AccountStatus status})> account() async {
-    calls.add('account');
-    return (role: role, status: AccountStatus.approved);
-  }
-
-  @override
-  Future<void> signOut() async => calls.add('signOut');
 }
