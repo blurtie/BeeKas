@@ -49,7 +49,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-04 — Masuk dengan email atau nomor HP + kata sandi
 
-**Digantikan sebagian oleh D-22 (20 Okt 2026).**
+**Digantikan sebagian oleh D-22 (20 Okt 2026).** Bagian "Ingat saya" digantikan D-23 (20 Okt 2026).
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
@@ -299,3 +299,15 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 **Mengubah:** D-04 (masuk dengan nomor HP, nomor HP wajib), D-05 (SSO: dari "tidak dibangun" menjadi "disembunyikan sampai ada akses BINUS"), dan keputusan lama bahwa komunikasi lewat WhatsApp (PRD, D-04 versi web).
 
 **Alasan:** Desain terbaru memuat alur jual-beli lengkap. Koreksi menjaga keputusan yang sudah ada: COD di kampus, nomor HP yang tidak diverifikasi, persetujuan data yang tercatat, dan kontras teks ≥ 4.5:1.
+
+---
+
+## D-23 — Tanpa "Ingat saya"; sesi selalu tersimpan
+
+**Status:** Dikonfirmasi Faiqi, 20 Oktober 2026
+
+**Implementasi:** PR #57.
+
+**Keputusan:** Layar Masuk tidak punya checkbox "Ingat saya". Sesi selalu tersimpan setelah aplikasi ditutup (perilaku bawaan Supabase), sampai pengguna memilih Keluar. Ini berbeda dari frame Masuk di `docs/design/masuk.png`.
+
+**Mengubah:** D-04, bagian "Ingat saya (default tercentang) … bila tidak dicentang, pengguna keluar saat aplikasi ditutup".

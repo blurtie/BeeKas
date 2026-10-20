@@ -26,6 +26,8 @@ enum SignupError {
   tooSoon('errorTooSoon'),
   weakPassword('errorWeakPassword'),
   invalidCredentials('errorInvalidCredentials'),
+  // Too many sign-in attempts (Supabase rate limit, D-04).
+  rateLimited('errorRateLimited'),
   // From approve_verification: decided by another admin meanwhile.
   notPending('errorNotPending'),
   // From the review functions: the account is not an admin.
@@ -57,6 +59,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('over_email_send_rate_limit', _) => SignupError.tooSoon,
     ('weak_password', _) => SignupError.weakPassword,
     ('invalid_credentials', _) => SignupError.invalidCredentials,
+    ('over_request_rate_limit', _) => SignupError.rateLimited,
     ('23514', 'not_pending') => SignupError.notPending,
     ('42501', 'not_admin') => SignupError.notAdmin,
     _ => SignupError.unknown,

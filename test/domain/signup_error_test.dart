@@ -67,6 +67,10 @@ void main() {
       signupErrorFrom('invalid_credentials', 'Invalid login credentials'),
       SignupError.invalidCredentials,
     );
+    expect(
+      signupErrorFrom('over_request_rate_limit', 'Request rate limit reached'),
+      SignupError.rateLimited,
+    );
   });
 
   test('maps the review functions (review.sql)', () {

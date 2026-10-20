@@ -20,6 +20,7 @@ class BeeTextField extends StatefulWidget {
     this.onChanged,
     this.textInputAction,
     this.autofillHints,
+    this.prefixIcon,
   });
 
   final String label;
@@ -32,6 +33,7 @@ class BeeTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final IconData? prefixIcon;
 
   @override
   State<BeeTextField> createState() => _BeeTextFieldState();
@@ -64,6 +66,9 @@ class _BeeTextFieldState extends State<BeeTextField> {
             autofillHints: widget.autofillHints,
             decoration: InputDecoration(
               hintText: widget.hint,
+              prefixIcon: widget.prefixIcon == null
+                  ? null
+                  : Icon(widget.prefixIcon),
               errorText: widget.errorText,
               helperText: widget.helperText,
               helperMaxLines: 3,
