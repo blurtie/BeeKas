@@ -42,7 +42,11 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(find.text(t('onboarding4Body')), findsOneWidget);
-    expect(t('onboarding4Body'), isNot(contains('WhatsApp')));
+    expect(
+      t('onboarding4Body'),
+      'Snap your item, list it in minutes, then chat with buyers in BeeKas '
+      'and meet for COD on campus.',
+    );
 
     await tester.tap(find.text(t('skip')));
     await tester.tap(find.text(t('signIn')));

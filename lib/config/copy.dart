@@ -172,7 +172,7 @@ const copy = <Lang, Map<String, String>>{
     'onboarding4Pre': 'Ready to ',
     'onboarding4Mark': 'Buy and Sell',
     'onboarding4Post': ' on Campus?',
-    'onboarding4Body': 'Snap your item and we draft the listing for you. Then chat with buyers in BeeKas and meet for COD on campus.',
+    'onboarding4Body': 'Snap your item, list it in minutes, then chat with buyers in BeeKas and meet for COD on campus.',
     'signInTitle': 'Welcome to ',
     'signInTitleEnd': '!',
     'signInSubtitle': 'Sign in to continue to the BINUS community marketplace.',
@@ -605,7 +605,7 @@ Changes to these terms are announced in the app. These terms are governed by the
     'onboarding4Mark': 'Jual Beli',
     'onboarding4Post': ' di Kampus?',
     // D-22 point 2: chat in the app, not WhatsApp.
-    'onboarding4Body': 'Foto barangmu, sistem buat draf listing otomatis, lalu ngobrol dengan pembeli lewat chat BeeKas dan ketemuan COD di kampus.',
+    'onboarding4Body': 'Foto barangmu, pasang dalam hitungan menit, lalu ngobrol dengan pembeli lewat chat BeeKas dan ketemuan COD di kampus.',
     'signInTitle': 'Selamat Datang di ',
     'signInTitleEnd': '!',
     'signInSubtitle': 'Masuk untuk melanjutkan ke marketplace komunitas BINUS.',
