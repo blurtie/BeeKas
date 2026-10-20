@@ -46,6 +46,18 @@ Destination destinationFor(Account account) {
   };
 }
 
+enum StartScreen { onboarding, signIn, account }
+
+/// Screens stacked at launch. A kept session skips onboarding and opens the
+/// screen for its status (#31); otherwise onboarding shows on the first open.
+List<StartScreen> startScreens(Account? account, {required bool onboarded}) =>
+    account == null
+    ? [onboarded ? StartScreen.signIn : StartScreen.onboarding]
+    : [
+        if (destinationFor(account).resumesDaftar) StartScreen.signIn,
+        StartScreen.account,
+      ];
+
 /// Masuk's message for a failed sign-in; [error] is null when the server could
 /// not be reached. Unknown email and wrong password share one message (D-04).
 String signInErrorKey(SignupError? error) => switch (error) {

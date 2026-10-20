@@ -19,6 +19,24 @@ Account _account(
 );
 
 void main() {
+  test('onboarding only on the first open without a session', () {
+    expect(startScreens(null, onboarded: false), [StartScreen.onboarding]);
+    expect(startScreens(null, onboarded: true), [StartScreen.signIn]);
+    for (final onboarded in [false, true]) {
+      expect(
+        startScreens(_account(AccountStatus.pending), onboarded: onboarded),
+        [StartScreen.account],
+      );
+      expect(
+        startScreens(
+          _account(AccountStatus.incomplete, hasConsent: false),
+          onboarded: onboarded,
+        ),
+        [StartScreen.signIn, StartScreen.account],
+      );
+    }
+  });
+
   test('members go where their status says', () {
     expect(
       destinationFor(_account(AccountStatus.pending)),
