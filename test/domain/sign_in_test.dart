@@ -1,6 +1,7 @@
 import 'package:beekas/domain/access.dart';
 import 'package:beekas/domain/registration.dart';
 import 'package:beekas/domain/sign_in.dart';
+import 'package:beekas/domain/signup_error.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Account _account(
@@ -46,5 +47,23 @@ void main() {
         Destination.review,
       );
     }
+  });
+
+  test('only the Daftar steps keep Masuk below them', () {
+    expect(Destination.values.where((d) => d.resumesDaftar), [
+      Destination.password,
+      Destination.consent,
+      Destination.photos,
+    ]);
+  });
+
+  test('sign-in errors: one message for wrong email or password', () {
+    expect(signInErrorKey(null), 'errorNetwork');
+    expect(
+      signInErrorKey(SignupError.invalidCredentials),
+      'errorInvalidCredentials',
+    );
+    expect(signInErrorKey(SignupError.rateLimited), 'errorRateLimited');
+    expect(signInErrorKey(SignupError.unknown), 'errorSignInFailed');
   });
 }

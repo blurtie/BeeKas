@@ -4,7 +4,6 @@ import '../config/copy.dart';
 import '../data/auth_repository.dart';
 import '../data/signup_repository.dart';
 import '../domain/sign_in.dart';
-import '../domain/signup_error.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
 
@@ -57,7 +56,14 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _loading = true);
     try {
       await widget.repository.signIn(_email.text, _password.text);
-      final account = await widget.repository.account();
+      final Account account;
+      try {
+        account = await widget.repository.account();
+      } on SignupException {
+        // No status to route by: do not leave a session behind.
+        await widget.repository.signOut().catchError((_) {});
+        rethrow;
+      }
       if (mounted) widget.onSignedIn(account);
     } on SignupException catch (e) {
       if (mounted) setState(() => _error = e);
@@ -70,16 +76,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final error = _error;
-    // One message for unknown email and wrong password (D-04).
-    final formError = error == null
-        ? null
-        : switch (error.error) {
-            null => 'errorNetwork',
-            final e &&
-                (SignupError.invalidCredentials || SignupError.rateLimited) =>
-              e.copyKey,
-            _ => 'errorSignInFailed',
-          };
+    final formError = error == null ? null : signInErrorKey(error.error);
     const gap = SizedBox(height: 16);
 
     return Scaffold(
@@ -92,19 +89,20 @@ class _SignInScreenState extends State<SignInScreen> {
             24,
           ),
           children: [
+            // The logo word stays untranslated and in its brand colours.
             Text.rich(
               TextSpan(
                 text: t('signInTitle'),
-                children: const [
-                  TextSpan(
+                children: [
+                  const TextSpan(
                     text: 'Bee',
                     style: TextStyle(color: BeeColors.brandOrange),
                   ),
-                  TextSpan(
+                  const TextSpan(
                     text: 'Kas',
                     style: TextStyle(color: BeeColors.logoKas),
                   ),
-                  TextSpan(text: '!'),
+                  TextSpan(text: t('signInTitleEnd')),
                 ],
               ),
               style: textTheme.headlineLarge,

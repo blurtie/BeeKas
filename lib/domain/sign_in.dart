@@ -3,6 +3,7 @@ library;
 
 import 'access.dart';
 import 'registration.dart';
+import 'signup_error.dart';
 
 /// The signed-in account, read by AuthRepository.account().
 typedef Account = ({
@@ -14,7 +15,19 @@ typedef Account = ({
   bool hasConsent,
 });
 
-enum Destination { password, consent, photos, pending, rejected, home, review }
+enum Destination {
+  password,
+  consent,
+  photos,
+  pending,
+  rejected,
+  home,
+  review;
+
+  /// Daftar steps have no Keluar, so Masuk stays below them for Back.
+  bool get resumesDaftar =>
+      this == password || this == consent || this == photos;
+}
 
 /// Admins go to L14. Incomplete members resume Daftar at the first unfinished
 /// step; a missing phone is asked for later by L10 (phone_missing).
@@ -29,3 +42,11 @@ Destination destinationFor(Account account) {
     AccountStatus.approved => Destination.home,
   };
 }
+
+/// Masuk's message for a failed sign-in; [error] is null when the server could
+/// not be reached. Unknown email and wrong password share one message (D-04).
+String signInErrorKey(SignupError? error) => switch (error) {
+  null => 'errorNetwork',
+  SignupError.invalidCredentials || SignupError.rateLimited => error.copyKey,
+  _ => 'errorSignInFailed',
+};

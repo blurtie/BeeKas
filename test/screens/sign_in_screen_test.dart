@@ -22,6 +22,7 @@ const Account _admin = (
 
 class _FakeAuth implements AuthRepository {
   SignupException? error;
+  SignupException? accountError;
   Completer<void>? gate;
   final calls = <String>[];
 
@@ -35,6 +36,7 @@ class _FakeAuth implements AuthRepository {
   @override
   Future<Account> account() async {
     calls.add('account');
+    if (accountError case final e?) throw e;
     return _admin;
   }
 
@@ -143,5 +145,14 @@ void main() {
   testWidgets('starts with the email verified on Daftar', (tester) async {
     await _pump(tester, _FakeAuth(), email: 'a@binus.ac.id');
     expect(find.text('a@binus.ac.id'), findsOneWidget);
+  });
+
+  testWidgets('a failed profile read signs out again', (tester) async {
+    final auth = _FakeAuth()..accountError = const SignupException(null);
+    final signedIn = await _pump(tester, auth);
+    await _submit(tester);
+    expect(auth.calls, ['signIn a@binus.ac.id', 'account', 'signOut']);
+    expect(find.text(t('errorNetwork')), findsOneWidget);
+    expect(signedIn, isEmpty);
   });
 }

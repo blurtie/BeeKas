@@ -56,10 +56,11 @@ class BeeKasApp extends StatelessWidget {
     return MaterialApp(
       title: 'BeeKas',
       theme: beeTheme(),
-      // Unused: every later route is pushed directly.
+      // Required next to onGenerateInitialRoutes (blank screen without it);
+      // later routes are pushed directly.
       onGenerateRoute: (_) => MaterialPageRoute(builder: _signIn),
       onGenerateInitialRoutes: (_) => [
-        if (account == null || _resumesDaftar(account!))
+        if (account == null || destinationFor(account!).resumesDaftar)
           MaterialPageRoute(builder: _signIn),
         if (account != null)
           MaterialPageRoute(
@@ -80,7 +81,7 @@ Widget _signIn(BuildContext context, [String? email]) => SignInScreen(
     final route = MaterialPageRoute<void>(
       builder: (context) => _screenFor(context, account),
     );
-    _resumesDaftar(account)
+    destinationFor(account).resumesDaftar
         ? Navigator.push(context, route)
         : Navigator.pushAndRemoveUntil(context, route, (_) => false);
   },
@@ -90,12 +91,6 @@ Widget _signIn(BuildContext context, [String? email]) => SignInScreen(
   onTerms: () => _legal(context, 'terms'),
   onPrivacy: () => _legal(context, 'privacy'),
 );
-
-/// Daftar steps have no Keluar, so Masuk stays below them for Back.
-bool _resumesDaftar(Account account) => switch (destinationFor(account)) {
-  Destination.password || Destination.consent || Destination.photos => true,
-  _ => false,
-};
 
 Widget _screenFor(BuildContext context, Account account) =>
     switch (destinationFor(account)) {
