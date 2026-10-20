@@ -1,16 +1,18 @@
 // Shared by the pg_cron-called functions (#33, #41): service-role RPC and the
 // x-cron-secret check. They run with verify_jwt = false, so the secret is the lock.
 
-const env = (k: string) => Deno.env.get(k) ?? "";
+export const env = (k: string) => Deno.env.get(k) ?? "";
+
+export const serviceHeaders = () => ({
+  "Content-Type": "application/json",
+  apikey: env("SUPABASE_SERVICE_ROLE_KEY"),
+  Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}`,
+});
 
 export async function rpc(name: string, args: unknown) {
   const res = await fetch(`${env("SUPABASE_URL")}/rest/v1/rpc/${name}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: env("SUPABASE_SERVICE_ROLE_KEY"),
-      Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}`,
-    },
+    headers: serviceHeaders(),
     body: JSON.stringify(args),
   });
   if (!res.ok) throw new Error(`${name} ${res.status}: ${await res.text()}`);

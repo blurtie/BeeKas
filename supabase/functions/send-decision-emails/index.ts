@@ -2,12 +2,10 @@
 // at-least-once (see the migration). Sends over HTTP with fetch: Edge Functions block
 // outgoing ports 25 and 587, so no SMTP.
 
-import { fromCron, rpc } from "../_shared/cron.ts";
+import { env, fromCron, rpc } from "../_shared/cron.ts";
 
 type Email = { id: number; recipient: string; subject: string; body: string };
 type Send = (e: Email) => Promise<void>;
-
-const env = (k: string) => Deno.env.get(k) ?? "";
 
 // One sender per EMAIL_API mode. The cloud provider is added once it is chosen.
 const senders: Record<string, Send> = {
