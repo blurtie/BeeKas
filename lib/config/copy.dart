@@ -1,10 +1,16 @@
+import 'package:flutter/foundation.dart';
+
 /// All UI text, in two maps (D-11). English is the default.
 enum Lang { en, id }
 
-// ponytail: global language; the EN|ID toggle ticket makes it persisted and listenable.
-Lang currentLang = Lang.en;
+/// The interface language; BeeLanguageScope rebuilds the screens when it
+/// changes, and main.dart keeps it on the device.
+final language = ValueNotifier(Lang.en);
 
-String t(String key) => copy[currentLang]![key]!;
+String t(String key) => copy[language.value]![key]!;
+
+/// A stored language name back to [Lang]; unknown or missing is English.
+Lang langFrom(String? name) => Lang.values.asNameMap()[name] ?? Lang.en;
 
 /// Version of the L7 consent text (consent* keys), stored by record_consent
 /// (D-20). Change it whenever that text changes.
@@ -159,7 +165,7 @@ const copy = <Lang, Map<String, String>>{
     'onboardingTagline': 'Sell, Buy, Share at BINUS',
     'onboardingCommunity': 'For the community of',
     'onboardingRegister': 'Create an account',
-    'languagePlaceholder': 'EN | ID',
+    'languageLabel': 'Language: {name}',
     'onboarding1Body': 'BeeKas is a preloved marketplace just for the BINUS community. Buy and sell used items safely, among fellow Binusians.',
     'onboarding2Pre': 'Find Items ',
     'onboarding2Mark': 'Without',
@@ -591,7 +597,7 @@ Changes to these terms are announced in the app. These terms are governed by the
     'onboardingTagline': 'Jual, Beli, Berbagi di BINUS',
     'onboardingCommunity': 'Untuk Komunitas',
     'onboardingRegister': 'Daftar Akun Baru',
-    'languagePlaceholder': 'EN | ID',
+    'languageLabel': 'Bahasa: {name}',
     'onboarding1Body': 'BeeKas adalah marketplace barang preloved khusus komunitas BINUS. Jual dan beli barang bekas dengan aman, sesama Binusian.',
     'onboarding2Pre': 'Cari Barang ',
     'onboarding2Mark': 'Tanpa',

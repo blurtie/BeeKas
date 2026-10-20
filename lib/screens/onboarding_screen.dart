@@ -73,13 +73,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 if (!_showIntro)
                   TextButton(onPressed: widget.onSkip, child: Text(t('skip'))),
                 const Spacer(),
-                // ponytail: placeholder only; #38 makes it switch language.
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    t('languagePlaceholder'),
-                    style: textTheme.labelMedium,
-                  ),
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: BeeLanguageToggle(),
                 ),
               ],
             ),

@@ -9,10 +9,21 @@ void main() {
     }
   });
 
+  test('every language keeps the same placeholders', () {
+    final placeholder = RegExp(r'\{\w+\}');
+    Set<String> names(String text) =>
+        placeholder.allMatches(text).map((m) => m[0]!).toSet();
+    for (final MapEntry(:key, value: en) in copy[Lang.en]!.entries) {
+      for (final lang in Lang.values) {
+        expect(names(copy[lang]![key]!), names(en), reason: '$lang $key');
+      }
+    }
+  });
+
   test('t reads the current language', () {
-    addTearDown(() => currentLang = Lang.en);
+    addTearDown(() => language.value = Lang.en);
     expect(t('signIn'), 'Sign in');
-    currentLang = Lang.id;
+    language.value = Lang.id;
     expect(t('signIn'), 'Masuk');
   });
 }

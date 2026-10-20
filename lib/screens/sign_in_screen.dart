@@ -88,11 +88,15 @@ class _SignInScreenState extends State<SignInScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
             BeeSpacing.screenX,
-            64,
+            16,
             BeeSpacing.screenX,
             24,
           ),
           children: [
+            const Align(
+              alignment: Alignment.centerRight,
+              child: BeeLanguageToggle(),
+            ),
             // The logo word stays untranslated and in its brand colours.
             Text.rich(
               TextSpan(
