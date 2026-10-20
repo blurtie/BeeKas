@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(27);
 
 create function pg_temp.sign_up(p_id uuid, p_email text, p_name text) returns void
 language sql as $$
@@ -77,6 +77,13 @@ select pg_temp.act_as(:a);
 select throws_ok($$ select * from public.decision_emails $$, '42501', null, 'member cannot read the outbox');
 select throws_ok($$ select * from public.claim_decision_emails() $$, '42501', null, 'member cannot claim');
 select throws_ok($$ select * from public.decision_email(1) $$, '42501', null, 'member cannot render an email');
+select throws_ok($$ select public.decision_emails_cron_secret() $$, '42501', null, 'member cannot read the cron secret');
+reset role;
+set local role anon;
+select throws_ok($$ select public.decision_emails_cron_secret() $$, '42501', null, 'anon cannot read the cron secret');
+reset role;
+set local role service_role;
+select isnt(public.decision_emails_cron_secret(), null, 'the function (service_role) reads the cron secret');
 reset role;
 
 -- Claiming ---------------------------------------------------------------------

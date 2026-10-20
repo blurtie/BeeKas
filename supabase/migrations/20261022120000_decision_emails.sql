@@ -183,9 +183,27 @@ revoke execute on function public.queue_approved_email(), public.queue_rejected_
 grant execute on function public.claim_decision_emails(int), public.finish_decision_email(bigint, text)
   to service_role;
 
--- Every minute, poke the function. The URL lives in Vault per environment (seed.sql locally,
--- docs/cloud-checklist.md for cloud); without it nothing is called and rows wait as pending.
+-- The shared secret pg_cron sends and the function checks (it runs with verify_jwt = false).
+-- Lives in Vault: seed.sql locally, docs/cloud-checklist.md for cloud. Only service_role reads it.
+create function public.decision_emails_cron_secret()
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select decrypted_secret from vault.decrypted_secrets where name = 'decision_emails_cron_secret';
+$$;
+revoke execute on function public.decision_emails_cron_secret() from public, anon, authenticated;
+grant execute on function public.decision_emails_cron_secret() to service_role;
+
+-- Every minute, poke the function. URL and secret live in Vault per environment; without
+-- them nothing is called and rows wait as pending.
 select cron.schedule('send-decision-emails', '* * * * *', $$
-  select net.http_post(url := s.decrypted_secret, body := '{}'::jsonb)
-  from vault.decrypted_secrets s where s.name = 'decision_emails_url'
+  select net.http_post(
+    url := u.decrypted_secret,
+    body := '{}'::jsonb,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', s.decrypted_secret))
+  from vault.decrypted_secrets u, vault.decrypted_secrets s
+  where u.name = 'decision_emails_url' and s.name = 'decision_emails_cron_secret'
 $$);

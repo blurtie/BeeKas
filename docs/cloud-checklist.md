@@ -42,10 +42,12 @@ Email disetujui/ditolak dikirim Edge Function `send-decision-emails` lewat **API
 
 1. Deploy function: `supabase functions deploy send-decision-emails --no-verify-jwt`.
 2. Di **Edge Functions → Secrets**, isi `EMAIL_API` (nama mode penyedia), `EMAIL_FROM`, dan kunci API penyedia. Kunci **tidak pernah** ditulis di repo, issue, PR, atau chat. Selama `EMAIL_API` kosong atau belum dikenal, function hanya mencatat peringatan dan antrean tetap `pending` tanpa menambah `attempts`.
-3. Di SQL editor, simpan URL function untuk `pg_cron` (sekali saja):
+3. Di SQL editor, simpan URL function dan secret bersama untuk `pg_cron` di Vault (sekali saja). `pg_cron` mengirim secret itu di header `x-cron-secret`; function membandingkannya (waktu-konstan) dengan nilai di Vault dan menolak dengan 401 bila tidak cocok. Buat nilai acak yang panjang, mis. `openssl rand -hex 32`, dan **jangan** pakai nilai lokal dari `seed.sql`. Nilainya tidak pernah ditulis di repo, issue, PR, atau chat:
    ```sql
    select vault.create_secret('https://<project-ref>.supabase.co/functions/v1/send-decision-emails', 'decision_emails_url');
+   select vault.create_secret('<nilai acak>', 'decision_emails_cron_secret');
    ```
+   Untuk mengganti secret: `select vault.update_secret(id, '<nilai baru>') from vault.secrets where name = 'decision_emails_cron_secret';`
 4. Pantau dan antrekan ulang. Baris yang gagal kirim 5 kali berstatus `failed` dan tidak dicoba lagi:
    ```sql
    -- Melihat yang gagal

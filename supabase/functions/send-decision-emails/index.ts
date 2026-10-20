@@ -40,7 +40,22 @@ async function rpc(name: string, args: unknown) {
   return res.status === 204 ? null : res.json();
 }
 
-Deno.serve(async () => {
+// Constant-time: compares SHA-256 digests byte by byte without stopping early.
+async function sameSecret(a: string, b: string) {
+  const hash = async (s: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
+  const [x, y] = await Promise.all([hash(a), hash(b)]);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+Deno.serve(async (req) => {
+  // Only pg_cron may run it: the shared secret from Vault must match the header.
+  const expected: string | null = await rpc("decision_emails_cron_secret", {});
+  const given = req.headers.get("x-cron-secret");
+  if (!expected || given === null || !(await sameSecret(given, expected))) {
+    return new Response("unauthorized", { status: 401 });
+  }
   const mode = env("EMAIL_API");
   const send = senders[mode];
   // Not configured is not a send failure: claim nothing, rows stay pending with attempts as is.

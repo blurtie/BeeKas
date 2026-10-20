@@ -434,6 +434,6 @@ enabled = true
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
-# #33: called by pg_cron, not by users. It only drains the outbox, so no JWT is needed.
+# #33: called by pg_cron, not by users. No JWT; it checks the x-cron-secret header instead.
 [functions.send-decision-emails]
 verify_jwt = false
