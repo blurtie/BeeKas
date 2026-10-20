@@ -24,7 +24,7 @@ void main() {
     await _pump(tester);
     expect(find.text(t('onboardingCommunity')), findsOneWidget);
     expect(find.text(t('skip')), findsNothing);
-    expect(find.text(t('languagePlaceholder')), findsOneWidget);
+    expect(find.text('EN'), findsOneWidget);
 
     await tester.pump(OnboardingScreen.introDuration);
     expect(find.text(t('onboardingCommunity')), findsNothing);

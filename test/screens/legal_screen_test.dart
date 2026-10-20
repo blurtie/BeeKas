@@ -34,7 +34,7 @@ Widget _consent(BuildContext context) => ConsentScreen(
 );
 
 void main() {
-  tearDown(() => currentLang = Lang.en);
+  tearDown(() => language.value = Lang.en);
 
   for (final lang in Lang.values) {
     for (final (name, screen) in [('L3', _signIn), ('L7', _consent)]) {
@@ -42,7 +42,7 @@ void main() {
         testWidgets('$lang $name opens $key, scrolls, and goes back', (
           tester,
         ) async {
-          currentLang = lang;
+          language.value = lang;
           tester.platformDispatcher.textScaleFactorTestValue = 2;
           addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
           await tester.pumpWidget(

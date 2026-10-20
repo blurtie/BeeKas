@@ -384,3 +384,82 @@ class BeeOutlinedPillButton extends StatelessWidget {
     child: Text(label),
   );
 }
+
+/// EN | ID (D-11) on Onboarding and Masuk. Sets [language]; the pressed
+/// side is bold and read out as selected.
+class BeeLanguageToggle extends StatelessWidget {
+  const BeeLanguageToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelMedium;
+    Widget option(Lang lang, String text, String labelKey) {
+      final selected = language.value == lang;
+      return TextButton(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          padding: EdgeInsets.zero,
+          foregroundColor: selected
+              ? BeeColors.textHeading
+              : BeeColors.textMuted,
+          textStyle: style?.copyWith(
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+          ),
+        ),
+        onPressed: () => language.value = lang,
+        child: Semantics(
+          selected: selected,
+          child: Text(text, semanticsLabel: t(labelKey)),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        option(Lang.en, 'EN', 'languageEn'),
+        ExcludeSemantics(
+          child: Text('|', style: style?.copyWith(color: BeeColors.textMuted)),
+        ),
+        option(Lang.id, 'ID', 'languageId'),
+      ],
+    );
+  }
+}
+
+/// Rebuilds everything below when [language] changes, so each t() reads the
+/// new language at once while screens keep their state (no restart).
+class BeeLanguageScope extends StatefulWidget {
+  const BeeLanguageScope({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<BeeLanguageScope> createState() => _BeeLanguageScopeState();
+}
+
+class _BeeLanguageScopeState extends State<BeeLanguageScope> {
+  @override
+  void initState() {
+    super.initState();
+    language.addListener(_rebuildAll);
+  }
+
+  @override
+  void dispose() {
+    language.removeListener(_rebuildAll);
+    super.dispose();
+  }
+
+  void _rebuildAll() {
+    void mark(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(mark);
+    }
+
+    (context as Element).visitChildren(mark);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

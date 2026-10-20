@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/copy.dart';
 import 'data/auth_repository.dart';
 import 'data/camera.dart';
+import 'data/language.dart';
 import 'data/onboarding.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
@@ -24,6 +25,7 @@ import 'screens/reset_screens.dart';
 import 'screens/review_list_screen.dart';
 import 'screens/selfie_screen.dart';
 import 'screens/sign_in_screen.dart';
+import 'ui/components.dart';
 import 'ui/theme.dart';
 
 // Public values only, passed with --dart-define-from-file (docs/local-setup.md).
@@ -38,6 +40,8 @@ Future<void> main() async {
     );
   }
   WidgetsFlutterBinding.ensureInitialized();
+  language.value = await savedLang();
+  language.addListener(() => saveLang(language.value));
   await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
   // A session kept from an earlier run opens the screen for its status.
   Account? account;
@@ -62,6 +66,7 @@ class BeeKasApp extends StatelessWidget {
     return MaterialApp(
       title: 'BeeKas',
       theme: beeTheme(),
+      builder: (context, child) => BeeLanguageScope(child: child!),
       // Required next to onGenerateInitialRoutes (blank screen without it);
       // later routes are pushed directly.
       onGenerateRoute: (_) => MaterialPageRoute(builder: _signIn),
