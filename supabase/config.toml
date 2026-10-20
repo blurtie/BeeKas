@@ -437,3 +437,7 @@ enabled = true
 # #33: called by pg_cron, not by users. No JWT; it checks the x-cron-secret header instead.
 [functions.send-decision-emails]
 verify_jwt = false
+
+# #41: called by pg_cron daily, not by users. No JWT; it checks the x-cron-secret header instead.
+[functions.delete-expired-photos]
+verify_jwt = false

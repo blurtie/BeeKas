@@ -60,3 +60,28 @@ Email disetujui/ditolak dikirim Edge Function `send-decision-emails` lewat **API
    where status = 'failed';
    ```
    Pengiriman bersifat *at-least-once*: bila function mati setelah email terkirim tapi sebelum ditandai `sent`, email bisa terkirim dua kali.
+
+## 7. Penghapusan foto 30 hari (#41, D-07)
+
+Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC (10:00 WIB). Function menghapus foto kartu dan selfie sebuah percobaan yang diputuskan lebih dari 29 hari lalu (disetujui: `approved_at`; ditolak: `rejected_at` percobaan itu), sehingga foto selalu terhapus paling lambat hari ke-30. Penghapusan lewat Storage API, karena `DELETE` lewat SQL di `storage.objects` membuat file yatim di bucket ([Supabase: Delete Objects](https://supabase.com/docs/guides/storage/management/delete-objects)).
+
+1. Deploy: `supabase functions deploy delete-expired-photos --no-verify-jwt`.
+2. Di SQL editor, simpan URL dan secret bersama di Vault (sekali saja). Buat nilai acak baru (mis. `openssl rand -hex 32`), **bukan** nilai lokal dari `seed.sql` dan bukan secret email keputusan. Nilainya tidak pernah ditulis di repo, issue, PR, atau chat:
+   ```sql
+   select vault.create_secret('https://<project-ref>.supabase.co/functions/v1/delete-expired-photos', 'photo_retention_url');
+   select vault.create_secret('<nilai acak>', 'photo_retention_cron_secret');
+   ```
+3. Bukti penghapusan dan pemantauan:
+   ```sql
+   -- Penghapusan yang sudah dijalankan
+   select profile_id, attempt, objects, deleted_at from public.photo_deletions order by deleted_at desc;
+
+   -- Foto yang sudah jatuh tempo tapi belum terhapus (harus kosong setelah run harian)
+   select * from public.expired_verification_photos();
+
+   -- Hasil panggilan pg_cron
+   select status, return_message, start_time from cron.job_run_details
+   where jobid = (select jobid from cron.job where jobname = 'delete-expired-photos')
+   order by start_time desc limit 5;
+   ```
+   Kegagalan per percobaan tercatat di log function sebagai `delete-expired-photos: <profile>/<attempt> failed: ...` dan dicoba lagi pada run berikutnya.

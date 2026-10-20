@@ -20,6 +20,7 @@ PendingAccount _account(
   String name,
   Duration waited, {
   List<Rejection> rejections = const [],
+  bool photosDeleted = false,
 }) => (
   id: id,
   fullName: name,
@@ -28,9 +29,10 @@ PendingAccount _account(
   accountType: AccountType.student,
   campus: Campus.values.first,
   submittedAt: _now.subtract(waited),
-  cardPath: '$id/1/card.jpg',
-  selfiePath: '$id/1/selfie.jpg',
+  cardPath: photosDeleted ? null : '$id/1/card.jpg',
+  selfiePath: photosDeleted ? null : '$id/1/selfie.jpg',
   rejections: rejections,
+  photosDeleted: photosDeleted,
 );
 
 class _FakeReview implements ReviewRepository {
@@ -174,6 +176,22 @@ void main() {
     expect(repo.approved, ['e']);
     expect(find.text(t('approved').replaceFirst('{name}', 'Eka')), findsOne);
     expect(find.text(t('reviewEmpty')), findsOneWidget);
+  });
+
+  testWidgets('L15 says the photos were deleted under the 30-day policy', (
+    tester,
+  ) async {
+    final repo = _FakeReview()
+      ..accounts = [
+        _account('e', 'Eka', const Duration(hours: 2), photosDeleted: true),
+      ];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    expect(find.text(t('reviewPhotoDeleted')), findsNWidgets(2));
+    expect(find.text(t('reviewPhotoFailed')), findsNothing);
+    expect(find.text(t('approve')), findsOneWidget);
   });
 
   testWidgets('L15 shows why approval failed and stays open', (tester) async {

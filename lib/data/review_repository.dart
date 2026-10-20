@@ -20,6 +20,8 @@ typedef PendingAccount = ({
   String? selfiePath,
   // Earlier rejections, newest first (D-25).
   List<Rejection> rejections,
+  // Earlier photos were deleted after 30 days (D-07, #41).
+  bool photosDeleted,
 });
 
 /// Admin review (D-09); the backend refuses non-admins. Failures are
@@ -62,6 +64,7 @@ class SupabaseReviewRepository implements ReviewRepository {
             for (final r in row['rejections'] as List<dynamic>)
               rejectionFrom(r as Map<String, dynamic>),
           ],
+          photosDeleted: row['photos_deleted'] as bool,
         ),
     ];
   });
