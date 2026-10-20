@@ -193,7 +193,7 @@ void main() {
     await _pump(
       tester,
       PasswordScreen(
-        repository: repo,
+        save: repo.setPassword,
         keptPhone: otp!.keptPhone,
         onDone: () {},
       ),
@@ -209,7 +209,7 @@ void main() {
       var done = false;
       await _pump(
         tester,
-        PasswordScreen(repository: repo, onDone: () => done = true),
+        PasswordScreen(save: repo.setPassword, onDone: () => done = true),
       );
       expect(find.text(t('passwordHelper')), findsOneWidget);
       FilledButton button() =>
@@ -236,7 +236,10 @@ void main() {
           'setPassword': [const SignupException(SignupError.weakPassword)],
         },
       );
-      await _pump(tester, PasswordScreen(repository: repo, onDone: () {}));
+      await _pump(
+        tester,
+        PasswordScreen(save: repo.setPassword, onDone: () {}),
+      );
       await tester.enterText(_field(t('password')), 'abcdefg1');
       await tester.enterText(_field(t('passwordConfirm')), 'abcdefg1');
       await tester.pump();

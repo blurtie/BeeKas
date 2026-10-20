@@ -66,4 +66,12 @@ void main() {
     expect(signInErrorKey(SignupError.rateLimited), 'errorRateLimited');
     expect(signInErrorKey(SignupError.unknown), 'errorSignInFailed');
   });
+
+  test('sending a reset code never tells registered from unknown emails', () {
+    expect(resetSendErrorKey(null), 'errorNetwork');
+    expect(resetSendErrorKey(SignupError.rateLimited), 'errorRateLimited');
+    for (final e in [SignupError.tooSoon, SignupError.unknown]) {
+      expect(resetSendErrorKey(e), isNull, reason: '$e');
+    }
+  });
 }

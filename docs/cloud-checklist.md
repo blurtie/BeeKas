@@ -6,10 +6,11 @@ Langkah wajib sebelum aplikasi memakai project Supabase cloud. Menurut D-10, cuk
 
 Template bawaan hanya berisi tautan, tanpa kode 6 digit, sehingga pendaftar tidak bisa menyelesaikan L5 (#27).
 
-Di **Authentication → Emails → Templates**, ubah dua template berikut supaya memakai `{{ .Token }}`. Isinya boleh disalin dari `supabase/templates/otp.html`:
+Di **Authentication → Emails → Templates**, ubah tiga template berikut supaya memakai `{{ .Token }}`. Isinya boleh disalin dari `supabase/templates/otp.html`:
 
 - **Confirm signup**: dikirim ke email baru.
 - **Magic link**: dikirim ke email yang sudah ada.
+- **Reset password**: dikirim saat Lupa kata sandi (#34).
 
 Subjek yang dipakai lokal: `BeeKas verification code / Kode verifikasi BeeKas`.
 

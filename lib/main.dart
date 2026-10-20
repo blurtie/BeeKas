@@ -16,6 +16,7 @@ import 'screens/password_screen.dart';
 import 'screens/pending_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/reset_screens.dart';
 import 'screens/review_list_screen.dart';
 import 'screens/selfie_screen.dart';
 import 'screens/sign_in_screen.dart';
@@ -90,7 +91,55 @@ Widget _signIn(BuildContext context, [String? email]) => SignInScreen(
   onBrowse: () => _catalog(context),
   onTerms: () => _legal(context, 'terms'),
   onPrivacy: () => _legal(context, 'privacy'),
+  onForgotPassword: (email) => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => _resetEmail(context, email)),
+  ),
 );
+
+/// Lupa password (#34): email, code, new password, then the screen for the
+/// account's status, as after Masuk.
+Widget _resetEmail(BuildContext context, String email) => ResetEmailScreen(
+  repository: _auth,
+  initialEmail: email,
+  onSent: (email) => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ResetCodeScreen(
+        repository: _auth,
+        email: email,
+        // The code is used: the password step replaces it.
+        onVerified: () => _replace(
+          context,
+          (context) => PasswordScreen(
+            reset: true,
+            save: _auth.resetPassword,
+            onDone: () => _afterReset(context),
+          ),
+        ),
+      ),
+    ),
+  ),
+);
+
+Future<void> _afterReset(BuildContext context) async {
+  try {
+    final account = await _auth.account();
+    if (!context.mounted) return;
+    final route = MaterialPageRoute<void>(
+      builder: (context) => _screenFor(context, account),
+    );
+    // Daftar steps keep Masuk below them, as after Masuk.
+    Navigator.pushAndRemoveUntil(
+      context,
+      route,
+      (r) => destinationFor(account).resumesDaftar && r.isFirst,
+    );
+  } on SignupException {
+    // The password is set; Masuk with it.
+    if (context.mounted) await _signOut(context);
+  }
+}
 
 Widget _screenFor(BuildContext context, Account account) =>
     switch (destinationFor(account)) {
@@ -169,7 +218,7 @@ Widget _password(
   String? keptPhone,
   AccountType accountType,
 ) => PasswordScreen(
-  repository: _repository,
+  save: _repository.setPassword,
   keptPhone: keptPhone,
   onDone: () => _replace(context, (context) => _consent(context, accountType)),
 );

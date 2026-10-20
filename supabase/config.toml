@@ -256,6 +256,11 @@ content_path = "./supabase/templates/otp.html"
 subject = "BeeKas verification code / Kode verifikasi BeeKas"
 content_path = "./supabase/templates/otp.html"
 
+# Lupa password (#34): resetPasswordForEmail sends "recovery"; the app asks for its code too.
+[auth.email.template.recovery]
+subject = "BeeKas verification code / Kode verifikasi BeeKas"
+content_path = "./supabase/templates/otp.html"
+
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"

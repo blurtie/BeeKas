@@ -9,7 +9,7 @@ import '../ui/tokens.dart';
 
 /// L3 Masuk (docs/design/masuk.png), with D-22 point 5: email only, no SSO,
 /// and the consent text is only a reminder. No Ingat saya: the session is
-/// always kept (D-23). Lupa password? is added with T11 (#34).
+/// always kept (D-23).
 class SignInScreen extends StatefulWidget {
   const SignInScreen({
     super.key,
@@ -19,6 +19,7 @@ class SignInScreen extends StatefulWidget {
     required this.onBrowse,
     required this.onTerms,
     required this.onPrivacy,
+    required this.onForgotPassword,
     this.initialEmail,
   });
 
@@ -28,6 +29,9 @@ class SignInScreen extends StatefulWidget {
   final VoidCallback onBrowse;
   final VoidCallback onTerms;
   final VoidCallback onPrivacy;
+
+  /// Lupa password (#34), with what is typed in the email field.
+  final ValueChanged<String> onForgotPassword;
   final String? initialEmail;
 
   @override
@@ -135,7 +139,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   ? t('passwordRequired')
                   : null,
             ),
-            const SizedBox(height: 32),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => widget.onForgotPassword(_email.text.trim()),
+                child: Text(t('forgotPassword')),
+              ),
+            ),
+            gap,
             if (formError != null) ...[BeeFormError(t(formError)), gap],
             FilledButton(
               onPressed: _loading ? null : _signIn,
