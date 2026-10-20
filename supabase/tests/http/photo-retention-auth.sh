@@ -13,22 +13,20 @@ q() { docker exec supabase_db_BeeKas psql -U postgres -tAqc "$1"; }
 fail=0
 check() { if [ "$2" = "$3" ]; then echo "ok   - $1"; else echo "FAIL - $1: got '$2', want '$3'"; fail=1; fi; }
 
-# A fake photo in the seed admin's folder (approved), with approved_at 31 days back.
+# A fake card-only photo in the seed admin's folder, uploaded 31 days back: never submitted (#65).
 OBJ=$ADMIN/t41-http/card.jpg
-old=$(q "select approved_at from public.profiles where id = '$ADMIN'" | tr -d '\r')
 cleanup() {
   curl -s -o /dev/null -X DELETE -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' \
     -d "{\"prefixes\":[\"$OBJ\"]}" "$API/storage/v1/object/verification"
   q "delete from public.photo_deletions where profile_id = '$ADMIN' and attempt = 't41-http'" >/dev/null
-  q "update public.profiles set approved_at = nullif('$old', '')::timestamptz where id = '$ADMIN'" >/dev/null
 }
 trap cleanup EXIT
 printf '\xff\xd8\xff\xd9' > "${TMPDIR:-/tmp}/t41.jpg"
 curl -s -o /dev/null -X POST -H "Authorization: Bearer $KEY" -H 'Content-Type: image/jpeg' \
   --data-binary @"${TMPDIR:-/tmp}/t41.jpg" "$API/storage/v1/object/verification/$OBJ"
-q "update public.profiles set approved_at = now() - interval '31 days' where id = '$ADMIN'" >/dev/null
+q "update storage.objects set created_at = now() - interval '31 days' where name = '$OBJ'" >/dev/null
 exists() { curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $KEY" "$API/storage/v1/object/verification/$OBJ"; }
-logged() { q "select count(*) from public.photo_deletions where profile_id = '$ADMIN' and attempt = 't41-http'" | tr -d '\r'; }
+logged() { q "select count(*) from public.photo_deletions where profile_id = '$ADMIN' and attempt = 't41-http' and reason = 'never_submitted'" | tr -d '\r'; }
 
 check "fake photo uploaded" "$(exists)" 200
 check "no header -> 401" "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL")" 401

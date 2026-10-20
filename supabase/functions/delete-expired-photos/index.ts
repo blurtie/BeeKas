@@ -1,20 +1,21 @@
-// #41 (D-07): deletes card and selfie photos 30 days after their attempt was decided.
+// #41 (D-07): deletes card and selfie photos 30 days after their attempt was decided, and
+// #65: attempts never submitted, 30 days after their last upload.
 // Called daily by pg_cron. Files go through the Storage API; a SQL DELETE on
 // storage.objects would orphan them in the bucket. Each deletion is logged in
 // public.photo_deletions (attempt, count, time).
 import { env, fromCron, rpc, serviceHeaders } from "../_shared/cron.ts";
 
-type Due = { profile_id: string; attempt: string; names: string[] };
+type Due = { profile_id: string; attempt: string; names: string[]; reason: "decided" | "never_submitted" };
 
 // The files are already gone, so a lost record is never retried by a later run: try a few
 // times, then leave everything needed to add it by hand in the log.
 async function record(d: Due, objects: number) {
   for (let i = 1; ; i++) {
     try {
-      return await rpc("record_photo_deletion", { p_profile: d.profile_id, p_attempt: d.attempt, p_objects: objects });
+      return await rpc("record_photo_deletion", { p_profile: d.profile_id, p_attempt: d.attempt, p_objects: objects, p_reason: d.reason });
     } catch (err) {
       if (i === 3) {
-        console.error(`delete-expired-photos: NOT RECORDED ${d.profile_id}/${d.attempt} objects=${objects}: ${err}`);
+        console.error(`delete-expired-photos: NOT RECORDED ${d.profile_id}/${d.attempt} objects=${objects} reason=${d.reason}: ${err}`);
         return;
       }
     }
