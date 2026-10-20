@@ -155,4 +155,11 @@ void main() {
     expect(find.text(t('errorNetwork')), findsOneWidget);
     expect(signedIn, isEmpty);
   });
+
+  testWidgets('screen readers read the title as one sentence', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await _pump(tester, _FakeAuth());
+    expect(find.bySemanticsLabel('${t('signInTitle')}BeeKas!'), findsOneWidget);
+    semantics.dispose();
+  });
 }

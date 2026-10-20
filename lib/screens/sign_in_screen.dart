@@ -8,8 +8,8 @@ import '../ui/components.dart';
 import '../ui/tokens.dart';
 
 /// L3 Masuk (docs/design/masuk.png), with D-22 point 5: email only, no SSO,
-/// and the consent text is only a reminder. Ingat saya and Lupa password wait
-/// for a decision. The session is kept after the app closes (Supabase).
+/// and the consent text is only a reminder. No Ingat saya: the session is
+/// always kept (D-23). Lupa password? is added with T11 (#34).
 class SignInScreen extends StatefulWidget {
   const SignInScreen({
     super.key,
