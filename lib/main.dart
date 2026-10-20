@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/copy.dart';
 import 'data/auth_repository.dart';
 import 'data/camera.dart';
+import 'data/onboarding.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
 import 'domain/registration.dart';
@@ -12,6 +13,7 @@ import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/consent_screen.dart';
 import 'screens/legal_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/password_screen.dart';
 import 'screens/pending_screen.dart';
@@ -46,13 +48,14 @@ Future<void> main() async {
       // Unreachable or gone: Masuk again.
     }
   }
-  runApp(BeeKasApp(account: account));
+  runApp(BeeKasApp(account: account, onboarded: await isOnboarded()));
 }
 
 class BeeKasApp extends StatelessWidget {
-  const BeeKasApp({super.key, this.account});
+  const BeeKasApp({super.key, this.account, this.onboarded = true});
 
   final Account? account;
+  final bool onboarded;
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +66,13 @@ class BeeKasApp extends StatelessWidget {
       // later routes are pushed directly.
       onGenerateRoute: (_) => MaterialPageRoute(builder: _signIn),
       onGenerateInitialRoutes: (_) => [
-        if (account == null || destinationFor(account!).resumesDaftar)
-          MaterialPageRoute(builder: _signIn),
-        if (account != null)
+        for (final screen in startScreens(account, onboarded: onboarded))
           MaterialPageRoute(
-            builder: (context) => _screenFor(context, account!),
+            builder: switch (screen) {
+              StartScreen.onboarding => _onboarding,
+              StartScreen.signIn => _signIn,
+              StartScreen.account => (context) => _screenFor(context, account!),
+            },
           ),
       ],
     );
@@ -98,6 +103,23 @@ Widget _signIn(BuildContext context, [String? email]) => SignInScreen(
     MaterialPageRoute(builder: (context) => _resetEmail(context, email)),
   ),
 );
+
+/// Every exit marks onboarding as seen, then leaves Masuk at the bottom.
+Widget _onboarding(BuildContext context) {
+  void leave({bool register = false}) {
+    markOnboarded();
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: _signIn));
+    if (register) {
+      Navigator.push(context, MaterialPageRoute(builder: _register));
+    }
+  }
+
+  return OnboardingScreen(
+    onSignIn: leave,
+    onSkip: leave,
+    onRegister: () => leave(register: true),
+  );
+}
 
 /// Lupa password (#34): email, code, new password, then the screen for the
 /// account's status, as after Masuk.

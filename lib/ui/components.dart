@@ -359,3 +359,28 @@ class BeeChecklistItem extends StatelessWidget {
     ),
   );
 }
+
+/// Pill button with a brand outline (Daftar Akun Baru on Onboarding).
+class BeeOutlinedPillButton extends StatelessWidget {
+  const BeeOutlinedPillButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: BeeColors.link,
+      minimumSize: const Size.fromHeight(48),
+      side: const BorderSide(color: BeeColors.brandPrimary),
+      shape: const StadiumBorder(),
+      textStyle: Theme.of(context).textTheme.labelLarge,
+    ),
+    onPressed: onPressed,
+    child: Text(label),
+  );
+}
