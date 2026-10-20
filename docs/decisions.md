@@ -311,3 +311,18 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 **Keputusan:** Layar Masuk tidak punya checkbox "Ingat saya". Sesi selalu tersimpan setelah aplikasi ditutup (perilaku bawaan Supabase), sampai pengguna memilih Keluar. Ini berbeda dari frame Masuk di `docs/design/masuk.png`.
 
 **Mengubah:** D-04, bagian "Ingat saya (default tercentang) … bila tidak dicentang, pengguna keluar saat aplikasi ditutup".
+
+---
+
+## D-24 — Selisih waktu respons Lupa kata sandi diterima sebagai risiko
+
+**Status:** Dikonfirmasi Faiqi, 20 Oktober 2026
+
+**Implementasi:** PR #59.
+
+**Keputusan:** Aplikasi menampilkan pesan yang sama setelah kode reset diminta, terdaftar atau tidak. Selisih waktu respons GoTrue (`/recover` lokal sekitar 15–24 ms untuk email terdaftar dan 4–9 ms untuk yang tidak, karena email hanya dikirim untuk akun yang ada) diterima sebagai risiko yang diketahui. Tidak ada perubahan server.
+
+**Alasan:**
+- Alur daftar sudah menampilkan "Email ini sudah terdaftar" setelah OTP, jadi keanggotaan email sudah bisa diketahui dari sana.
+- Dampaknya rendah: yang terbuka hanya apakah sebuah email BINUS punya akun BeeKas.
+- Rate limit per IP dari Supabase membatasi percobaan massal.
