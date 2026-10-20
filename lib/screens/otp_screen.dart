@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/signup_repository.dart';
 import '../domain/registration.dart';
+import '../domain/sign_in.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
 
@@ -53,7 +54,7 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
-  bool get _codeValid => RegExp(r'^\d{6}$').hasMatch(_code.text.trim());
+  bool get _codeValid => isOtpCode(_code.text);
 
   Future<void> _verify() async {
     setState(() => _submitted = true);

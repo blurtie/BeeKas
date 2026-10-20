@@ -74,4 +74,18 @@ void main() {
       expect(resetSendErrorKey(e), isNull, reason: '$e');
     }
   });
+
+  test('codes are 6 digits', () {
+    expect(isOtpCode(' 123456 '), isTrue);
+    for (final c in ['12345', '1234567', '12a456', '']) {
+      expect(isOtpCode(c), isFalse, reason: c);
+    }
+  });
+
+  test('checking a reset code', () {
+    expect(resetVerifyErrorKey(null), 'errorNetwork');
+    expect(resetVerifyErrorKey(SignupError.invalidCode), 'errorInvalidCode');
+    expect(resetVerifyErrorKey(SignupError.rateLimited), 'errorRateLimited');
+    expect(resetVerifyErrorKey(SignupError.unknown), 'errorResetFailed');
+  });
 }

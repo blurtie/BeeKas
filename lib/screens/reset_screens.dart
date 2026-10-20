@@ -137,7 +137,7 @@ class _ResetCodeScreenState extends State<ResetCodeScreen> {
     super.dispose();
   }
 
-  bool get _codeValid => RegExp(r'^\d{6}$').hasMatch(_code.text.trim());
+  bool get _codeValid => isOtpCode(_code.text);
 
   void _countDown() {
     _timer?.cancel();
@@ -160,14 +160,7 @@ class _ResetCodeScreenState extends State<ResetCodeScreen> {
       if (mounted) widget.onVerified();
     } on SignupException catch (e) {
       if (mounted) {
-        setState(
-          () => _error = switch (e.error) {
-            null => 'errorNetwork',
-            final e && (SignupError.invalidCode || SignupError.rateLimited) =>
-              e.copyKey,
-            _ => 'errorResetFailed',
-          },
-        );
+        setState(() => _error = resetVerifyErrorKey(e.error));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

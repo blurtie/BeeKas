@@ -26,7 +26,9 @@ enum SignupError {
   tooSoon('errorTooSoon'),
   weakPassword('errorWeakPassword'),
   invalidCredentials('errorInvalidCredentials'),
-  // Too many sign-in attempts (Supabase rate limit, D-04).
+  // Too many requests from this device (GoTrue's per-IP limit, D-04). Lupa
+  // password shows it, so only codes that never depend on the email may map
+  // here; the per-email resend limit is tooSoon.
   rateLimited('errorRateLimited'),
   // From approve_verification: decided by another admin meanwhile.
   notPending('errorNotPending'),
