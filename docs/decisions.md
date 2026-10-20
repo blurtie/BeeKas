@@ -349,7 +349,7 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 
 **Status:** Diputuskan Faiqi, 20 Oktober 2026
 
-**Implementasi:** PR #53.
+**Implementasi:** PR #63.
 
 **Keputusan:**
 - Nomor HP opsional saat daftar (D-22 poin 4). Bila diisi, formatnya tetap divalidasi dan disimpan lewat `set_phone` setelah OTP (D-17). Mengirim berkas untuk diperiksa tidak lagi membutuhkan nomor.
