@@ -399,8 +399,12 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+# #33: local decision emails go to Mailpit over its HTTP API (no credentials). Cloud sets
+# these as Edge Function secrets in the dashboard (docs/cloud-checklist.md).
+[edge_runtime.secrets]
+EMAIL_API = "mailpit"
+EMAIL_FROM = "BeeKas <no-reply@beekas.test>"
+MAILPIT_URL = "http://supabase_inbucket_BeeKas:8025"
 
 [analytics]
 enabled = true
@@ -429,3 +433,7 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# #33: called by pg_cron, not by users. No JWT; it checks the x-cron-secret header instead.
+[functions.send-decision-emails]
+verify_jwt = false

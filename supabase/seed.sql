@@ -30,3 +30,9 @@ values (
 );
 
 commit;
+
+-- #33: where pg_cron calls send-decision-emails (Kong inside the local Docker network).
+select vault.create_secret(
+  'http://supabase_kong_BeeKas:8000/functions/v1/send-decision-emails', 'decision_emails_url');
+-- The header pg_cron sends and the function checks. Local value only; cloud sets its own.
+select vault.create_secret('local-decision-emails-cron-secret', 'decision_emails_cron_secret');

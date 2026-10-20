@@ -111,6 +111,16 @@ Build debug Android mengizinkan `http` biasa (`android/app/src/debug/AndroidMani
 
 Supabase lokal tidak mengirim email ke internet. Semua email (OTP, persetujuan) ditangkap mail server lokal **Mailpit**: buka http://127.0.0.1:54324 di browser laptop.
 
+Email keputusan verifikasi (disetujui atau ditolak beserta alasannya, #33) muncul di Mailpit paling lambat sekitar 1 menit setelah admin menekan Setujui atau Tolak. Email ini dikirim oleh Edge Function `send-decision-emails`, yang dipanggil `pg_cron` tiap menit. Bila tidak muncul, cek antreannya di Studio (http://127.0.0.1:54323) dengan `select * from public.decision_emails order by id desc;`, dan lihat log function dengan `docker logs supabase_edge_runtime_BeeKas`. Perubahan `[edge_runtime.secrets]` di `supabase/config.toml` baru berlaku setelah `supabase stop` lalu `supabase start`.
+
+Untuk memeriksa bahwa function hanya bisa dipanggil dengan secret yang benar, jalankan dari root repo (Git Bash) saat Supabase lokal menyala dengan seed:
+
+```bash
+bash supabase/tests/http/decision-emails-auth.sh
+```
+
+Skrip ini menjeda `pg_cron` sebentar, membuat satu email uji ke admin seed, lalu memeriksa empat hal: panggilan tanpa header, dengan header salah, dan dengan header kosong dibalas 401 tanpa mengklaim baris; panggilan dengan header benar dibalas 200 dan mengirim email itu ke Mailpit. Setelah selesai, baris uji dihapus dan `pg_cron` diaktifkan lagi. Exit code 0 berarti semua lolos. Skrip ini tidak dijalankan di CI.
+
 ## Masalah umum
 
 - **Build Android gagal dengan `Could not close incremental caches ... different roots`**: terjadi bila repo dan pub cache ada di drive berbeda (misalnya repo di `D:`, pub cache di `C:`). Biasanya build tetap selesai; bila gagal, jalankan `flutter clean` lalu ulangi.
