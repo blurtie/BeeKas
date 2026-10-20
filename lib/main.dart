@@ -1,18 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/copy.dart';
+import 'data/auth_repository.dart';
 import 'data/camera.dart';
+import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
 import 'domain/registration.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/consent_screen.dart';
+import 'screens/debug_sign_in_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/password_screen.dart';
 import 'screens/pending_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/review_list_screen.dart';
 import 'screens/selfie_screen.dart';
 import 'ui/theme.dart';
 
@@ -48,6 +53,21 @@ class BeeKasApp extends StatelessWidget {
 
 Widget _register(BuildContext context) => RegisterScreen(
   repository: _repository,
+  // kDebugMode is a constant: release builds drop the entry and its screen.
+  debugEntry: kDebugMode
+      ? TextButton(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DebugSignInScreen(
+                repository: _auth,
+                onAdmin: () => _review(context),
+              ),
+            ),
+          ),
+          child: const Text('Admin (debug)'),
+        )
+      : null,
   onCodeSent: (registration) => Navigator.push(
     context,
     MaterialPageRoute(
@@ -73,6 +93,33 @@ Widget _register(BuildContext context) => RegisterScreen(
 );
 
 final _repository = SupabaseSignupRepository(Supabase.instance.client);
+final _auth = SupabaseAuthRepository(Supabase.instance.client);
+
+/// L14 replaces the stack; signing out goes back to Daftar.
+void _review(BuildContext context) => Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ReviewListScreen(
+      repository: SupabaseReviewRepository(Supabase.instance.client),
+      onSignOut: () => _signOut(context),
+    ),
+  ),
+  (_) => false,
+);
+
+Future<void> _signOut(BuildContext context) async {
+  try {
+    await _auth.signOut();
+  } on SignupException {
+    // The local session is cleared anyway.
+  }
+  if (!context.mounted) return;
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: _register),
+    (_) => false,
+  );
+}
 
 /// Steps after OTP replace the previous one: the code is already used.
 void _replace(BuildContext context, WidgetBuilder builder) =>
@@ -134,19 +181,7 @@ void _pending(BuildContext context) => Navigator.pushAndRemoveUntil(
           ),
         ),
       ),
-      onSignOut: () async {
-        try {
-          await _repository.signOut();
-        } on SignupException {
-          // The local session is cleared anyway.
-        }
-        if (!context.mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: _register),
-          (_) => false,
-        );
-      },
+      onSignOut: () => _signOut(context),
     ),
   ),
   (_) => false,

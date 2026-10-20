@@ -56,7 +56,7 @@ class SupabaseSignupRepository implements SignupRepository {
   GoTrueClient get _auth => _client.auth;
 
   @override
-  Future<void> sendCode(Registration registration) => _guard(
+  Future<void> sendCode(Registration registration) => guardBackend(
     () => _auth.signInWithOtp(
       email: registration.email,
       data: registration.metadata,
@@ -64,23 +64,24 @@ class SupabaseSignupRepository implements SignupRepository {
   );
 
   @override
-  Future<void> verifyCode(String email, String code) => _guard(
+  Future<void> verifyCode(String email, String code) => guardBackend(
     () => _auth.verifyOTP(email: email, token: code, type: OtpType.email),
   );
 
   @override
-  Future<({bool hasPassword, String? phone})> account() => _guard(() async {
-    final hasPassword = await _client.rpc<bool>('has_password');
-    final profile = await _client
-        .from('profiles')
-        .select('phone')
-        .eq('id', _auth.currentUser!.id)
-        .single();
-    return (hasPassword: hasPassword, phone: profile['phone'] as String?);
-  });
+  Future<({bool hasPassword, String? phone})> account() =>
+      guardBackend(() async {
+        final hasPassword = await _client.rpc<bool>('has_password');
+        final profile = await _client
+            .from('profiles')
+            .select('phone')
+            .eq('id', _auth.currentUser!.id)
+            .single();
+        return (hasPassword: hasPassword, phone: profile['phone'] as String?);
+      });
 
   @override
-  Future<void> updateIdentity(Registration registration) => _guard(
+  Future<void> updateIdentity(Registration registration) => guardBackend(
     () => _client.rpc<void>(
       'update_identity',
       params: {
@@ -91,20 +92,21 @@ class SupabaseSignupRepository implements SignupRepository {
   );
 
   @override
-  Future<void> setPhone(String phone) =>
-      _guard(() => _client.rpc<void>('set_phone', params: {'p_phone': phone}));
+  Future<void> setPhone(String phone) => guardBackend(
+    () => _client.rpc<void>('set_phone', params: {'p_phone': phone}),
+  );
 
   @override
   Future<void> setPassword(String password) =>
-      _guard(() => _auth.updateUser(UserAttributes(password: password)));
+      guardBackend(() => _auth.updateUser(UserAttributes(password: password)));
 
   @override
-  Future<void> recordConsent(String version) => _guard(
+  Future<void> recordConsent(String version) => guardBackend(
     () => _client.rpc<void>('record_consent', params: {'p_version': version}),
   );
 
   @override
-  Future<void> uploadPhoto(String path, Uint8List bytes) => _guard(
+  Future<void> uploadPhoto(String path, Uint8List bytes) => guardBackend(
     () => _client.storage
         .from('verification')
         .uploadBinary(
@@ -116,10 +118,10 @@ class SupabaseSignupRepository implements SignupRepository {
 
   @override
   Future<void> submitForReview() =>
-      _guard(() => _client.rpc<void>('submit_for_review'));
+      guardBackend(() => _client.rpc<void>('submit_for_review'));
 
   @override
-  Future<String> status() => _guard(() async {
+  Future<String> status() => guardBackend(() async {
     final profile = await _client
         .from('profiles')
         .select('status')
@@ -129,29 +131,30 @@ class SupabaseSignupRepository implements SignupRepository {
   });
 
   @override
-  Future<void> signOut() => _guard(_auth.signOut);
+  Future<void> signOut() => guardBackend(_auth.signOut);
+}
 
-  Future<T> _guard<T>(Future<T> Function() call) async {
-    try {
-      return await call();
-    } on AuthRetryableFetchException catch (e) {
-      // No status means no response. With the SDK's API version header GoTrue
-      // turns every trigger error into 500 "Database error saving new user".
-      throw SignupException(e.statusCode == null ? null : SignupError.unknown);
-    } on AuthException catch (e) {
-      throw SignupException(
-        signupErrorFrom(e.code, e.message),
-        retryAfter: retryAfterSeconds(e.message),
-      );
-    } on PostgrestException catch (e) {
-      throw SignupException(signupErrorFrom(e.code, e.message));
-    } on StorageException {
-      // Refused by the bucket policy or limits; the app never sends such files.
-      throw const SignupException(SignupError.unknown);
-    } on Exception {
-      // PostgREST calls throw the http client's exceptions when offline.
-      throw const SignupException(null);
-    }
+/// Runs a backend call, turning its failures into [SignupException].
+Future<T> guardBackend<T>(Future<T> Function() call) async {
+  try {
+    return await call();
+  } on AuthRetryableFetchException catch (e) {
+    // No status means no response. With the SDK's API version header GoTrue
+    // turns every trigger error into 500 "Database error saving new user".
+    throw SignupException(e.statusCode == null ? null : SignupError.unknown);
+  } on AuthException catch (e) {
+    throw SignupException(
+      signupErrorFrom(e.code, e.message),
+      retryAfter: retryAfterSeconds(e.message),
+    );
+  } on PostgrestException catch (e) {
+    throw SignupException(signupErrorFrom(e.code, e.message));
+  } on StorageException {
+    // Refused by the bucket policy or limits; the app never sends such files.
+    throw const SignupException(SignupError.unknown);
+  } on Exception {
+    // PostgREST calls throw the http client's exceptions when offline.
+    throw const SignupException(null);
   }
 }
 
