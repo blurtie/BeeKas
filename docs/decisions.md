@@ -49,6 +49,8 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 ## D-04 — Masuk dengan email atau nomor HP + kata sandi
 
+**Digantikan sebagian oleh D-22 (20 Okt 2026).**
+
 **Status:** Disetujui CTO, 5 Oktober 2026
 
 **Keputusan:**
@@ -66,6 +68,8 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 ---
 
 ## D-05 — Tidak ada login SSO Microsoft BINUS
+
+**Digantikan sebagian oleh D-22 (20 Okt 2026).**
 
 **Status:** Disetujui CTO, 5 Oktober 2026
 
@@ -274,3 +278,24 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 **Alasan:** UU PDP meminta pihak yang bisa dihubungi pengguna soal data pribadinya. Akun admin per orang membuat catatan "disetujui/ditolak oleh siapa" akurat.
 
 **Konsekuensi:** Perlu lima akun admin: lokal lewat seed (D-18, saat ini satu), cloud dibuat terpisah.
+
+---
+
+## D-22 — Desain Figma 20 Oktober 2026 jadi acuan, dengan koreksi
+
+**Status:** Dikonfirmasi Faiqi, 20 Oktober 2026
+
+**Keputusan:**
+1. **Acuan desain:** ekspor Figma 20 Oktober 2026 di `docs/design/` (lihat `docs/design/tokens.md`) menjadi acuan layar, kecuali koreksi di poin 3 dan 5.
+2. **Chat di aplikasi:** pembeli dan penjual berkomunikasi lewat chat di aplikasi, menggantikan WhatsApp. Teks Onboarding-4 yang menyebut WhatsApp perlu diubah.
+3. **Fitur yang disepakati:** Beli Sekarang dan Booking 24 Jam, profil dengan follow, ulasan/rating, harga coret, dan notifikasi. Transaksi tetap COD di kampus; lokasi dan waktu COD disepakati lewat chat aplikasi. Tidak ada pengiriman. **Koreksi desain (perlu diubah desainer):** "Alamat Pengiriman" di Checkout (Daftar-7) diganti "Lokasi COD", dan status "Dikirim/Dalam perjalanan" di Pesanan Saya (Daftar-8) diganti status COD.
+4. **Nomor HP opsional** saat daftar.
+5. **Pengecualian dari desain di layar Masuk:**
+   - Masuk hanya dengan email + kata sandi; nomor HP tidak diverifikasi sehingga tidak dipakai untuk masuk.
+   - Tombol SSO disembunyikan sampai ada akses dari BINUS.
+   - Centang persetujuan eksplisit (D-20) tetap wajib. Teks persetujuan di layar Masuk hanya pengingat.
+6. **Warna** mengikuti token di kode (`onPrimary` gelap, tautan `#BB4902`), bukan teks putih di atas kuning seperti di Figma, karena kontrasnya kurang.
+
+**Mengubah:** D-04 (masuk dengan nomor HP, nomor HP wajib), D-05 (SSO: dari "tidak dibangun" menjadi "disembunyikan sampai ada akses BINUS"), dan keputusan lama bahwa komunikasi lewat WhatsApp (PRD, D-04 versi web).
+
+**Alasan:** Desain terbaru memuat alur jual-beli lengkap. Koreksi menjaga keputusan yang sudah ada: COD di kampus, nomor HP yang tidak diverifikasi, persetujuan data yang tercatat, dan kontras teks ≥ 4.5:1.

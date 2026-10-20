@@ -88,3 +88,21 @@ Ukuran diukur dari tinggi huruf kapital dan bisa meleset ±1. Ukuran 12 untuk is
 | `verifikasi-wajah.png` | Verifikasi wajah 416:507 |
 | `verifikasi-diproses.png` | Verifikasi sedang diproses 459:184 |
 | `home.png` | Home 462:207 (di luar lingkup login, hanya rujukan) |
+
+## Ekspor 20 Oktober 2026 (acuan terbaru, D-22)
+
+PNG dari ekspor Figma 20 Oktober 2026. Karena sistem file tidak membedakan huruf besar-kecil, `home.png`, `masuk.png`, dan `onboarding-1.png` … `onboarding-4.png` di atas sudah diganti versi 20 Oktober. Warna tetap mengikuti token di atas (D-22 poin 6).
+
+| File | Layar |
+|---|---|
+| `onboarding.png`, `onboarding-1.png` … `onboarding-4.png` | Onboarding (logo + komunitas), carousel |
+| `masuk.png` | Masuk (pengecualian D-22 poin 5) |
+| `daftar.png` | Isi Data Diri |
+| `daftar-1.png` / `daftar-2.png` | Upload KTM / Konfirmasi KTM |
+| `daftar-3.png` / `daftar-4.png` | Verifikasi Wajah / Verifikasi Sedang Diproses |
+| `daftar-5.png` / `daftar-6.png` | Status Booking / Profil |
+| `daftar-7.png` / `daftar-8.png` | Checkout / Pesanan Saya (koreksi COD, D-22 poin 3) |
+| `daftar-9.png` / `daftar-10.png` | Chat / Notifikasi |
+| `daftar-11.png` / `daftar-12.png` | Tambah Barang / Kategori |
+| `daftar-13.png` / `daftar-14.png` | Booking Barang / Detail Barang |
+| `home.png` | Beranda |

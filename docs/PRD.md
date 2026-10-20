@@ -76,7 +76,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 - Tombol EN | ID tampil di pojok kanan atas.
 
 ### L3 Masuk
-- Isian: "Email atau nomor HP" dan "Kata sandi" (bisa ditampilkan atau disembunyikan).
+- Isian: "Email atau nomor HP" dan "Kata sandi" (bisa ditampilkan atau disembunyikan). (Lihat D-22.)
 - "Ingat saya" tercentang secara default (D-04).
 - Tautan "Lupa kata sandi?" dan tombol Masuk. Tombol "Masuk dengan SSO" dan pemisah "atau" di frame tidak dibangun (D-05).
 - Tautan Daftar dan tautan "Lihat katalog sebagai tamu". Tautan tamu belum ada di desain.
@@ -89,21 +89,21 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 - Isian:
   - Nama lengkap.
   - Email BINUS: `@binus.ac.id` atau `@binus.edu`, tidak peka huruf besar-kecil.
-  - Nomor HP: diterima `08…`, `628…`, atau `+628…`, lalu dinormalisasi ke `+628…` dan disimpan setelah OTP terverifikasi (L5).
+  - Nomor HP: diterima `08…`, `628…`, atau `+628…`, lalu dinormalisasi ke `+628…` dan disimpan setelah OTP terverifikasi (L5). (Lihat D-22.)
   - Tipe akun, diturunkan dari domain email (D-15): `@binus.ac.id` otomatis Mahasiswa tanpa pilihan; `@binus.edu` menampilkan pilihan wajib Dosen / Staf setelah email valid diketik.
   - Kampus asal: dropdown D-12.
 - Banner "Pastikan data sudah benar dan sesuai identitas BINUS."
 - Validasi saat menekan Lanjut:
   - Semua isian wajib.
   - Email harus berdomain BINUS.
-  - Nomor HP harus valid. Nomor yang sudah dipakai ditolak setelah OTP terverifikasi, dengan pesan 'Nomor HP ini sudah terdaftar' dan kesempatan mengganti nomor.
+  - Nomor HP harus valid. Nomor yang sudah dipakai ditolak setelah OTP terverifikasi, dengan pesan 'Nomor HP ini sudah terdaftar' dan kesempatan mengganti nomor. (Lihat D-22.)
   - Email yang sudah terdaftar tidak diperiksa saat Lanjut, untuk mencegah enumerasi email (D-07); pesan "Email ini sudah terdaftar" dengan tautan Masuk ditampilkan setelah OTP terverifikasi.
 
 ### L5 Verifikasi email
 - Kode 6 digit dikirim ke email BINUS.
 - Tombol kirim ulang aktif setelah 60 detik.
 - Kode berlaku sesuai bawaan Supabase. Kode salah atau kedaluwarsa menampilkan pesan dan pilihan kirim ulang.
-- Setelah kode benar, nomor HP dari L4 disimpan. Bila nomor sudah dipakai, pengguna diminta memasukkan nomor lain sebelum lanjut.
+- Setelah kode benar, nomor HP dari L4 disimpan. Bila nomor sudah dipakai, pengguna diminta memasukkan nomor lain sebelum lanjut. (Lihat D-22.)
 - Akun dibuat setelah kode benar, dengan status `incomplete` setelah L6.
 
 ### L6 Buat kata sandi
@@ -164,7 +164,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
   - foto kartu dan selfie berdampingan.
 - Tombol Setujui, atau Tolak dengan alasan wajib.
 - Setelah keputusan, email dikirim ke pendaftar dan statusnya berubah.
-- Admin bisa melepas nomor HP dari sebuah akun, bila pemilik asli nomor itu menghubungi Bantuan karena tidak bisa mendaftar (D-04). Akun yang nomornya dilepas tidak bisa masuk dengan nomor HP sampai mengisi nomor baru.
+- Admin bisa melepas nomor HP dari sebuah akun, bila pemilik asli nomor itu menghubungi Bantuan karena tidak bisa mendaftar (D-04). Akun yang nomornya dilepas tidak bisa masuk dengan nomor HP sampai mengisi nomor baru. (Lihat D-22.)
 
 ### L16 Layar teks statis
 - Kebijakan Privasi dan Syarat & Ketentuan, dalam dua bahasa.
@@ -179,7 +179,7 @@ Kolom "Desain" berisi frame Figma, atau "Tanpa desain". "Tanpa desain" berarti l
 
 1. **Email BINUS:** domain `binus.ac.id` atau `binus.edu`, tidak peka huruf besar-kecil, spasi di awal dan akhir dibuang.
 2. **Nomor HP:** normalisasi ke `+628` diikuti 8–11 digit (10–13 digit termasuk 08 di depan).
-3. **Sign-in identifier:** bila mengandung `@`, diperlakukan sebagai email; selain itu nomor HP.
+3. **Sign-in identifier:** bila mengandung `@`, diperlakukan sebagai email; selain itu nomor HP. (Lihat D-22.)
 4. **Kata sandi:** minimal 8 karakter, ada huruf dan angka, sama dengan konfirmasinya.
 5. **Tipe akun dari domain** (D-15): `binus.ac.id` → mahasiswa; `binus.edu` → dosen atau staf, wajib dipilih. Tipe akun menentukan jenis kartu.
 6. **Daftar kampus:** kode dan label (D-12).
@@ -224,9 +224,9 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 
 ## 10. Dicatat untuk sesi berikutnya (di luar lingkup login)
 
-- Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web).
+- Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web). (Lihat D-22.)
 - Ikon favorit dan notifikasi di header Home.
 - Kartu digital member: ide terbuka, belum punya fungsi (D-14).
-- Sesi katalog: nomor WhatsApp penjual hanya terlihat oleh member `approved` (D-06). Pertimbangkan pengingat bagi penjual bahwa nomornya akan terlihat oleh pembeli.
+- Sesi katalog: nomor WhatsApp penjual hanya terlihat oleh member `approved` (D-06). Pertimbangkan pengingat bagi penjual bahwa nomornya akan terlihat oleh pembeli. (Lihat D-22.)
 - Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri".
-- Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama.
+- Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama. (Lihat D-22.)
