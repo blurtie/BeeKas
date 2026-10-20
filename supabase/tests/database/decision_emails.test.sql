@@ -2,6 +2,9 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(30);
 
+-- Start from an empty outbox even on a used local DB; rolled back at the end.
+delete from public.decision_emails;
+
 create function pg_temp.sign_up(p_id uuid, p_email text, p_name text) returns void
 language sql as $$
   insert into auth.users (id, email, raw_user_meta_data, aud, role)
