@@ -161,7 +161,7 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSignOut: () => _signOut(context),
       ),
       // ponytail: Beranda is another PRD; a placeholder until then.
-      Destination.home => _placeholder(context, t('homeSoon')),
+      Destination.home => _homePlaceholder(context, t('homeSoon')),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
         onSignOut: () => _signOut(context),
@@ -297,7 +297,7 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
 );
 
 /// Temporary end screen for Beranda.
-Widget _placeholder(BuildContext context, String body) => Scaffold(
+Widget _homePlaceholder(BuildContext context, String body) => Scaffold(
   body: SafeArea(
     child: Padding(
       padding: const EdgeInsets.all(24),

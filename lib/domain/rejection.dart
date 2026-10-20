@@ -9,5 +9,8 @@ typedef Rejection = ({List<RejectionReason> reasons, String? note});
 
 /// At least one reason; [RejectionReason.other] needs the note.
 bool isValidRejection(Set<RejectionReason> reasons, String note) =>
-    reasons.isNotEmpty &&
-    (!reasons.contains(RejectionReason.other) || note.trim().isNotEmpty);
+    reasons.isNotEmpty && !isNoteMissing(reasons, note);
+
+/// [RejectionReason.other] is chosen without saying what.
+bool isNoteMissing(Set<RejectionReason> reasons, String note) =>
+    reasons.contains(RejectionReason.other) && note.trim().isEmpty;

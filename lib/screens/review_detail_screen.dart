@@ -270,10 +270,7 @@ class _RejectDialogState extends State<_RejectDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final noteMissing =
-        _tried &&
-        _reasons.contains(RejectionReason.other) &&
-        _note.text.trim().isEmpty;
+    final noteMissing = _tried && isNoteMissing(_reasons, _note.text);
     return AlertDialog(
       title: Text(t('rejectTitle').replaceFirst('{name}', widget.name)),
       scrollable: true,
