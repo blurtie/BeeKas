@@ -66,13 +66,20 @@ Deno.serve(async (req) => {
   const emails: Email[] = await rpc("claim_decision_emails", {});
   let sent = 0;
   for (const e of emails) {
+    let error: string | null = null;
     try {
       await send(e);
-      await rpc("finish_decision_email", { p_id: e.id, p_error: null });
       sent++;
     } catch (err) {
-      console.error(`send-decision-emails: row ${e.id} failed: ${err}`);
-      await rpc("finish_decision_email", { p_id: e.id, p_error: String(err).slice(0, 500) });
+      error = String(err).slice(0, 500);
+      console.error(`send-decision-emails: row ${e.id} failed: ${error}`);
+    }
+    // A failed bookkeeping call must not stop the loop or turn a sent email into a failure;
+    // the row stays 'sending' and is retried after 10 minutes (at-least-once).
+    try {
+      await rpc("finish_decision_email", { p_id: e.id, p_error: error });
+    } catch (err) {
+      console.error(`send-decision-emails: row ${e.id} not recorded: ${err}`);
     }
   }
   return Response.json({ sent, claimed: emails.length });

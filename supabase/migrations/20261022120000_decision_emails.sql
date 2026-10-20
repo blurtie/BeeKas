@@ -136,16 +136,21 @@ end;
 $$;
 
 -- Claims up to p_limit rows for one run. SKIP LOCKED keeps overlapping runs from taking the
--- same row; a row stuck in 'sending' for over 10 minutes (crashed run) can be claimed again.
+-- same row; a row stuck in 'sending' for over 10 minutes (crashed run) counts as a failed
+-- attempt and is claimed again, or marked failed once that is the 5th.
 create function public.claim_decision_emails(p_limit int default 20)
 returns table (id bigint, recipient text, subject text, body text)
 language sql
 security definer
 set search_path = ''
 as $$
+  update public.decision_emails
+  set status = 'failed', attempts = attempts + 1, last_error = 'stuck in sending'
+  where status = 'sending' and claimed_at < now() - interval '10 minutes' and attempts + 1 >= 5;
+
   with claimed as (
     update public.decision_emails d
-    set status = 'sending', claimed_at = now()
+    set status = 'sending', claimed_at = now(), attempts = d.attempts + (d.status = 'sending')::int
     where d.id in (
       select c.id from public.decision_emails c
       where c.status = 'pending'

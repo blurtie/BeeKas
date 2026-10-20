@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(30);
 
 create function pg_temp.sign_up(p_id uuid, p_email text, p_name text) returns void
 language sql as $$
@@ -101,6 +101,9 @@ set local role service_role;
 select is((select array_agg(recipient) from public.claim_decision_emails()), array['t33-a@binus.ac.id'],
   'a sending row older than 10 minutes is claimed again');
 reset role;
+select is((select attempts from public.decision_emails where kind = 'approved'), 1,
+  'reclaiming a stuck row counts the crashed attempt');
+update public.decision_emails set attempts = 0 where kind = 'approved';
 
 -- Finishing --------------------------------------------------------------------
 
@@ -133,6 +136,15 @@ select results_eq($$ select status, attempts from public.decision_emails where k
 set local role service_role;
 select is((select count(*)::int from public.claim_decision_emails()), 0, 'failed rows are not claimed');
 reset role;
+
+-- A row stuck in sending on its last attempt is marked failed instead of retried forever.
+update public.decision_emails set status = 'sending', attempts = 4, claimed_at = now() - interval '11 minutes'
+  where kind = 'rejected';
+set local role service_role;
+select is((select count(*)::int from public.claim_decision_emails()), 0, 'a stuck row on its 5th attempt is not claimed');
+reset role;
+select results_eq($$ select status, attempts, last_error from public.decision_emails where kind = 'rejected' $$,
+  $$ values ('failed', 5, 'stuck in sending') $$, 'and is marked failed');
 
 -- Requeue (docs/cloud-checklist.md) brings it back.
 update public.decision_emails set status = 'pending', attempts = 0, last_error = null where status = 'failed';
