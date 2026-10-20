@@ -179,7 +179,7 @@ BeeKas collects only the data it needs to make sure every user is part of BINUS,
 
 BeeKas is a marketplace for selling, buying, and donating second-hand goods for the BINUS community, built by a student team in the Venture Creation course (ENPR6312001). BeeKas is not an official service of Universitas Bina Nusantara.
 
-The person responsible for personal data is the BeeKas CTO (D-21). Contact us at beekas2026@gmail.com.
+The person responsible for personal data is the BeeKas CTO. Contact us at beekas2026@gmail.com.
 
 # 2. Data we collect
 
@@ -241,7 +241,7 @@ We do not sell or rent data to anyone.
 
 # 5. How long data is kept
 
-- ID card photo and selfie: deleted no later than 30 days after verification is approved or rejected (D-07).
+- ID card photo and selfie: deleted no later than 30 days after verification is approved or rejected.
 
 - Verification history: kept after the photos are deleted, for as long as the account exists. [KONFIRMASI: how long after the account is deleted.]
 
@@ -594,7 +594,7 @@ BeeKas mengumpulkan data seperlunya untuk memastikan setiap pengguna adalah warg
 
 BeeKas adalah marketplace jual, beli, dan donasi barang bekas untuk komunitas BINUS, dibuat oleh tim mahasiswa dalam mata kuliah Venture Creation (ENPR6312001). BeeKas bukan layanan resmi Universitas Bina Nusantara.
 
-Penanggung jawab data pribadi adalah CTO BeeKas (D-21). Hubungi kami di beekas2026@gmail.com.
+Penanggung jawab data pribadi adalah CTO BeeKas. Hubungi kami di beekas2026@gmail.com.
 
 # 2. Data yang kami kumpulkan
 
@@ -656,7 +656,7 @@ Kami tidak menjual atau menyewakan data ke pihak mana pun.
 
 # 5. Berapa lama data disimpan
 
-- Foto kartu dan selfie: dihapus paling lambat 30 hari setelah verifikasi disetujui atau ditolak (D-07).
+- Foto kartu dan selfie: dihapus paling lambat 30 hari setelah verifikasi disetujui atau ditolak.
 
 - Riwayat verifikasi: tetap disimpan setelah foto dihapus, selama akun ada. [KONFIRMASI: berapa lama setelah akun dihapus.]
 

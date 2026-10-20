@@ -75,6 +75,16 @@ void main() {
             const Offset(0, -300),
           );
           expect(tester.takeException(), isNull);
+          final rendered = tester
+              .widgetList<Text>(
+                find.descendant(
+                  of: find.byType(LegalScreen),
+                  matching: find.byType(Text),
+                ),
+              )
+              .map((w) => w.data)
+              .join(' ');
+          expect(rendered, isNot(contains('**')));
 
           await tester.tap(find.byTooltip(t('back')));
           await tester.pumpAndSettle();
@@ -89,6 +99,18 @@ void main() {
     for (final lang in Lang.values) {
       for (final key in ['privacyBody', 'termsBody', 'legalReadMore']) {
         expect(copy[lang]![key], isNotEmpty, reason: '$lang $key');
+      }
+    }
+  });
+
+  test('legal texts cite no decision numbers', () {
+    for (final lang in Lang.values) {
+      for (final key in ['privacyBody', 'termsBody']) {
+        expect(
+          copy[lang]![key],
+          isNot(matches(RegExp(r'D-\d'))),
+          reason: '$lang $key',
+        );
       }
     }
   });
