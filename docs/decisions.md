@@ -326,3 +326,19 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Alur daftar sudah menampilkan "Email ini sudah terdaftar" setelah OTP, jadi keanggotaan email sudah bisa diketahui dari sana.
 - Dampaknya rendah: yang terbuka hanya apakah sebuah email BINUS punya akun BeeKas.
 - Rate limit per IP dari Supabase membatasi percobaan massal.
+
+---
+
+## D-25 — Penolakan disimpan per percobaan sebagai riwayat
+
+**Status:** Dikonfirmasi Faiqi, 20 Oktober 2026
+
+**Implementasi:** PR #60.
+
+**Keputusan:**
+- Admin menolak dengan minimal satu alasan dari daftar kode tetap: foto kartu tidak jelas (`card`), selfie tidak cocok (`selfie`), data tidak sesuai (`data`), atau Lainnya (`other`). Catatan bebas boleh ditambahkan, dan wajib bila memilih Lainnya.
+- Setiap penolakan disimpan sebagai satu catatan riwayat yang menempel ke percobaan yang diperiksa (folder `<attempt>`, D-19), berisi kode alasan, catatan, admin pemeriksa, dan waktu. Penolakan baru tidak menimpa yang lama.
+- L12 menampilkan penolakan terbaru. L15 menampilkan riwayat penolakan akun itu: jumlah, alasan, dan catatan sebelumnya.
+- Riwayat tetap ada setelah foto dihapus (D-07). Member hanya bisa membaca riwayat miliknya sendiri. Tidak ada yang bisa menulis riwayat langsung, termasuk admin; riwayat hanya ditulis lewat fungsi backend tolak.
+
+**Alasan:** Kode alasan bisa ditampilkan dalam dua bahasa (D-11). Riwayat per percobaan membantu admin menilai pengiriman ulang dan menjadi jejak pemeriksaan menurut UU PDP.

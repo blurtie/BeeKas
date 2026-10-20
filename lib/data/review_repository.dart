@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/registration.dart';
+import '../domain/rejection.dart';
 import 'signup_repository.dart';
 
 /// A pending account in L14-L15, with the paths of its latest complete
@@ -17,6 +18,8 @@ typedef PendingAccount = ({
   DateTime submittedAt,
   String? cardPath,
   String? selfiePath,
+  // Earlier rejections, newest first (D-25).
+  List<Rejection> rejections,
 });
 
 /// Admin review (D-09); the backend refuses non-admins. Failures are
@@ -30,6 +33,10 @@ abstract interface class ReviewRepository {
 
   /// pending → approved; the backend records the admin and the time.
   Future<void> approve(String id);
+
+  /// pending → rejected with the reasons (rule 9); the backend records the
+  /// admin and the time. A blank [note] is stored as none.
+  Future<void> reject(String id, Set<RejectionReason> reasons, String note);
 }
 
 class SupabaseReviewRepository implements ReviewRepository {
@@ -51,6 +58,10 @@ class SupabaseReviewRepository implements ReviewRepository {
           submittedAt: DateTime.parse(row['submitted_at'] as String),
           cardPath: row['card_path'] as String?,
           selfiePath: row['selfie_path'] as String?,
+          rejections: [
+            for (final r in row['rejections'] as List<dynamic>)
+              rejectionFrom(r as Map<String, dynamic>),
+          ],
         ),
     ];
   });
@@ -63,4 +74,17 @@ class SupabaseReviewRepository implements ReviewRepository {
   Future<void> approve(String id) => guardBackend(
     () => _client.rpc<void>('approve_verification', params: {'p_id': id}),
   );
+
+  @override
+  Future<void> reject(String id, Set<RejectionReason> reasons, String note) =>
+      guardBackend(
+        () => _client.rpc<void>(
+          'reject_verification',
+          params: {
+            'p_id': id,
+            'p_reasons': [for (final r in reasons) r.name],
+            'p_note': note,
+          },
+        ),
+      );
 }

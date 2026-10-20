@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/access.dart';
 import '../domain/registration.dart';
+import '../domain/rejection.dart';
 import '../domain/sign_in.dart';
 import 'signup_repository.dart';
 
@@ -43,18 +44,31 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<Account> account() => guardBackend(() async {
     final hasPassword = await _client.rpc<bool>('has_password');
+    final id = _client.auth.currentUser!.id;
     final profile = await _client
         .from('profiles')
         .select('role, status, account_type, consent_at')
-        .eq('id', _client.auth.currentUser!.id)
+        .eq('id', id)
         .single();
+    final status = AccountStatus.values.byName(profile['status'] as String);
+    final rejection = status == AccountStatus.rejected
+        ? await _client
+              .from('verification_rejections')
+              .select('reasons, note, rejected_at')
+              .eq('profile_id', id)
+              .order('rejected_at', ascending: false)
+              .order('id', ascending: false)
+              .limit(1)
+              .maybeSingle()
+        : null;
     return (
       role: Role.values.byName(profile['role'] as String),
-      status: AccountStatus.values.byName(profile['status'] as String),
+      status: status,
       // Null for seeded admins (D-18).
       accountType: AccountType.values.asNameMap()[profile['account_type']],
       hasPassword: hasPassword,
       hasConsent: profile['consent_at'] != null,
+      rejection: rejection == null ? null : rejectionFrom(rejection),
     );
   });
 

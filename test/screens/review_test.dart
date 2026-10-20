@@ -6,6 +6,7 @@ import 'package:beekas/config/copy.dart';
 import 'package:beekas/data/review_repository.dart';
 import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/registration.dart';
+import 'package:beekas/domain/rejection.dart';
 import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/review_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,12 @@ import 'package:beekas/ui/theme.dart';
 
 final _now = DateTime.utc(2026, 10, 20, 12);
 
-PendingAccount _account(String id, String name, Duration waited) => (
+PendingAccount _account(
+  String id,
+  String name,
+  Duration waited, {
+  List<Rejection> rejections = const [],
+}) => (
   id: id,
   fullName: name,
   email: '$id@binus.ac.id',
@@ -24,6 +30,7 @@ PendingAccount _account(String id, String name, Duration waited) => (
   submittedAt: _now.subtract(waited),
   cardPath: '$id/1/card.jpg',
   selfiePath: '$id/1/selfie.jpg',
+  rejections: rejections,
 );
 
 class _FakeReview implements ReviewRepository {
@@ -31,6 +38,7 @@ class _FakeReview implements ReviewRepository {
   final errors = <String, SignupException>{};
   final photos = <String, Uint8List>{};
   final approved = <String>[];
+  final rejected = <(String, Set<RejectionReason>, String)>[];
   int loads = 0;
 
   /// Completes [pending] when set; for the loading state.
@@ -54,6 +62,18 @@ class _FakeReview implements ReviewRepository {
     final error = errors.remove('approve');
     if (error != null) throw error;
     approved.add(id);
+    accounts = accounts.where((a) => a.id != id).toList();
+  }
+
+  @override
+  Future<void> reject(
+    String id,
+    Set<RejectionReason> reasons,
+    String note,
+  ) async {
+    final error = errors.remove('reject');
+    if (error != null) throw error;
+    rejected.add((id, {...reasons}, note));
     accounts = accounts.where((a) => a.id != id).toList();
   }
 }
@@ -171,5 +191,114 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(t('errorNotPending')), findsOneWidget);
     expect(repo.approved, isEmpty);
+  });
+
+  testWidgets('L15 Tolak needs a reason, and a note for Other', (tester) async {
+    final repo = _FakeReview()
+      ..accounts = [_account('e', 'Eka', const Duration(hours: 2))];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(OutlinedButton, t('reject')));
+    await tester.pumpAndSettle();
+    final submit = find.widgetWithText(TextButton, t('reject'));
+
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    expect(find.text(t('rejectReasonRequired')), findsOneWidget);
+
+    await tester.tap(find.text(t('rejectReason_card')));
+    await tester.tap(find.text(t('rejectReason_other')));
+    await tester.pumpAndSettle();
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    expect(find.text(t('rejectReasonRequired')), findsNothing);
+    expect(find.text(t('rejectNoteRequired')), findsOneWidget);
+    expect(repo.rejected, isEmpty);
+
+    await tester.enterText(find.byType(TextField), 'Kartu terpotong');
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    final (id, reasons, note) = repo.rejected.single;
+    expect((id, note), ('e', 'Kartu terpotong'));
+    expect(reasons, {RejectionReason.card, RejectionReason.other});
+    expect(find.text(t('rejected').replaceFirst('{name}', 'Eka')), findsOne);
+    expect(find.text(t('reviewEmpty')), findsOneWidget);
+  });
+
+  testWidgets('L15 Tolak: Batal changes nothing; a failure stays open', (
+    tester,
+  ) async {
+    final repo = _FakeReview()
+      ..accounts = [_account('e', 'Eka', const Duration(hours: 2))]
+      ..errors['reject'] = const SignupException(SignupError.notPending);
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(OutlinedButton, t('reject')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('cancel')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, t('reject')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('rejectReason_data')));
+    await tester.tap(find.widgetWithText(TextButton, t('reject')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('errorNotPending')), findsOneWidget);
+    expect(repo.rejected, isEmpty);
+  });
+
+  testWidgets('L15 lists earlier rejections, newest first', (tester) async {
+    final repo = _FakeReview()
+      ..accounts = [
+        _account(
+          'e',
+          'Eka',
+          const Duration(hours: 2),
+          rejections: [
+            (
+              reasons: [RejectionReason.selfie],
+              note: null,
+              rejectedAt: DateTime.utc(2026, 10, 19),
+            ),
+            (
+              reasons: [RejectionReason.card, RejectionReason.other],
+              note: 'Kartu terpotong',
+              rejectedAt: DateTime.utc(2026, 10, 18),
+            ),
+          ],
+        ),
+      ];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    expect(find.text(t('reviewRejections').replaceFirst('{n}', '2')), findsOne);
+    final first = tester.getTopLeft(find.text(t('rejectReason_selfie')));
+    final second = tester.getTopLeft(
+      find.text(
+        '${t('rejectReason_card')} · ${t('rejectReason_other')} · Kartu terpotong',
+      ),
+    );
+    expect(first.dy, lessThan(second.dy));
+  });
+
+  testWidgets('L15 without earlier rejections shows no history', (
+    tester,
+  ) async {
+    final repo = _FakeReview()
+      ..accounts = [_account('e', 'Eka', const Duration(hours: 2))];
+    await _pumpList(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eka'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining(t('reviewRejections').split(' (').first),
+      findsNothing,
+    );
   });
 }

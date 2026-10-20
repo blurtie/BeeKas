@@ -35,7 +35,7 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
   }
 
   Future<void> _open(PendingAccount account) async {
-    final approved = await Navigator.push<bool>(
+    final outcome = await Navigator.push<String>(
       context,
       MaterialPageRoute(
         builder: (context) =>
@@ -43,10 +43,10 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
       ),
     );
     if (!mounted) return;
-    if (approved == true) {
+    if (outcome != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t('approved').replaceFirst('{name}', account.fullName)),
+          content: Text(t(outcome).replaceFirst('{name}', account.fullName)),
         ),
       );
     }

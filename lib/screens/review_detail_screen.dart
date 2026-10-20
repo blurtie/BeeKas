@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/review_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/rejection.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
 
 /// L15 Admin: detail berkas (no design). Personal details, account and card
-/// type, phone (unverified, D-04), card and selfie side by side, Setujui. Tolak
-/// comes with #32. Pops true once approved.
+/// type, phone (unverified, D-04), card and selfie side by side, earlier
+/// rejections (D-25), Setujui and Tolak with reasons (rule 9). Pops the copy key of the outcome, 'approved'
+/// or 'rejected'.
 class ReviewDetailScreen extends StatefulWidget {
   const ReviewDetailScreen({
     super.key,
@@ -29,7 +31,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
   // Photos stay in memory only (D-07).
   late final _card = _load(widget.account.cardPath);
   late final _selfie = _load(widget.account.selfiePath);
-  bool _approving = false;
+  bool _busy = false;
   String? _error;
 
   Future<Uint8List?> _load(String? path) async =>
@@ -56,17 +58,38 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
       ),
     );
     if (sure != true || !mounted) return;
+    await _decide(() => widget.repository.approve(account.id), 'approved');
+  }
+
+  Future<void> _reject() async {
+    final rejection =
+        await showDialog<({Set<RejectionReason> reasons, String note})>(
+          context: context,
+          builder: (context) => _RejectDialog(name: widget.account.fullName),
+        );
+    if (rejection == null || !mounted) return;
+    await _decide(
+      () => widget.repository.reject(
+        widget.account.id,
+        rejection.reasons,
+        rejection.note,
+      ),
+      'rejected',
+    );
+  }
+
+  Future<void> _decide(Future<void> Function() call, String outcome) async {
     setState(() {
-      _approving = true;
+      _busy = true;
       _error = null;
     });
     try {
-      await widget.repository.approve(account.id);
-      if (mounted) Navigator.pop(context, true);
+      await call();
+      if (mounted) Navigator.pop(context, outcome);
     } on SignupException catch (e) {
       if (mounted) setState(() => _error = e.error?.copyKey ?? 'errorNetwork');
     } finally {
-      if (mounted) setState(() => _approving = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -116,14 +139,37 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
             ),
             field(t('reviewCard'), t('card_${account.accountType.name}')),
             field(t('phone'), account.phone ?? t('reviewPhoneMissing')),
+            if (account.rejections.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                t('reviewRejections')
+                    .replaceFirst('{n}', '${account.rejections.length}'),
+                style: textTheme.titleMedium,
+              ),
+              for (final r in account.rejections)
+                field(
+                  MaterialLocalizations.of(context)
+                      .formatMediumDate(r.rejectedAt.toLocal()),
+                  [
+                    for (final reason in r.reasons)
+                      t('rejectReason_${reason.name}'),
+                    ?r.note,
+                  ].join(' · '),
+                ),
+            ],
             const SizedBox(height: 32),
             if (_error != null) ...[
               BeeFormError(t(_error!)),
               const SizedBox(height: 16),
             ],
             FilledButton(
-              onPressed: _approving ? null : _approve,
-              child: BeeButtonLabel(t('approve'), loading: _approving),
+              onPressed: _busy ? null : _approve,
+              child: BeeButtonLabel(t('approve'), loading: _busy),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: _busy ? null : _reject,
+              child: Text(t('reject')),
             ),
           ],
         ),
@@ -205,6 +251,81 @@ class _Photo extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Tolak: at least one reason, and a note when Other is chosen (rule 9). Pops
+/// the reasons and note, or null on Batal.
+class _RejectDialog extends StatefulWidget {
+  const _RejectDialog({required this.name});
+
+  final String name;
+
+  @override
+  State<_RejectDialog> createState() => _RejectDialogState();
+}
+
+class _RejectDialogState extends State<_RejectDialog> {
+  final _reasons = <RejectionReason>{};
+  final _note = TextEditingController();
+  bool _tried = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (isValidRejection(_reasons, _note.text)) {
+      Navigator.pop(context, (reasons: _reasons, note: _note.text));
+    } else {
+      setState(() => _tried = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final noteMissing = _tried && isNoteMissing(_reasons, _note.text);
+    return AlertDialog(
+      title: Text(t('rejectTitle').replaceFirst('{name}', widget.name)),
+      scrollable: true,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t('rejectReasons'),
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          for (final reason in RejectionReason.values)
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _reasons.contains(reason),
+              title: Text(t('rejectReason_${reason.name}')),
+              onChanged: (on) => setState(
+                () => on! ? _reasons.add(reason) : _reasons.remove(reason),
+              ),
+            ),
+          if (_tried && _reasons.isEmpty)
+            BeeFormError(t('rejectReasonRequired')),
+          const SizedBox(height: 8),
+          BeeTextField(
+            label: t('rejectNote'),
+            controller: _note,
+            errorText: noteMissing ? t('rejectNoteRequired') : null,
+            onChanged: (_) => setState(() {}),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(t('cancel')),
+        ),
+        TextButton(onPressed: _submit, child: Text(t('reject'))),
       ],
     );
   }

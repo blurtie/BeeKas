@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(46);
+select plan(48);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -114,8 +114,10 @@ reset role;
 select pg_temp.act_as(:a);
 select throws_ok($$ update public.profiles set full_name = 'Hacked' $$, '42501', null,
   'member cannot update name directly');
-update public.profiles set status = 'approved';
-update public.profiles set status = 'pending' where id = 'bbbbbbbb-0000-4000-8000-000000000001';
+select throws_ok($$ update public.profiles set status = 'approved' $$, '42501', null,
+  'member cannot update status directly');
+select throws_ok($$ update public.profiles set status = 'pending' where id = 'bbbbbbbb-0000-4000-8000-000000000001' $$,
+  '42501', null, 'member cannot update another status directly');
 reset role;
 select is(pg_temp.status_of(:b), 'incomplete', 'member cannot update another profile');
 select is(pg_temp.status_of(:a), 'incomplete', 'member cannot update status directly');
@@ -171,16 +173,22 @@ reset role;
 
 select pg_temp.act_as(:admin);
 select results_eq(
-  $$ select name from storage.objects where bucket_id = 'verification' order by name $$,
+  $$ select name from storage.objects where bucket_id = 'verification'
+     and name like 'aaaaaaaa-0000-4000-8000-000000000001/%' order by name $$,
   $$ values ('aaaaaaaa-0000-4000-8000-000000000001/1/card.jpg'), ('aaaaaaaa-0000-4000-8000-000000000001/1/selfie.jpg') $$,
   'admin reads photos; the member could not rename them');
+reset role;
+-- The trigger guards transitions whoever updates (admins use the functions, review.test.sql).
 select throws_ok($$ update public.profiles set status = 'incomplete' where email = 'ani@binus.ac.id' $$,
   '23514', null, 'pending -> incomplete is illegal');
 select throws_ok($$ update public.profiles set status = 'approved' where email = 'budi@binus.edu' $$,
   '23514', null, 'incomplete -> approved is illegal');
-update public.profiles set status = 'approved', phone = null where email = 'ani@binus.ac.id';
+select pg_temp.act_as(:admin);
+select public.approve_verification(:a);
 reset role;
 select is(pg_temp.status_of(:a), 'approved', 'admin approves pending');
+-- ponytail: phone release is #40; released here as the superuser until then.
+update public.profiles set phone = null where email = 'ani@binus.ac.id';
 
 select pg_temp.act_as(:a);
 select throws_ok($$ select public.set_phone('081111111111') $$, '23514', null,
@@ -202,7 +210,7 @@ insert into storage.objects (bucket_id, name, owner_id) values
 select public.submit_for_review();
 reset role;
 select pg_temp.act_as(:admin);
-update public.profiles set status = 'rejected' where email = 'budi@binus.edu';
+select public.reject_verification(:b, array['card'], null);
 reset role;
 select ok((select last_rejected_at is not null from public.profiles where email = 'budi@binus.edu'),
   'rejection records last_rejected_at');
