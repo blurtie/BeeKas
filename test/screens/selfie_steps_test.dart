@@ -130,7 +130,7 @@ void main() {
       PhoneScreen(
         repository: FakeSignupRepository(),
         initialError: SignupError.phoneTaken,
-        onSaved: () {},
+        onDone: () {},
       ),
     );
     expect(find.text(t('phoneSubtitle')), findsOneWidget);

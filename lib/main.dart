@@ -191,7 +191,7 @@ Widget _register(BuildContext context) => RegisterScreen(
               : PhoneScreen(
                   repository: _repository,
                   initialError: result.phoneError!,
-                  onSaved: () => _replace(
+                  onDone: () => _replace(
                     context,
                     (context) =>
                         _password(context, null, registration.accountType),

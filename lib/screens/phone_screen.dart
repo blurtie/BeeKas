@@ -7,18 +7,21 @@ import '../domain/signup_error.dart';
 import '../ui/components.dart';
 
 /// L5, after OTP: set_phone refused the Daftar number (taken or invalid), so
-/// another one is needed before the password step. No frame yet.
+/// another one or Lewati leads to the password step without a phone (D-22
+/// poin 4). No frame yet.
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({
     super.key,
     required this.repository,
     required this.initialError,
-    required this.onSaved,
+    required this.onDone,
   });
 
   final SignupRepository repository;
   final SignupError initialError;
-  final VoidCallback onSaved;
+
+  /// After saving a number or skipping.
+  final VoidCallback onDone;
 
   @override
   State<PhoneScreen> createState() => _PhoneScreenState();
@@ -43,7 +46,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     setState(() => _loading = true);
     try {
       await widget.repository.setPhone(phone);
-      if (mounted) widget.onSaved();
+      if (mounted) widget.onDone();
     } on SignupException catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -91,6 +94,11 @@ class _PhoneScreenState extends State<PhoneScreen> {
         FilledButton(
           onPressed: _loading ? null : _save,
           child: BeeButtonLabel(t('next'), loading: _loading),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _loading ? null : widget.onDone,
+          child: Text(t('skip')),
         ),
       ],
     );
