@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(48);
+select plan(54);
 
 -- Helpers ------------------------------------------------------------------
 
@@ -226,7 +226,7 @@ select lives_ok($$ select public.submit_for_review() $$, 'resubmit with new phot
 reset role;
 select is(pg_temp.status_of(:b), 'pending', 'B is pending again');
 
--- Submit needs a phone (D-04): profiles start without one since phone_after_otp.
+-- Phone is optional (D-22 poin 4, #53): submitting without one works.
 
 select pg_temp.sign_up('cccccccc-0000-4000-8000-000000000001', 'cici@binus.ac.id',
   '{"full_name": "Cici", "campus": "malang"}');
@@ -235,8 +235,24 @@ select public.record_consent('2026-10-07');
 insert into storage.objects (bucket_id, name, owner_id) values
   ('verification', 'cccccccc-0000-4000-8000-000000000001/1/card.jpg', 'cccccccc-0000-4000-8000-000000000001'),
   ('verification', 'cccccccc-0000-4000-8000-000000000001/1/selfie.jpg', 'cccccccc-0000-4000-8000-000000000001');
-select throws_ok($$ select public.submit_for_review() $$, '23514', 'phone_missing',
-  'submit with both photos but no phone is rejected');
+select lives_ok($$ select public.submit_for_review() $$, 'submit without a phone');
+reset role;
+select is(pg_temp.status_of('cccccccc-0000-4000-8000-000000000001'), 'pending', 'C is pending without a phone');
+select ok((select phone is not null from public.profiles where id = :b), 'B keeps its phone after resubmitting');
+
+-- Phone is private (D-26): members never read another member's phone.
+
+select pg_temp.act_as('cccccccc-0000-4000-8000-000000000001');
+select is_empty($$ select phone from public.profiles where id <> auth.uid() $$,
+  'member cannot read other profiles (or their phone) by direct select');
+select throws_ok($$ select * from public.pending_verifications() $$, '42501', 'not_admin',
+  'member cannot read phones through pending_verifications');
+reset role;
+select pg_temp.act_as(:b);
+select isnt((select phone from public.profiles where id = auth.uid()), null, 'owner reads own phone');
+reset role;
+select pg_temp.act_as(:admin);
+select isnt((select phone from public.profiles where id = :b), null, 'admin reads any phone');
 reset role;
 
 select * from finish();

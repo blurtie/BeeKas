@@ -6,35 +6,22 @@ import '../domain/registration.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
 
-/// Why the phone step is shown; picks the subtitle.
-enum PhoneScreenMode {
-  /// After OTP, set_phone refused the Daftar number (taken or invalid).
-  rejected('phoneSubtitle'),
-
-  /// L10 Kirim: submit_for_review found no phone (phone_missing). The
-  /// subtitle carries the message, so no error and no stepper.
-  missing('phoneSubtitleMissing');
-
-  const PhoneScreenMode(this.subtitleKey);
-  final String subtitleKey;
-}
-
 /// L5, after OTP: set_phone refused the Daftar number (taken or invalid), so
-/// another one is needed before the password step. Also opened from L10 when
-/// no phone is saved. No frame yet.
+/// another one or Lewati leads to the password step without a phone (D-22
+/// poin 4). No frame yet.
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({
     super.key,
     required this.repository,
     required this.initialError,
-    required this.onSaved,
-    this.mode = PhoneScreenMode.rejected,
+    required this.onDone,
   });
 
   final SignupRepository repository;
   final SignupError initialError;
-  final VoidCallback onSaved;
-  final PhoneScreenMode mode;
+
+  /// After saving a number or skipping.
+  final VoidCallback onDone;
 
   @override
   State<PhoneScreen> createState() => _PhoneScreenState();
@@ -42,9 +29,7 @@ class PhoneScreen extends StatefulWidget {
 
 class _PhoneScreenState extends State<PhoneScreen> {
   final _phone = TextEditingController();
-  late SignupException? _error = widget.mode == PhoneScreenMode.missing
-      ? null
-      : SignupException(widget.initialError);
+  late SignupException? _error = SignupException(widget.initialError);
   bool _submitted = false;
   bool _loading = false;
 
@@ -61,7 +46,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
     setState(() => _loading = true);
     try {
       await widget.repository.setPhone(phone);
-      if (mounted) widget.onSaved();
+      if (mounted) widget.onDone();
     } on SignupException catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -89,8 +74,8 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
     return BeeSignupPage(
       title: t('phoneTitle'),
-      step: widget.mode == PhoneScreenMode.missing ? null : 0,
-      subtitle: t(widget.mode.subtitleKey),
+      step: 0,
+      subtitle: t('phoneSubtitle'),
       children: [
         BeeTextField(
           label: t('phone'),
@@ -109,6 +94,11 @@ class _PhoneScreenState extends State<PhoneScreen> {
         FilledButton(
           onPressed: _loading ? null : _save,
           child: BeeButtonLabel(t('next'), loading: _loading),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _loading ? null : widget.onDone,
+          child: Text(t('skip')),
         ),
       ],
     );

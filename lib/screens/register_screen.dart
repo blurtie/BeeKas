@@ -141,8 +141,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             gap,
             BeeTextField(
               key: const ValueKey(RegistrationField.phone),
-              label: t('phone'),
+              label: t('phoneOptional'),
               hint: t('phoneHint'),
+              helperText: t('phoneHelper'),
               controller: _phone,
               keyboardType: TextInputType.phone,
               errorText: errorFor(RegistrationField.phone),

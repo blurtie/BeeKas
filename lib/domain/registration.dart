@@ -64,7 +64,9 @@ class Registration {
 
   final String fullName;
   final String email;
-  final String phone;
+
+  /// Null when left empty: the number is optional (D-22 poin 4).
+  final String? phone;
   final AccountType accountType;
   final Campus campus;
 
@@ -110,9 +112,7 @@ RegistrationResult validateRegistration({
   }
 
   final normalizedPhone = normalizePhone(phone);
-  if (phone.trim().isEmpty) {
-    errors[RegistrationField.phone] = 'errorPhoneRequired';
-  } else if (normalizedPhone == null) {
+  if (phone.trim().isNotEmpty && normalizedPhone == null) {
     errors[RegistrationField.phone] = 'errorInvalidPhone';
   }
   if (campus == null) errors[RegistrationField.campus] = 'errorInvalidCampus';
@@ -122,7 +122,7 @@ RegistrationResult validateRegistration({
     registration: Registration(
       fullName: name,
       email: normalizeEmail(email),
-      phone: normalizedPhone!,
+      phone: normalizedPhone,
       accountType: type!,
       campus: campus!,
     ),
@@ -151,5 +151,8 @@ enum AfterOtp {
 }) => (
   next: hasPassword ? AfterOtp.alreadyRegistered : AfterOtp.continueSignup,
   phoneChanged:
-      !hasPassword && storedPhone != null && storedPhone != submitted.phone,
+      !hasPassword &&
+      storedPhone != null &&
+      submitted.phone != null &&
+      storedPhone != submitted.phone,
 );

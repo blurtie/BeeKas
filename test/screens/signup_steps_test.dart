@@ -172,7 +172,7 @@ void main() {
       PhoneScreen(
         repository: repo,
         initialError: otp!.phoneError!,
-        onSaved: () => saved = true,
+        onDone: () => saved = true,
       ),
     );
     expect(find.text(t('errorPhoneTaken')), findsOneWidget);
@@ -181,6 +181,35 @@ void main() {
     await tester.pump();
     expect(repo.phone, '+6281311112222');
     expect(saved, isTrue);
+  });
+
+  testWidgets('taken number: generic message, Lewati goes on without a phone', (
+    tester,
+  ) async {
+    final repo = FakeSignupRepository(
+      errors: {
+        'setPhone': [const SignupException(SignupError.phoneTaken)],
+      },
+    );
+    final otp = await _verify(tester, repo);
+    await tester.pump();
+
+    var done = false;
+    await _pump(
+      tester,
+      PhoneScreen(
+        repository: repo,
+        initialError: otp!.phoneError!,
+        onDone: () => done = true,
+      ),
+    );
+    expect(
+      find.text("This number can't be used. Try another number or skip."),
+      findsOneWidget,
+    );
+    await _tap(tester, t('skip'));
+    expect(done, isTrue);
+    expect(repo.phone, isNull);
   });
 
   testWidgets('abandoned sign-up: old number kept and shown', (tester) async {

@@ -124,81 +124,18 @@ void main() {
     expect(find.text(t('openSettings')), findsOneWidget);
   });
 
-  testWidgets('phone_missing opens the #27 phone step, then sends the same '
-      'photos again', (tester) async {
-    final repo = FakeSignupRepository(
-      errors: {
-        'submitForReview': [const SignupException(SignupError.phoneMissing)],
-      },
-    );
-    var sent = false;
-    await _pumpSelfie(tester, repo, onSent: () => sent = true);
-    await tester.tap(find.text(t('startVerification')));
-    await tester.pump();
-    await tester.tap(find.text(t('send')));
-    await tester.pump();
-    expect(find.text(t('errorPhoneMissing')), findsOneWidget);
-
-    await tester.tap(find.text(t('addPhone')));
-    await tester.pumpAndSettle();
-    expect(find.byType(PhoneScreen), findsOneWidget);
-    expect(find.text(t('phoneSubtitleMissing')), findsOneWidget);
-    await tester.enterText(find.byType(TextField), '0813-1111-2222');
-    await tester.tap(find.text(t('next')));
-    // Not pumpAndSettle: Kirim keeps spinning after success, as L11 replaces
-    // the route in the app.
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-
-    expect(repo.phone, '+6281311112222');
-    expect(find.byType(SelfieScreen), findsOneWidget);
-    expect(repo.uploads, ['a1/card.jpg', 'a1/selfie.jpg']);
-    expect(repo.calls.where((c) => c == 'submitForReview'), hasLength(2));
-    expect(sent, isTrue);
-  });
-
-  testWidgets('phone step, rejected mode: stepper and the error', (
-    tester,
-  ) async {
+  testWidgets('phone step: stepper and the error', (tester) async {
     await _pump(
       tester,
       PhoneScreen(
         repository: FakeSignupRepository(),
         initialError: SignupError.phoneTaken,
-        onSaved: () {},
+        onDone: () {},
       ),
     );
     expect(find.text(t('phoneSubtitle')), findsOneWidget);
     expect(find.text(t('errorPhoneTaken')), findsOneWidget);
     expect(find.byType(BeeStepper), findsOneWidget);
-  });
-
-  testWidgets('phone step, missing mode: only the subtitle, no stepper', (
-    tester,
-  ) async {
-    final repo = FakeSignupRepository(
-      errors: {
-        'setPhone': [const SignupException(null)],
-      },
-    );
-    await _pump(
-      tester,
-      PhoneScreen(
-        repository: repo,
-        initialError: SignupError.phoneMissing,
-        onSaved: () {},
-        mode: PhoneScreenMode.missing,
-      ),
-    );
-    expect(find.text(t('phoneSubtitleMissing')), findsOneWidget);
-    expect(find.text(t('errorPhoneMissing')), findsNothing);
-    expect(find.byType(BeeStepper), findsNothing);
-
-    // A failed save still shows its error.
-    await tester.enterText(find.byType(TextField), '0813-1111-2222');
-    await tester.tap(find.text(t('next')));
-    await tester.pump();
-    expect(find.text(t('errorNetwork')), findsOneWidget);
   });
 
   testWidgets('L11 offers Lihat katalog and Keluar', (tester) async {
