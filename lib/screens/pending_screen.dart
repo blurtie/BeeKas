@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
+import '../ui/assets.dart';
 import '../ui/tokens.dart';
 
 /// L11 Verifikasi Sedang Diproses, frame 459:184. The frame's back arrow and
-/// Kembali become Lihat katalog and Keluar (PRD); Bantuan comes with T12. The
-/// bee illustration has no asset yet.
+/// Kembali become Lihat katalog and Keluar (PRD); Bantuan comes with T12.
 class PendingScreen extends StatelessWidget {
   const PendingScreen({
     super.key,
@@ -57,7 +57,13 @@ class PendingScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            Image.asset(
+              BeeAssets.beeWriting,
+              height: 160,
+              excludeFromSemantics: true,
+            ),
+            const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
