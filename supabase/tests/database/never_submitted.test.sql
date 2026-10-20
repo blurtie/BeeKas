@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(9);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -64,6 +64,8 @@ reset role;
 update public.verification_rejections set rejected_at = now() - interval '10 days' where profile_id = :r;
 update public.profiles set approved_at = now() - interval '10 days' where id = :v;
 -- R then uploads a new card only, 9 days ago.
+-- V had a card-only folder 40 days ago, before the approved attempt.
+select pg_temp.upload(:v, '0', array['card.jpg'], 40);
 select pg_temp.upload(:r, '2', array['card.jpg'], 9);
 
 create temp table due as
@@ -73,7 +75,8 @@ create temp table due as
 select results_eq(
   $$ select profile_id, attempt, reason from due order by profile_id $$,
   $$ values ('aaaaaaaa-6500-4000-8000-000000000001', '1', 'never_submitted'),
-            ('bbbbbbbb-6500-4000-8000-000000000001', '1', 'never_submitted') $$,
+            ('bbbbbbbb-6500-4000-8000-000000000001', '1', 'never_submitted'),
+            ('eeeeeeee-6500-4000-8000-000000000001', '0', 'never_submitted') $$,
   'only attempts never submitted and uploaded over 29 days ago are due');
 select is((select names from due where profile_id = 'bbbbbbbb-6500-4000-8000-000000000001'),
   array['bbbbbbbb-6500-4000-8000-000000000001/1/card.jpg', 'bbbbbbbb-6500-4000-8000-000000000001/1/selfie.jpg'],
@@ -84,8 +87,10 @@ select ok(not exists (select 1 from due where profile_id = 'cccccccc-6500-4000-8
   'pending attempt: never touched, however old');
 select ok(not exists (select 1 from due where profile_id = 'dddddddd-6500-4000-8000-000000000001'),
   'rejected attempt waits for its own 29 days; later card-only upload is too recent');
-select ok(not exists (select 1 from due where profile_id = 'eeeeeeee-6500-4000-8000-000000000001'),
+select ok(not exists (select 1 from due where profile_id = 'eeeeeeee-6500-4000-8000-000000000001' and attempt = '1'),
   'approved attempt waits for its own 29 days');
+select ok(exists (select 1 from due where profile_id = 'eeeeeeee-6500-4000-8000-000000000001' and attempt = '0'),
+  'unsent folder of an approved account counts from its upload, not approval');
 
 select public.record_photo_deletion(:g, '1', 1, 'never_submitted');
 select results_eq(

@@ -5,7 +5,7 @@
 // public.photo_deletions (attempt, count, time).
 import { env, fromCron, rpc, serviceHeaders } from "../_shared/cron.ts";
 
-type Due = { profile_id: string; attempt: string; names: string[]; reason: string };
+type Due = { profile_id: string; attempt: string; names: string[]; reason: "decided" | "never_submitted" };
 
 // The files are already gone, so a lost record is never retried by a later run: try a few
 // times, then leave everything needed to add it by hand in the log.

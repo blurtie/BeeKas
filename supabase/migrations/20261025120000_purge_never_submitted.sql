@@ -8,7 +8,9 @@ alter table public.photo_deletions
 alter table public.photo_deletions alter column reason drop default;
 
 -- Due attempts, one row per folder:
---   decided          decided more than 29 days ago (#41, unchanged).
+--   decided          decided more than 29 days ago (#41). Only the approved attempt itself
+--                    counts from approved_at; other folders of an approved account were never
+--                    submitted and count from their upload.
 --   never_submitted  no decision covers it, it is not the attempt under review, and its
 --                    last file was uploaded more than 29 days ago.
 -- 29 days so a daily run always deletes by day 30.
@@ -25,7 +27,8 @@ as $$
       coalesce(
         (select min(r.rejected_at) from public.verification_rejections r
          where r.profile_id = p.id and r.attempt = f.attempt),
-        case when p.status = 'approved' then p.approved_at end
+        case when p.status = 'approved' and f.attempt is not distinct from public.latest_attempt(p.id)
+          then p.approved_at end
       ) as decided_at,
       max(o.created_at) as uploaded_at,
       p.status = 'pending' and f.attempt is not distinct from public.latest_attempt(p.id)

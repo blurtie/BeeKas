@@ -147,7 +147,7 @@ Untuk memeriksa bahwa function hanya bisa dipanggil dengan secret yang benar:
 bash supabase/tests/http/photo-retention-auth.sh
 ```
 
-Skrip ini mengunggah satu foto palsu ke folder admin seed dan memundurkan `approved_at` admin 31 hari, lalu memeriksa: panggilan tanpa header, dengan header salah, dan dengan header kosong dibalas 401 tanpa menghapus apa pun; panggilan dengan header benar dibalas 200, file hilang dari bucket, dan penghapusannya tercatat. Setelah selesai, foto, catatan, dan `approved_at` dikembalikan. Exit code 0 berarti semua lolos. Skrip ini tidak dijalankan di CI.
+Skrip ini mengunggah satu foto palsu ke folder admin seed dan memundurkan waktu unggahnya 31 hari (percobaan yang tidak dikirim), lalu memeriksa: panggilan tanpa header, dengan header salah, dan dengan header kosong dibalas 401 tanpa menghapus apa pun; panggilan dengan header benar dibalas 200, file hilang dari bucket, dan penghapusannya tercatat. Setelah selesai, foto dan catatan dihapus. Exit code 0 berarti semua lolos. Skrip ini tidak dijalankan di CI.
 
 ## Masalah umum
 
