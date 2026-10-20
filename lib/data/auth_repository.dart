@@ -5,8 +5,7 @@ import '../domain/registration.dart';
 import '../domain/sign_in.dart';
 import 'signup_repository.dart';
 
-/// Masuk (#31): signing in with email and password. Failures are
-/// [SignupException]s.
+/// Masuk (#31) and Lupa password (#34). Failures are [SignupException]s.
 abstract interface class AuthRepository {
   Future<void> signIn(String email, String password);
 
@@ -17,6 +16,16 @@ abstract interface class AuthRepository {
   bool get signedIn;
 
   Future<void> signOut();
+
+  /// Emails a 6-digit recovery code; GoTrue answers the same for unknown
+  /// emails.
+  Future<void> sendResetCode(String email);
+
+  /// Signs in with the recovery code.
+  Future<void> verifyResetCode(String email, String code);
+
+  /// Sets the new password, then signs out every other device. Safe to retry.
+  Future<void> resetPassword(String password);
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -54,4 +63,29 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() => guardBackend(_client.auth.signOut);
+
+  @override
+  Future<void> sendResetCode(String email) => guardBackend(
+    () => _client.auth.resetPasswordForEmail(normalizeEmail(email)),
+  );
+
+  @override
+  Future<void> verifyResetCode(String email, String code) => guardBackend(
+    () => _client.auth.verifyOTP(
+      email: normalizeEmail(email),
+      token: code,
+      type: OtpType.recovery,
+    ),
+  );
+
+  @override
+  Future<void> resetPassword(String password) => guardBackend(() async {
+    try {
+      await _client.auth.updateUser(UserAttributes(password: password));
+    } on AuthException catch (e) {
+      // A retry after the sign-out below failed: the password is already set.
+      if (e.code != 'same_password') rethrow;
+    }
+    await _client.auth.signOut(scope: SignOutScope.others);
+  });
 }

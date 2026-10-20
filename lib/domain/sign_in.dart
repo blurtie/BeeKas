@@ -50,3 +50,24 @@ String signInErrorKey(SignupError? error) => switch (error) {
   SignupError.invalidCredentials || SignupError.rateLimited => error.copyKey,
   _ => 'errorSignInFailed',
 };
+
+/// Lupa password, sending the code: null means "shown as sent". Anything that
+/// could depend on whether the email has an account (per-email resend limit,
+/// mail errors) is shown as sent, so the screen never reveals it. Only errors
+/// that do not depend on the email are shown.
+String? resetSendErrorKey(SignupError? error) => switch (error) {
+  null => 'errorNetwork',
+  SignupError.rateLimited => error.copyKey,
+  _ => null,
+};
+
+/// The emailed codes (L5 and Lupa password) are 6 digits.
+bool isOtpCode(String input) => RegExp(r'^\d{6}$').hasMatch(input.trim());
+
+/// Lupa password, checking the code. GoTrue answers a wrong and an expired
+/// code alike (otp_expired), for unknown emails too, so nothing here leaks.
+String resetVerifyErrorKey(SignupError? error) => switch (error) {
+  null => 'errorNetwork',
+  SignupError.invalidCode || SignupError.rateLimited => error.copyKey,
+  _ => 'errorResetFailed',
+};

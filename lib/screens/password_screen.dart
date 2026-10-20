@@ -3,19 +3,24 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/signup_repository.dart';
 import '../domain/password.dart';
+import '../domain/signup_error.dart';
 import '../ui/components.dart';
 
-/// L6 Buat kata sandi (no frame yet). The account stays `incomplete`.
+/// L6 Buat kata sandi (no frame yet). The account stays `incomplete`. Also
+/// the new password of Lupa password (#34), with [reset].
 class PasswordScreen extends StatefulWidget {
   const PasswordScreen({
     super.key,
-    required this.repository,
+    required this.save,
     required this.onDone,
     this.keptPhone,
+    this.reset = false,
   });
 
-  final SignupRepository repository;
+  /// Stores the password: setPassword for L6, resetPassword for #34.
+  final Future<void> Function(String password) save;
   final VoidCallback onDone;
+  final bool reset;
 
   /// The abandoned sign-up's number that stays instead of the typed one.
   final String? keptPhone;
@@ -43,7 +48,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
       _error = null;
     });
     try {
-      await widget.repository.setPassword(_password.text);
+      await widget.save(_password.text);
       if (mounted) widget.onDone();
     } on SignupException catch (e) {
       if (mounted) setState(() => _error = e);
@@ -58,7 +63,8 @@ class _PasswordScreenState extends State<PasswordScreen> {
     void changed(String _) => setState(() => _error = null);
 
     return BeeSignupPage(
-      title: t('passwordTitle'),
+      step: widget.reset ? null : 0,
+      title: t(widget.reset ? 'resetPasswordTitle' : 'passwordTitle'),
       subtitle: t('passwordSubtitle'),
       children: [
         if (widget.keptPhone != null) ...[
@@ -91,12 +97,21 @@ class _PasswordScreenState extends State<PasswordScreen> {
         BeeChecklistItem(t('ruleMatch'), met: check.matches),
         const SizedBox(height: 32),
         if (_error != null) ...[
-          BeeFormError(t(_error!.error?.copyKey ?? 'errorNetwork')),
+          BeeFormError(
+            t(switch (_error!.error) {
+              null => 'errorNetwork',
+              SignupError.unknown when widget.reset => 'errorResetFailed',
+              final e => e.copyKey,
+            }),
+          ),
           const SizedBox(height: 16),
         ],
         FilledButton(
           onPressed: _loading || !check.ok ? null : _save,
-          child: BeeButtonLabel(t('next'), loading: _loading),
+          child: BeeButtonLabel(
+            t(widget.reset ? 'savePassword' : 'next'),
+            loading: _loading,
+          ),
         ),
       ],
     );
