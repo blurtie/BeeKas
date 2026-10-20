@@ -60,6 +60,15 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/images/logo/
+    - assets/images/ilustrasi/
+    - assets/images/ikon/kategori/
+    - assets/images/ikon/kategori-beranda/
+    - assets/images/ikon/listing/
+    - assets/images/ikon/notifikasi/
+    - assets/images/ikon/pesanan/
+
   fonts:
     - family: Poppins
       fonts:

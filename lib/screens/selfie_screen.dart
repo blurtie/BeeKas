@@ -7,12 +7,13 @@ import '../data/signup_repository.dart';
 import '../domain/photo.dart';
 import '../domain/registration.dart';
 import '../domain/signup_error.dart';
+import '../ui/assets.dart';
 import '../ui/components.dart';
 import 'phone_screen.dart';
 import '../ui/tokens.dart';
 
 /// L10 Verifikasi wajah, frame 416:507, with the PRD's four tips. The frame's
-/// illustration is a face icon until the selfie replaces it; then Ulangi and
+/// illustration is an example selfie until the selfie replaces it; then Ulangi and
 /// Kirim. Kirim uploads both photos and submits (D-19); on failure the selfie
 /// stays and Kirim tries again.
 class SelfieScreen extends StatefulWidget {
@@ -155,10 +156,10 @@ class _SelfieScreenState extends State<SelfieScreen> {
               child: ColoredBox(
                 color: BeeColors.border,
                 child: selfie == null
-                    ? const Icon(
-                        Icons.face,
-                        size: 120,
-                        color: BeeColors.textMuted,
+                    ? Image.asset(
+                        BeeAssets.selfieExample,
+                        fit: BoxFit.cover,
+                        excludeFromSemantics: true,
                       )
                     : Image.memory(
                         selfie,
