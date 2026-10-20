@@ -32,6 +32,13 @@ ThemeData beeTheme() {
         height: 1.2,
         color: BeeColors.textHeading,
       ),
+      // L11 Verifikasi Sedang Diproses title, centred.
+      headlineSmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+        color: BeeColors.textHeading,
+      ),
       // Typed field text; matches the 14 dp placeholder.
       bodyLarge: TextStyle(fontSize: 14, color: BeeColors.textBody),
       bodyMedium: TextStyle(

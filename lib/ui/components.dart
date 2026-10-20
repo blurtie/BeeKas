@@ -277,14 +277,16 @@ class BeeSignupPage extends StatelessWidget {
   final String subtitle;
   final List<Widget> children;
 
-  /// Stepper position: 0 data diri, 1 kartu, 2 wajah.
-  final int step;
+  /// Stepper position: 0 data diri, 1 kartu, 2 wajah; null hides it.
+  final int? step;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: BeeHeader(title: BeeStepper(current: step)),
+      appBar: BeeHeader(
+        title: step == null ? null : BeeStepper(current: step!),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

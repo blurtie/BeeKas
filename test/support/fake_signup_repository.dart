@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/registration.dart';
 
@@ -17,6 +19,12 @@ class FakeSignupRepository implements SignupRepository {
   Registration? sent;
   String? password;
   String? consentVersion;
+
+  /// Upload paths that went in, in order.
+  final uploads = <String>[];
+
+  /// An upload path that fails once with a network error.
+  String? failUpload;
 
   Future<void> _call(String name) async {
     calls.add(name);
@@ -58,6 +66,28 @@ class FakeSignupRepository implements SignupRepository {
   Future<void> recordConsent(String version) async {
     await _call('recordConsent');
     consentVersion = version;
+  }
+
+  @override
+  Future<void> uploadPhoto(String path, Uint8List bytes) async {
+    await _call('uploadPhoto');
+    if (path == failUpload) {
+      failUpload = null;
+      throw const SignupException(null);
+    }
+    uploads.add(path);
+  }
+
+  @override
+  Future<void> submitForReview() => _call('submitForReview');
+
+  /// What status() returns.
+  String profileStatus = 'incomplete';
+
+  @override
+  Future<String> status() async {
+    await _call('status');
+    return profileStatus;
   }
 
   @override

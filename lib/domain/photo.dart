@@ -36,9 +36,12 @@ Uint8List preparePhoto(Uint8List jpeg) {
   return clean;
 }
 
-/// Removes EXIF (GPS, device, time), XMP, IPTC and comments from [jpeg]. The
+/// Removes EXIF (GPS, device, time), XMP, IPTC, comments and every other
+/// application segment from [jpeg], keeping only the ICC colour profile. The
 /// EXIF orientation is written back on its own, because image_picker leaves the
-/// pixels unrotated and copies GPS tags along with it.
+/// pixels unrotated and copies GPS tags along with it. Anything after the main
+/// image ends is cut: phones append a second image there (MPF, Ultra HDR gain
+/// map) with its own metadata.
 Uint8List stripJpegMetadata(Uint8List jpeg) {
   final out = BytesBuilder(copy: false);
   int? orientation;
@@ -51,8 +54,8 @@ Uint8List stripJpegMetadata(Uint8List jpeg) {
       if (jpeg[i] != 0xFF) throw const FormatException('bad marker');
       final marker = jpeg[i + 1];
       if (marker == 0xDA) {
-        // Start of scan: the rest is image data.
-        out.add(Uint8List.sublistView(jpeg, i));
+        // Image data up to and including the main image's EOI.
+        out.add(Uint8List.sublistView(jpeg, i, _endOfImage(jpeg, i)));
         break;
       }
       final end = i + 2 + (jpeg[i + 2] << 8 | jpeg[i + 3]);
@@ -61,10 +64,10 @@ Uint8List stripJpegMetadata(Uint8List jpeg) {
       if (marker == 0xE1) {
         orientation ??= _exifOrientation(Uint8List.sublistView(segment, 4));
       }
-      // Keep APP0 (JFIF), APP2 (ICC colour profile) and everything that is not
-      // an application segment or comment.
+      // Of the application segments (APP0-APP15) and comments, only the ICC
+      // profile stays; APP2 also holds MPF and gain-map pointers.
       final metadata =
-          (marker >= 0xE1 && marker <= 0xEF && marker != 0xE2) ||
+          (marker >= 0xE0 && marker <= 0xEF && !_isIcc(segment)) ||
           marker == 0xFE;
       if (!metadata) out.add(segment);
       i = end;
@@ -79,6 +82,53 @@ Uint8List stripJpegMetadata(Uint8List jpeg) {
     if (orientation != null) ..._orientationSegment(orientation),
     ...body,
   ]);
+}
+
+/// APP2 whose payload starts with "ICC_PROFILE\0".
+bool _isIcc(Uint8List segment) {
+  const id = [
+    0x49,
+    0x43,
+    0x43,
+    0x5F,
+    0x50,
+    0x52,
+    0x4F,
+    0x46,
+    0x49,
+    0x4C,
+    0x45,
+    0,
+  ];
+  if (segment[1] != 0xE2 || segment.length < 4 + id.length) return false;
+  for (var k = 0; k < id.length; k++) {
+    if (segment[4 + k] != id[k]) return false;
+  }
+  return true;
+}
+
+/// Index just past the EOI that ends the image whose first scan starts at
+/// [sos]. Inside scan data 0xFF is followed by 0x00 (stuffing), a restart
+/// marker or fill bytes; marker segments between progressive scans are skipped
+/// by their length.
+int _endOfImage(Uint8List jpeg, int sos) {
+  var i = sos + 2 + (jpeg[sos + 2] << 8 | jpeg[sos + 3]);
+  while (i + 1 < jpeg.length) {
+    if (jpeg[i] != 0xFF) {
+      i++;
+      continue;
+    }
+    final next = jpeg[i + 1];
+    if (next == 0xD9) return i + 2;
+    if (next == 0xFF) {
+      i++;
+    } else if (next == 0x00 || (next >= 0xD0 && next <= 0xD7)) {
+      i += 2;
+    } else {
+      i += 2 + (jpeg[i + 2] << 8 | jpeg[i + 3]);
+    }
+  }
+  throw const FormatException('no end of image');
 }
 
 /// The EXIF orientation of [jpeg], or null.
