@@ -34,3 +34,21 @@ jobs:
 
       - name: Test
         run: flutter test
+
+  pgtap:
+    name: pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          # Keep in sync with the local CLI (`supabase --version`).
+          version: 2.119.0
+
+      - name: Start database
+        run: supabase db start
+
+      - name: Test
+        run: supabase test db
