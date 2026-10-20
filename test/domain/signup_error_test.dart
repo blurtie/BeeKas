@@ -40,7 +40,7 @@ void main() {
     );
   });
 
-  test('maps submit_for_review without a phone', () {
+  test('maps submit_for_review photos_missing', () {
     expect(
       signupErrorFrom('23514', 'photos_missing'),
       SignupError.photosMissing,
