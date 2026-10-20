@@ -63,7 +63,7 @@ Email disetujui/ditolak dikirim Edge Function `send-decision-emails` lewat **API
 
 ## 7. Penghapusan foto 30 hari (#41, D-07)
 
-Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC (10:00 WIB). Function menghapus foto kartu dan selfie sebuah percobaan yang diputuskan lebih dari 29 hari lalu (disetujui: `approved_at`; ditolak: `rejected_at` percobaan itu), sehingga foto selalu terhapus paling lambat hari ke-30. Penghapusan lewat Storage API, karena `DELETE` lewat SQL di `storage.objects` membuat file yatim di bucket ([Supabase: Delete Objects](https://supabase.com/docs/guides/storage/management/delete-objects)).
+Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC (10:00 WIB). Function menghapus foto kartu dan selfie sebuah percobaan yang diputuskan lebih dari 29 hari lalu (disetujui: `approved_at`; ditolak: `rejected_at` percobaan itu), sehingga foto selalu terhapus paling lambat hari ke-30. Percobaan yang tidak pernah dikirim dihapus dengan cara yang sama, dihitung dari unggahan terakhirnya (#65); kolom `reason` di `photo_deletions` membedakan `decided` dan `never_submitted`. Tidak ada function atau secret baru. Penghapusan lewat Storage API, karena `DELETE` lewat SQL di `storage.objects` membuat file yatim di bucket ([Supabase: Delete Objects](https://supabase.com/docs/guides/storage/management/delete-objects)).
 
 1. Deploy: `supabase functions deploy delete-expired-photos --no-verify-jwt`.
 2. Di SQL editor, simpan URL dan secret bersama di Vault (sekali saja). Buat nilai acak baru (mis. `openssl rand -hex 32`), **bukan** nilai lokal dari `seed.sql` dan bukan secret email keputusan. Nilainya tidak pernah ditulis di repo, issue, PR, atau chat:

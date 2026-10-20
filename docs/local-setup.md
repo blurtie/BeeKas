@@ -123,7 +123,7 @@ Skrip ini menjeda `pg_cron` sebentar, membuat satu email uji ke admin seed, lalu
 
 ## 7. Penghapusan foto 30 hari
 
-Foto kartu dan selfie sebuah percobaan dihapus paling lambat 30 hari setelah diputuskan (D-07, #41). Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC. Status, admin, waktu, riwayat penolakan, dan persetujuan tetap disimpan; setiap penghapusan dicatat di `public.photo_deletions` (percobaan, jumlah file, waktu).
+Foto kartu dan selfie sebuah percobaan dihapus paling lambat 30 hari setelah diputuskan (D-07, #41). Percobaan yang tidak pernah dikirim (hanya kartu, atau kartu dan selfie tanpa Kirim yang berhasil) dihapus paling lambat 30 hari setelah file terakhirnya diunggah (#65); percobaan yang sedang diperiksa tidak disentuh. Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC. Status, admin, waktu, riwayat penolakan, dan persetujuan tetap disimpan; setiap penghapusan dicatat di `public.photo_deletions` (percobaan, jumlah file, waktu, alasan: `decided` atau `never_submitted`).
 
 Menjalankannya manual (Git Bash, Supabase lokal menyala dengan seed):
 
@@ -133,7 +133,7 @@ Menjalankannya manual (Git Bash, Supabase lokal menyala dengan seed):
    ```
    Untuk mencoba dengan akun uji, mundurkan tanggal keputusannya dulu, misalnya
    `update public.profiles set approved_at = now() - interval '31 days' where email = 't41-a@binus.ac.id';`
-   atau `update public.verification_rejections set rejected_at = now() - interval '31 days' where profile_id = '<id>';`.
+   atau `update public.verification_rejections set rejected_at = now() - interval '31 days' where profile_id = '<id>';`, atau untuk percobaan yang tidak dikirim `update storage.objects set created_at = now() - interval '30 days' where name like '<id>/%';`.
 2. Panggil function dengan secret lokal dari `seed.sql`:
    ```bash
    curl -X POST -H 'x-cron-secret: local-photo-retention-cron-secret' http://127.0.0.1:54321/functions/v1/delete-expired-photos

@@ -95,7 +95,7 @@ select ok(not exists (select 1 from due where profile_id = 'eeeeeeee-4100-4000-8
 
 -- Recording and L15 ----------------------------------------------------------------
 
-select public.record_photo_deletion(:d, '1', 2);
+select public.record_photo_deletion(:d, '1', 2, 'decided');
 select results_eq(
   $$ select attempt, objects, deleted_at = now() from public.photo_deletions where profile_id = 'dddddddd-4100-4000-8000-000000000001' $$,
   $$ values ('1', 2, true) $$, 'deletion recorded: attempt, count, time');
