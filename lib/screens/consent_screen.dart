@@ -4,17 +4,20 @@ import '../config/copy.dart';
 import '../data/signup_repository.dart';
 import '../ui/components.dart';
 
-/// L7 Persetujuan data (no frame yet), before any photo is taken (D-07). The
-/// Kebijakan Privasi link follows in T13.
+/// L7 Persetujuan data (no frame yet), before any photo is taken (D-07).
 class ConsentScreen extends StatefulWidget {
   const ConsentScreen({
     super.key,
     required this.repository,
     required this.onAgreed,
+    required this.onTerms,
+    required this.onPrivacy,
   });
 
   final SignupRepository repository;
   final VoidCallback onAgreed;
+  final VoidCallback onTerms;
+  final VoidCallback onPrivacy;
 
   @override
   State<ConsentScreen> createState() => _ConsentScreenState();
@@ -64,6 +67,15 @@ class _ConsentScreenState extends State<ConsentScreen> {
         section('consentPurposeLabel', 'consentPurpose'),
         section('consentViewerLabel', 'consentViewer'),
         section('consentRetentionLabel', 'consentRetention'),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(t('legalReadMore'), style: textTheme.bodyMedium),
+            TextButton(onPressed: widget.onPrivacy, child: Text(t('privacy'))),
+            Text(t('and'), style: textTheme.bodyMedium),
+            TextButton(onPressed: widget.onTerms, child: Text(t('terms'))),
+          ],
+        ),
         const SizedBox(height: 8),
         CheckboxListTile(
           value: _agreed,

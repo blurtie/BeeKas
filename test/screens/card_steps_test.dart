@@ -36,7 +36,12 @@ void main() {
       var agreed = false;
       await _pump(
         tester,
-        ConsentScreen(repository: repo, onAgreed: () => agreed = true),
+        ConsentScreen(
+          repository: repo,
+          onAgreed: () => agreed = true,
+          onTerms: () {},
+          onPrivacy: () {},
+        ),
       );
       for (final key in [
         'consentData',
@@ -68,7 +73,12 @@ void main() {
       var agreed = false;
       await _pump(
         tester,
-        ConsentScreen(repository: repo, onAgreed: () => agreed = true),
+        ConsentScreen(
+          repository: repo,
+          onAgreed: () => agreed = true,
+          onTerms: () {},
+          onPrivacy: () {},
+        ),
       );
       await tester.tap(find.text(t('consentAgree')));
       await tester.pump();

@@ -11,6 +11,7 @@ import 'domain/registration.dart';
 import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/consent_screen.dart';
+import 'screens/legal_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/password_screen.dart';
 import 'screens/pending_screen.dart';
@@ -233,6 +234,8 @@ Widget _password(
 
 Widget _consent(BuildContext context, AccountType accountType) => ConsentScreen(
   repository: _repository,
+  onTerms: () => _legal(context, 'terms'),
+  onPrivacy: () => _legal(context, 'privacy'),
   onAgreed: () => Navigator.push(
     context,
     MaterialPageRoute(builder: (context) => _photos(context, accountType)),
@@ -282,17 +285,11 @@ void _catalog(BuildContext context) => Navigator.push(
   ),
 );
 
-// ponytail: S&K and Kebijakan Privasi are being drafted (D-21); a draft notice.
 void _legal(BuildContext context, String titleKey) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => Scaffold(
-      appBar: AppBar(title: Text(t(titleKey))),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(t('legalDraft')),
-      ),
-    ),
+    builder: (context) =>
+        LegalScreen(titleKey: titleKey, bodyKey: '${titleKey}Body'),
   ),
 );
 

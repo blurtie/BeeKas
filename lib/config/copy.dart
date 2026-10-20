@@ -168,8 +168,207 @@ const copy = <Lang, Map<String, String>>{
     'and': 'and',
     'terms': 'Terms & Conditions',
     'privacy': 'Privacy Policy',
-    'legalDraft':
-        'DRAFT: this text is not final and is being written by the team.',
+    'legalReadMore': 'Read more in the',
+    'legalDraftMarker': '[DRAFT — awaiting team]',
+    // Translated from notes/kebijakan-privasi-sk-draf.md (draft 0.1).
+    'privacyBody': '''Draft version 0.1. Effective from [release date].
+
+BeeKas collects only the data it needs to make sure every user is part of BINUS, and uses it only to run the marketplace. We do not sell data and do not use it for advertising.
+
+# 1. Who we are
+
+BeeKas is a marketplace for selling, buying, and donating second-hand goods for the BINUS community, built by a student team in the Venture Creation course (ENPR6312001). BeeKas is not an official service of Universitas Bina Nusantara.
+
+The person responsible for personal data is the BeeKas CTO (D-21). Contact us at beekas2026@gmail.com.
+
+# 2. Data we collect
+
+For each item: when it is collected, whether it is required, and what it is for.
+
+- Full name, BINUS email, account type (student/lecturer/staff), campus — at registration, required. To create your account and check your identity.
+
+- Phone number — at registration, optional. Only used by the BeeKas team if we need to reach you; never shown to other users.
+
+- Password — at registration, required. To sign in to your account. Stored as a hash; the team cannot see it.
+
+- Photo of your BINUS ID card and photo of your face (selfie) — identity verification, required for full access. An admin matches your face and the card details with your registration details.
+
+- Proof of consent (time and text version) — when you agree, required. Proof that you agreed to the use of your photos.
+
+- Verification history (status, reviewing admin, time, rejection reason, note) — after review, automatic. A record of the review and for handling complaints.
+
+- Batch year (BINUSIAN) — Edit Profile, optional. Shown on your profile; not verified.
+
+- Items you list (photos, title, description, price, category, condition) — when listing an item, required to list. Shown in the catalog.
+
+- Chat messages — when chatting, automatic. To agree on the transaction and COD.
+
+- Bookings, orders, COD location and time — when transacting, automatic. To run 24-hour bookings and orders.
+
+- Reviews, ratings, and the accounts you follow — when you give them or follow, optional. Shown on profiles and items.
+
+- Listing quota purchases [KONFIRMASI: what data is stored, e.g. QRIS transfer proof] — when buying quota, required to buy. Payment confirmation by an admin.
+
+Data stored only on your device: language choice, onboarding status, and sign-in session.
+
+What we do not collect: student ID number (NIM), major, and GPS location. Location data inside verification photos is removed before upload. [KONFIRMASI: also applies to item photos.]
+
+# 3. Who can see your data
+
+- ID card photo and selfie: only admins, namely the five BeeKas team members, each with their own account.
+
+- Phone number: you and admins.
+
+- BINUS email: you and admins. [KONFIRMASI: not shown to other users]
+
+- Name, campus, account type, verified badge, items, reviews: other users and guests browsing the catalog. [KONFIRMASI: what exactly is shown to guests]
+
+- Chat messages: you and the person you chat with. [KONFIRMASI: whether admins may read chats when there is a report]
+
+- Verification history: you (your own history) and admins.
+
+# 4. Other parties that process data
+
+- Supabase: database, authentication, and photo storage. [KONFIRMASI: server location. If outside Indonesia, transfer of data abroad must meet the requirements of the PDP Law.]
+
+- Email provider: sends OTP codes and verification result emails. [KONFIRMASI: provider not yet chosen.]
+
+- Gmail: receives the Help emails you send to beekas2026@gmail.com.
+
+- If push notifications or AI listing creation are added later, their providers will be added here before those features are used.
+
+We do not sell or rent data to anyone.
+
+# 5. How long data is kept
+
+- ID card photo and selfie: deleted no later than 30 days after verification is approved or rejected (D-07).
+
+- Verification history: kept after the photos are deleted, for as long as the account exists. [KONFIRMASI: how long after the account is deleted.]
+
+- Account data, items, chats, and reviews: while the account is active. [KONFIRMASI: deletion deadline after the account is closed.]
+
+- If BeeKas is transferred to another party, including BINUS, we will notify users before the data is transferred.
+
+# 6. How we protect data
+
+- Verification photos are kept in private storage that is not publicly accessible.
+
+- Access rules in the database limit who can read what, not just the app's screens.
+
+- Every admin has their own account, so every approval and rejection is recorded under the name of the reviewing admin.
+
+# 7. Your rights
+
+Under the Personal Data Protection Law (Law No. 27 of 2022), you can request:
+
+- a copy of your personal data;
+
+- correction of incorrect data;
+
+- deletion of your account and personal data;
+
+- withdrawal of consent to the use of your verification photos. As a result, full access is revoked until you verify again. [KONFIRMASI: the withdrawal flow is not built yet.]
+
+Send requests to beekas2026@gmail.com from your BINUS email. We reply within [KONFIRMASI: deadline; to be checked against the PDP Law].
+
+# 8. If a data breach occurs
+
+We notify affected users in writing, stating which data was affected, when, and the steps we are taking. [KONFIRMASI: notification deadline under the PDP Law.]
+
+# 9. Users under 18
+
+[KONFIRMASI: some new students may be under 18. The PDP Law requires consent from a parent or guardian for children's data. The team needs to decide whether to set an age limit or add a consent step.]
+
+# 10. Changes to this policy
+
+Changes are announced in the app. If the use of verification photos changes, you will be asked to agree again before continuing.''',
+    'termsBody': '''Draft version 0.1. Effective from [release date].
+
+By registering for or using BeeKas, you agree to these terms. BeeKas connects sellers and buyers in the BINUS community; transactions and payments happen directly between you during COD on campus.
+
+# 1. Who may use BeeKas
+
+- Guests without an account may browse the catalog.
+
+- Accounts are only for owners of an active BINUS email (@binus.ac.id or @binus.edu). Alumni whose @binus.ac.id email is still active register as students.
+
+- One person, one account. Accounts may not be lent, sold, or used by someone else.
+
+- [KONFIRMASI: minimum age, see Privacy Policy section 9.]
+
+# 2. Account and verification
+
+- Registration details must be correct and match your BINUS ID card.
+
+- Full access (contacting sellers, buying, listing items) only opens after the team verifies your ID card photo and selfie. Review is completed within 1×24 hours, including weekends and public holidays.
+
+- If rejected, you see the reasons and may resend your photos. There is no limit yet on the number of resubmissions.
+
+- Create a password just for BeeKas. Do not use your Binusmaya password or that of another account.
+
+- You are responsible for all activity on your account. If you suspect someone else is using your account, contact Help right away.
+
+# 3. Listing items
+
+- You can sell items or donate them. Donated items are given to the buyer for free.
+
+- Fee: Rp1,000 per listing, including donation listings. The fee is paid through a prepaid listing quota package to the BeeKas team's QRIS, then confirmed by an admin. [KONFIRMASI: package prices, quota validity period, and whether quota is refundable.]
+
+- Photos must be real photos of the item being sold. Descriptions and condition must be honest, including defects or damage.
+
+- Strikethrough prices may only be used if they match a price that actually applied before. Fake original prices are prohibited.
+
+- Delete or mark as sold any item that is no longer available.
+
+# 4. Prohibited items
+
+- Illegal goods, narcotics, prescription-only drugs, and drugs without a distribution permit.
+
+- Weapons, explosives, and dangerous goods.
+
+- Stolen, counterfeit, or pirated goods, including pirated software and books.
+
+- Identity cards, Flazz cards, or documents belonging to anyone.
+
+- Digital accounts, vouchers that may not be resold, and assignment or exam jockey services.
+
+- Adult content.
+
+- [KONFIRMASI: alcohol, cigarettes and vapes, food, animals, and over-the-counter drugs.]
+
+# 5. Booking, buying, and COD
+
+- 24-Hour Booking: the item is held for you for 24 hours without payment. After 24 hours with no follow-up, the booking is cancelled automatically and the item is available again. [KONFIRMASI: whether the seller may extend it.]
+
+- Buy Now: you confirm the order, then the seller processes it.
+
+- COD on campus: location and time are agreed through chat in the app. Pay the seller directly when you meet. There is no delivery.
+
+- Check the item before paying. Choose a busy place on campus.
+
+- BeeKas does not hold transaction money and is not a party to the sale. Disputes are settled between seller and buyer; the team can help mediate through Help.
+
+# 6. Chat, reviews, and conduct
+
+- Be polite. Harassment, threats, hate speech, and spam are prohibited.
+
+- Do not share other people's personal data, including photos or phone numbers, without their permission.
+
+- Reviews must be honest and based on transactions that actually happened. [KONFIRMASI: reviews only after the order is completed.]
+
+- Do not use BeeKas to defraud others or to move transactions outside the app to avoid these rules.
+
+# 7. Violations
+
+The BeeKas team may remove listings, restrict features, or close accounts that violate these terms. Report violations through Help (beekas2026@gmail.com). [KONFIRMASI: in-app report and block features.]
+
+# 8. Limitation of liability
+
+BeeKas is a student project and is provided as is. We try to keep the app running and secure, but we do not guarantee the quality of items, the honesty of users, or the outcome of transactions. Identity verification makes sure users are part of BINUS; it does not guarantee their conduct.
+
+# 9. Changes and governing law
+
+Changes to these terms are announced in the app. These terms are governed by the laws of the Republic of Indonesia.''',
     'rejectedTitle': 'Verification rejected',
     'rejectedBody': 'Your submission was not approved for these reasons:',
     'rejectedNote': 'Note from the team',
@@ -384,7 +583,207 @@ const copy = <Lang, Map<String, String>>{
     'and': 'dan',
     'terms': 'Syarat & Ketentuan',
     'privacy': 'Kebijakan Privasi',
-    'legalDraft': 'DRAF: teks ini belum final dan sedang ditulis tim.',
+    'legalReadMore': 'Baca selengkapnya di',
+    'legalDraftMarker': '[DRAF — menunggu tim]',
+    // From notes/kebijakan-privasi-sk-draf.md (draf 0.1); tables as lists.
+    'privacyBody': '''Versi draf 0.1. Berlaku sejak [tanggal rilis].
+
+BeeKas mengumpulkan data seperlunya untuk memastikan setiap pengguna adalah warga BINUS, lalu memakainya hanya untuk menjalankan marketplace. Kami tidak menjual data dan tidak memakainya untuk iklan.
+
+# 1. Siapa kami
+
+BeeKas adalah marketplace jual, beli, dan donasi barang bekas untuk komunitas BINUS, dibuat oleh tim mahasiswa dalam mata kuliah Venture Creation (ENPR6312001). BeeKas bukan layanan resmi Universitas Bina Nusantara.
+
+Penanggung jawab data pribadi adalah CTO BeeKas (D-21). Hubungi kami di beekas2026@gmail.com.
+
+# 2. Data yang kami kumpulkan
+
+Untuk setiap data: kapan diambil, wajib atau tidak, dan untuk apa.
+
+- Nama lengkap, email BINUS, tipe akun (mahasiswa/dosen/staf), kampus — saat daftar, wajib. Membuat akun dan memeriksa identitas.
+
+- Nomor HP — saat daftar, opsional. Hanya dipakai tim BeeKas bila perlu menghubungimu, tidak ditampilkan ke pengguna lain.
+
+- Kata sandi — saat daftar, wajib. Masuk ke akun. Disimpan dalam bentuk hash; tim tidak bisa melihatnya.
+
+- Foto kartu identitas BINUS dan foto wajah (selfie) — verifikasi identitas, wajib untuk akses penuh. Admin mencocokkan wajah dan data di kartu dengan data pendaftaran.
+
+- Bukti persetujuan (waktu dan versi teks) — saat menyetujui, wajib. Bukti bahwa kamu menyetujui pemakaian foto.
+
+- Riwayat verifikasi (status, admin pemeriksa, waktu, alasan penolakan, catatan) — setelah diperiksa, otomatis. Jejak pemeriksaan dan penanganan keluhan.
+
+- Angkatan (BINUSIAN) — Edit Profil, opsional. Ditampilkan di profil; tidak diverifikasi.
+
+- Barang yang kamu pasang (foto, judul, deskripsi, harga, kategori, kondisi) — saat memasang barang, wajib untuk memasang. Ditampilkan di katalog.
+
+- Isi chat — saat chat, otomatis. Menyepakati transaksi dan COD.
+
+- Booking, pesanan, lokasi dan waktu COD — saat bertransaksi, otomatis. Menjalankan booking 24 jam dan pesanan.
+
+- Ulasan, rating, dan daftar akun yang kamu ikuti — saat kamu memberi atau mengikuti, opsional. Ditampilkan di profil dan barang.
+
+- Pembelian kuota listing [KONFIRMASI: data apa yang disimpan, mis. bukti transfer QRIS] — saat membeli kuota, wajib untuk membeli. Konfirmasi pembayaran oleh admin.
+
+Data yang tersimpan hanya di perangkatmu: pilihan bahasa, status onboarding, dan sesi masuk.
+
+Yang tidak kami kumpulkan: NIM, jurusan, dan lokasi GPS. Data lokasi di dalam foto verifikasi dibuang sebelum diunggah. [KONFIRMASI: berlaku juga untuk foto barang.]
+
+# 3. Siapa yang bisa melihat datamu
+
+- Foto kartu dan selfie: hanya admin, yaitu lima anggota tim BeeKas dengan akun masing-masing.
+
+- Nomor HP: kamu dan admin.
+
+- Email BINUS: kamu dan admin. [KONFIRMASI: tidak ditampilkan ke pengguna lain]
+
+- Nama, kampus, tipe akun, tanda terverifikasi, barang, ulasan: pengguna lain dan tamu yang membuka katalog. [KONFIRMASI: apa saja yang tampil ke tamu]
+
+- Isi chat: kamu dan lawan chat. [KONFIRMASI: apakah admin boleh membaca chat saat ada laporan]
+
+- Riwayat verifikasi: kamu (riwayatmu sendiri) dan admin.
+
+# 4. Pihak lain yang memproses data
+
+- Supabase: database, autentikasi, dan penyimpanan foto. [KONFIRMASI: lokasi server. Bila di luar Indonesia, pengiriman data ke luar negeri harus memenuhi ketentuan UU PDP.]
+
+- Penyedia email: mengirim kode OTP dan email hasil verifikasi. [KONFIRMASI: penyedia belum dipilih.]
+
+- Gmail: menerima email Bantuan yang kamu kirim ke beekas2026@gmail.com.
+
+- Bila nanti ada notifikasi push atau pembuatan listing dengan AI, penyedianya ditambahkan di sini sebelum fitur itu dipakai.
+
+Kami tidak menjual atau menyewakan data ke pihak mana pun.
+
+# 5. Berapa lama data disimpan
+
+- Foto kartu dan selfie: dihapus paling lambat 30 hari setelah verifikasi disetujui atau ditolak (D-07).
+
+- Riwayat verifikasi: tetap disimpan setelah foto dihapus, selama akun ada. [KONFIRMASI: berapa lama setelah akun dihapus.]
+
+- Data akun, barang, chat, dan ulasan: selama akun aktif. [KONFIRMASI: batas waktu penghapusan setelah akun ditutup.]
+
+- Bila BeeKas dialihkan ke pihak lain, termasuk BINUS, kami memberi tahu pengguna sebelum data dialihkan.
+
+# 6. Cara kami menjaga data
+
+- Foto verifikasi disimpan di penyimpanan privat yang tidak bisa diakses publik.
+
+- Aturan akses di database membatasi siapa membaca apa, bukan hanya tampilan aplikasi.
+
+- Setiap admin punya akun sendiri, sehingga setiap persetujuan dan penolakan tercatat atas nama admin yang memeriksa.
+
+# 7. Hak kamu
+
+Sesuai UU Pelindungan Data Pribadi (UU No. 27 Tahun 2022), kamu bisa meminta:
+
+- salinan data pribadimu;
+
+- perbaikan data yang salah;
+
+- penghapusan akun dan data pribadimu;
+
+- penarikan persetujuan pemakaian foto verifikasi. Akibatnya, akses penuh dicabut sampai kamu memverifikasi ulang. [KONFIRMASI: alur penarikan belum dibangun.]
+
+Kirim permintaan ke beekas2026@gmail.com dari email BINUS-mu. Kami menjawab dalam [KONFIRMASI: batas waktu; perlu dicek terhadap UU PDP].
+
+# 8. Bila terjadi kebocoran data
+
+Kami memberi tahu pengguna yang terdampak secara tertulis, berisi data apa yang terdampak, kapan, dan langkah yang kami ambil. [KONFIRMASI: batas waktu pemberitahuan menurut UU PDP.]
+
+# 9. Pengguna di bawah 18 tahun
+
+[KONFIRMASI: sebagian mahasiswa baru mungkin belum 18 tahun. UU PDP mewajibkan persetujuan orang tua atau wali untuk data anak. Tim perlu memutuskan apakah membatasi usia atau menambah langkah persetujuan.]
+
+# 10. Perubahan kebijakan
+
+Perubahan diumumkan di aplikasi. Bila pemakaian foto verifikasi berubah, kamu diminta menyetujui ulang sebelum melanjutkan.''',
+    'termsBody': '''Versi draf 0.1. Berlaku sejak [tanggal rilis].
+
+Dengan mendaftar atau memakai BeeKas, kamu menyetujui syarat ini. BeeKas mempertemukan penjual dan pembeli di komunitas BINUS; transaksi dan pembayaran terjadi langsung di antara kalian saat COD di kampus.
+
+# 1. Siapa yang boleh memakai BeeKas
+
+- Tamu tanpa akun boleh melihat katalog.
+
+- Akun hanya untuk pemilik email BINUS aktif (@binus.ac.id atau @binus.edu). Alumni yang email @binus.ac.id-nya masih aktif mendaftar sebagai mahasiswa.
+
+- Satu orang, satu akun. Akun tidak boleh dipinjamkan, dijual, atau dipakai orang lain.
+
+- [KONFIRMASI: batas usia minimum, lihat Kebijakan Privasi bagian 9.]
+
+# 2. Akun dan verifikasi
+
+- Data pendaftaran harus benar dan sesuai kartu identitas BINUS-mu.
+
+- Akses penuh (menghubungi penjual, membeli, memasang barang) baru terbuka setelah tim memverifikasi foto kartu dan selfie-mu. Pemeriksaan selesai paling lambat 1×24 jam, termasuk akhir pekan dan hari libur.
+
+- Bila ditolak, kamu melihat alasannya dan boleh mengirim ulang foto. Belum ada batas jumlah pengiriman ulang.
+
+- Buat kata sandi khusus untuk BeeKas. Jangan pakai kata sandi Binusmaya atau akun lain.
+
+- Kamu bertanggung jawab atas semua aktivitas di akunmu. Bila curiga akunmu dipakai orang lain, segera hubungi Bantuan.
+
+# 3. Memasang barang
+
+- Kamu bisa menjual barang atau mendonasikannya. Barang donasi diberikan gratis kepada pembeli.
+
+- Biaya: Rp1.000 per listing, termasuk listing donasi. Biaya dibayar lewat paket kuota listing prabayar ke QRIS tim BeeKas, lalu dikonfirmasi admin. [KONFIRMASI: harga paket, masa berlaku kuota, dan apakah kuota bisa dikembalikan.]
+
+- Foto harus foto asli barang yang dijual. Deskripsi dan kondisi harus jujur, termasuk cacat atau kerusakan.
+
+- Harga coret hanya boleh dipakai bila sesuai harga yang benar-benar pernah berlaku. Harga asli palsu dilarang.
+
+- Hapus atau tandai terjual barang yang sudah tidak tersedia.
+
+# 4. Barang yang dilarang
+
+- Barang ilegal, narkotika, obat keras, dan obat tanpa izin edar.
+
+- Senjata, bahan peledak, dan barang berbahaya.
+
+- Barang curian, palsu, atau bajakan, termasuk software dan buku bajakan.
+
+- Kartu identitas, Flazz, atau dokumen milik siapa pun.
+
+- Akun digital, voucher yang dilarang dijual ulang, dan jasa joki tugas atau ujian.
+
+- Konten dewasa.
+
+- [KONFIRMASI: alkohol, rokok dan vape, makanan, hewan, serta obat bebas.]
+
+# 5. Booking, pembelian, dan COD
+
+- Booking 24 Jam: barang ditahan untukmu selama 24 jam tanpa pembayaran. Setelah 24 jam tanpa kelanjutan, booking batal otomatis dan barang tersedia lagi. [KONFIRMASI: apakah penjual boleh memperpanjang.]
+
+- Beli Sekarang: kamu mengonfirmasi pesanan, lalu penjual memprosesnya.
+
+- COD di kampus: lokasi dan waktu disepakati lewat chat di aplikasi. Bayar langsung ke penjual saat bertemu. Tidak ada pengiriman.
+
+- Periksa barang sebelum membayar. Pilih tempat ramai di area kampus.
+
+- BeeKas tidak memegang uang transaksi dan bukan pihak dalam jual beli. Sengketa diselesaikan antara penjual dan pembeli; tim bisa membantu menengahi lewat Bantuan.
+
+# 6. Chat, ulasan, dan perilaku
+
+- Bersikap sopan. Pelecehan, ancaman, ujaran kebencian, dan spam dilarang.
+
+- Jangan menyebarkan data pribadi orang lain, termasuk foto atau nomor HP, tanpa izinnya.
+
+- Ulasan harus jujur dan berdasarkan transaksi yang benar-benar terjadi. [KONFIRMASI: ulasan hanya setelah pesanan selesai.]
+
+- Jangan memakai BeeKas untuk menipu atau mengalihkan transaksi ke luar aplikasi demi menghindari aturan ini.
+
+# 7. Pelanggaran
+
+Tim BeeKas boleh menghapus listing, membatasi fitur, atau menutup akun yang melanggar syarat ini. Laporkan pelanggaran lewat Bantuan (beekas2026@gmail.com). [KONFIRMASI: fitur lapor dan blokir di aplikasi.]
+
+# 8. Batas tanggung jawab
+
+BeeKas adalah proyek mahasiswa dan disediakan sebagaimana adanya. Kami berusaha menjaga aplikasi tetap berjalan dan aman, tetapi tidak menjamin kualitas barang, kejujuran pengguna, atau hasil transaksi. Verifikasi identitas memastikan pengguna adalah warga BINUS, bukan menjamin perilakunya.
+
+# 9. Perubahan dan hukum yang berlaku
+
+Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik Indonesia.''',
     'rejectedTitle': 'Verifikasi ditolak',
     'rejectedBody': 'Berkas kamu belum disetujui karena:',
     'rejectedNote': 'Catatan dari tim',
