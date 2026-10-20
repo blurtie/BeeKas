@@ -16,6 +16,7 @@ import 'screens/password_screen.dart';
 import 'screens/pending_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/rejected_screen.dart';
 import 'screens/reset_screens.dart';
 import 'screens/review_list_screen.dart';
 import 'screens/selfie_screen.dart';
@@ -147,13 +148,20 @@ Widget _screenFor(BuildContext context, Account account) =>
       Destination.consent => _consent(context, account.accountType!),
       Destination.photos => _photos(context, account.accountType!),
       Destination.pending => _pendingScreen(context),
-      Destination.rejected => _placeholder(
-        context,
-        t('rejectedTitle'),
-        t('rejectedBody'),
+      // Kirim ulang goes to L8; the profile and consent are kept (D-08).
+      Destination.rejected => RejectedScreen(
+        rejection: account.rejection,
+        onResend: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => _photos(context, account.accountType!),
+          ),
+        ),
+        onBrowse: () => _catalog(context),
+        onSignOut: () => _signOut(context),
       ),
       // ponytail: Beranda is another PRD; a placeholder until then.
-      Destination.home => _placeholder(context, null, t('homeSoon')),
+      Destination.home => _placeholder(context, t('homeSoon')),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
         onSignOut: () => _signOut(context),
@@ -288,32 +296,23 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
   ),
 );
 
-/// Temporary end screens: rejected (#32 adds the reason) and Beranda.
-Widget _placeholder(BuildContext context, String? title, String body) =>
-    Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (title != null) ...[
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-              ],
-              Text(body, textAlign: TextAlign.center),
-              const SizedBox(height: 32),
-              OutlinedButton(
-                onPressed: () => _signOut(context),
-                child: Text(t('signOut')),
-              ),
-            ],
+/// Temporary end screen for Beranda.
+Widget _placeholder(BuildContext context, String body) => Scaffold(
+  body: SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(body, textAlign: TextAlign.center),
+          const SizedBox(height: 32),
+          OutlinedButton(
+            onPressed: () => _signOut(context),
+            child: Text(t('signOut')),
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);

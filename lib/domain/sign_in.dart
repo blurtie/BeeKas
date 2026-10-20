@@ -3,6 +3,7 @@ library;
 
 import 'access.dart';
 import 'registration.dart';
+import 'rejection.dart';
 import 'signup_error.dart';
 
 /// The signed-in account, read by AuthRepository.account().
@@ -13,6 +14,8 @@ typedef Account = ({
   AccountType? accountType,
   bool hasPassword,
   bool hasConsent,
+  // The latest rejection (L12); kept after a resubmission.
+  Rejection? rejection,
 });
 
 enum Destination {

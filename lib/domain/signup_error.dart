@@ -32,6 +32,8 @@ enum SignupError {
   rateLimited('errorRateLimited'),
   // From approve_verification: decided by another admin meanwhile.
   notPending('errorNotPending'),
+  // From reject_verification: rule 9; the form checks it first.
+  reasonMissing('errorReasonMissing'),
   // From the review functions: the account is not an admin.
   notAdmin('errorNotAdmin'),
   unknown('errorSignupUnknown');
@@ -63,6 +65,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('invalid_credentials', _) => SignupError.invalidCredentials,
     ('over_request_rate_limit', _) => SignupError.rateLimited,
     ('23514', 'not_pending') => SignupError.notPending,
+    ('23514', 'reason_missing') => SignupError.reasonMissing,
     ('42501', 'not_admin') => SignupError.notAdmin,
     _ => SignupError.unknown,
   };

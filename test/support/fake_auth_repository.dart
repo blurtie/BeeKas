@@ -12,6 +12,7 @@ const Account fakeAdmin = (
   accountType: AccountType.staff,
   hasPassword: true,
   hasConsent: false,
+  rejection: null,
 );
 
 /// Records calls; [errors] holds per-method failures, thrown once each in

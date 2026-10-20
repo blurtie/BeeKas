@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/access.dart';
 import '../domain/registration.dart';
+import '../domain/rejection.dart';
 import '../domain/sign_in.dart';
 import 'signup_repository.dart';
 
@@ -45,7 +46,9 @@ class SupabaseAuthRepository implements AuthRepository {
     final hasPassword = await _client.rpc<bool>('has_password');
     final profile = await _client
         .from('profiles')
-        .select('role, status, account_type, consent_at')
+        .select(
+          'role, status, account_type, consent_at, rejection_reasons, rejection_note',
+        )
         .eq('id', _client.auth.currentUser!.id)
         .single();
     return (
@@ -55,6 +58,13 @@ class SupabaseAuthRepository implements AuthRepository {
       accountType: AccountType.values.asNameMap()[profile['account_type']],
       hasPassword: hasPassword,
       hasConsent: profile['consent_at'] != null,
+      rejection: switch (profile['rejection_reasons']) {
+        final List<dynamic> codes => (
+          reasons: [for (final c in codes) RejectionReason.values.byName(c)],
+          note: profile['rejection_note'] as String?,
+        ),
+        _ => null,
+      },
     );
   });
 

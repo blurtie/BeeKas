@@ -15,6 +15,7 @@ Account _account(
   accountType: AccountType.student,
   hasPassword: hasPassword,
   hasConsent: hasConsent,
+  rejection: null,
 );
 
 void main() {

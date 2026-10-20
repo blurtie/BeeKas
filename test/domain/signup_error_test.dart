@@ -75,6 +75,10 @@ void main() {
 
   test('maps the review functions (review.sql)', () {
     expect(signupErrorFrom('23514', 'not_pending'), SignupError.notPending);
+    expect(
+      signupErrorFrom('23514', 'reason_missing'),
+      SignupError.reasonMissing,
+    );
     expect(signupErrorFrom('42501', 'not_admin'), SignupError.notAdmin);
   });
 
