@@ -9,7 +9,6 @@ import '../domain/registration.dart';
 import '../domain/signup_error.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
-import 'phone_screen.dart';
 import '../ui/tokens.dart';
 
 /// L10 Verifikasi wajah, frame 416:507, with the PRD's four tips. The frame's
@@ -99,22 +98,6 @@ class _SelfieScreenState extends State<SelfieScreen> {
     if (mounted) setState(() => _sending = false);
   }
 
-  /// phone_missing: the #27 phone step, then Kirim again with the same photos.
-  Future<void> _addPhone() async {
-    final saved = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PhoneScreen(
-          repository: widget.repository,
-          initialError: SignupError.phoneMissing,
-          mode: PhoneScreenMode.missing,
-          onSaved: () => Navigator.pop(context, true),
-        ),
-      ),
-    );
-    if (saved == true && mounted) await _send();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -178,14 +161,6 @@ class _SelfieScreenState extends State<SelfieScreen> {
         const SizedBox(height: 20),
         if (_error != null) ...[
           BeeFormError(t(_error!)),
-          if (_error == SignupError.phoneMissing.copyKey)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: idle ? _addPhone : null,
-                child: Text(t('addPhone')),
-              ),
-            ),
           if (_cameraDenied)
             Align(
               alignment: Alignment.centerLeft,

@@ -10,8 +10,6 @@ enum SignupError {
   invalidCampus('errorInvalidCampus'),
   invalidPhone('errorInvalidPhone'),
   phoneTaken('errorPhoneTaken'),
-  // From submit_for_review: no phone saved yet (D-04).
-  phoneMissing('errorPhoneMissing'),
   // From submit_for_review: card or selfie not uploaded since the last
   // rejection.
   photosMissing('errorPhotosMissing'),
@@ -56,7 +54,6 @@ SignupError signupErrorFrom(String? code, String message) {
       SignupError.invalidPhone,
     ('23505', _) when message.contains('profiles_phone_key') =>
       SignupError.phoneTaken,
-    ('23514', 'phone_missing') => SignupError.phoneMissing,
     ('23514', 'photos_missing') => SignupError.photosMissing,
     ('23514', 'illegal_status_transition') => SignupError.illegalTransition,
     ('otp_expired', _) => SignupError.invalidCode,

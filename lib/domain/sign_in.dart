@@ -33,7 +33,7 @@ enum Destination {
 }
 
 /// Admins go to L14. Incomplete members resume Daftar at the first unfinished
-/// step; a missing phone is asked for later by L10 (phone_missing).
+/// step.
 Destination destinationFor(Account account) {
   if (canReviewVerifications(account.role)) return Destination.review;
   return switch (account.status) {

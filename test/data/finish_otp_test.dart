@@ -36,6 +36,27 @@ void main() {
     expect(repo.phone, reg.phone);
   });
 
+  test('no phone entered: skips set_phone without error', () async {
+    final repo = FakeSignupRepository();
+    final r = await finishOtp(
+      repo,
+      const Registration(
+        fullName: 'Ana',
+        email: 'a@binus.ac.id',
+        phone: null,
+        accountType: AccountType.student,
+        campus: Campus.senayan,
+      ),
+    );
+    expect(r, (
+      next: AfterOtp.continueSignup,
+      phoneError: null,
+      keptPhone: null,
+    ));
+    expect(repo.calls, ['account', 'updateIdentity']);
+    expect(repo.phone, isNull);
+  });
+
   test('taken number: continues but asks for another', () async {
     final repo = FakeSignupRepository(
       errors: {

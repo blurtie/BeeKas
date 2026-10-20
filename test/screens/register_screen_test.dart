@@ -28,10 +28,11 @@ Future<void> _pump(
 Future<void> _fill(
   WidgetTester tester, {
   String email = 'a@binus.ac.id',
+  String phone = '0812-3456-7890',
 }) async {
   await tester.enterText(_field(t('fullName')), 'Ana');
   await tester.enterText(_field(t('emailBinus')), email);
-  await tester.enterText(_field(t('phone')), '0812-3456-7890');
+  await tester.enterText(_field(t('phoneOptional')), phone);
   await _pick(tester, t('campusHint'), t('campus_senayan'));
 }
 
@@ -65,11 +66,12 @@ void main() {
     for (final key in [
       'fullNameRequired',
       'errorEmailRequired',
-      'errorPhoneRequired',
       'errorInvalidCampus',
     ]) {
       expect(find.text(t(key)), findsOneWidget, reason: key);
     }
+    expect(find.text(t('errorPhoneRequired')), findsNothing);
+    expect(find.text(t('phoneHelper')), findsOneWidget);
     expect(repo.sent, isNull);
   });
 
@@ -94,6 +96,25 @@ void main() {
     expect(done!.phone, '+6281234567890');
     expect(repo.sent!.metadata.containsKey('phone'), isFalse);
     expect(repo.sent!.campus, Campus.senayan);
+  });
+
+  testWidgets('empty phone is optional and sends no phone', (tester) async {
+    final repo = FakeSignupRepository();
+    Registration? done;
+    await _pump(tester, repo, (r) => done = r);
+    await _fill(tester, phone: '');
+    await _next(tester);
+    expect(done, isNotNull);
+    expect(done!.phone, isNull);
+  });
+
+  testWidgets('a filled but invalid phone is refused', (tester) async {
+    final repo = FakeSignupRepository();
+    await _pump(tester, repo);
+    await _fill(tester, phone: '0812');
+    await _next(tester);
+    expect(find.text(t('errorInvalidPhone')), findsOneWidget);
+    expect(repo.sent, isNull);
   });
 
   testWidgets('a backend unknown error shows above Lanjut', (tester) async {

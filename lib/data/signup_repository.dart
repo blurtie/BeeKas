@@ -185,9 +185,10 @@ Future<OtpResult> finishOtp(
   }
   await repository.updateIdentity(submitted);
   SignupError? phoneError;
-  if (account.phone == null) {
+  final phone = submitted.phone;
+  if (account.phone == null && phone != null) {
     try {
-      await repository.setPhone(submitted.phone);
+      await repository.setPhone(phone);
     } on SignupException catch (e) {
       if (e.error != SignupError.phoneTaken &&
           e.error != SignupError.invalidPhone) {

@@ -342,3 +342,18 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Riwayat tetap ada setelah foto dihapus (D-07). Member hanya bisa membaca riwayat miliknya sendiri. Tidak ada yang bisa menulis riwayat langsung, termasuk admin; riwayat hanya ditulis lewat fungsi backend tolak.
 
 **Alasan:** Kode alasan bisa ditampilkan dalam dua bahasa (D-11). Riwayat per percobaan membantu admin menilai pengiriman ulang dan menjadi jejak pemeriksaan menurut UU PDP.
+
+---
+
+## D-26 — Tujuan nomor HP: hanya untuk tim BeeKas
+
+**Status:** Diputuskan Faiqi, 20 Oktober 2026
+
+**Implementasi:** PR #53.
+
+**Keputusan:**
+- Nomor HP opsional saat daftar (D-22 poin 4). Bila diisi, formatnya tetap divalidasi dan disimpan lewat `set_phone` setelah OTP (D-17). Mengirim berkas untuk diperiksa tidak lagi membutuhkan nomor.
+- Nomor HP hanya dipakai tim BeeKas bila perlu menghubungi pengguna, dan tidak dibagikan atau ditampilkan ke pengguna lain.
+- Di database hanya pemilik akun dan admin yang bisa membaca nomor HP.
+- Teks di bawah kolom: "Opsional. Hanya dipakai tim BeeKas bila perlu menghubungimu, tidak ditampilkan ke pengguna lain."
+- Kebijakan Privasi harus memuat tujuan yang sama persis.

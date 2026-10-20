@@ -89,15 +89,35 @@ void main() {
   });
 
   group('validateRegistration', () {
-    test('every field is required', () {
+    test('every field but phone is required', () {
       final r = validateRegistration(fullName: ' ', email: '', phone: '');
       expect(r.registration, isNull);
       expect(r.errors, {
         RegistrationField.fullName: 'fullNameRequired',
         RegistrationField.email: 'errorEmailRequired',
-        RegistrationField.phone: 'errorPhoneRequired',
         RegistrationField.campus: 'errorInvalidCampus',
       });
+    });
+
+    test('an empty phone is valid and stays null (D-22 poin 4)', () {
+      final r = validateRegistration(
+        fullName: 'A',
+        email: 'a@binus.ac.id',
+        phone: '  ',
+        campus: Campus.base,
+      );
+      expect(r.errors, isEmpty);
+      expect(r.registration!.phone, isNull);
+    });
+
+    test('a filled phone is still validated', () {
+      final r = validateRegistration(
+        fullName: 'A',
+        email: 'a@binus.ac.id',
+        phone: '0812',
+        campus: Campus.base,
+      );
+      expect(r.errors, {RegistrationField.phone: 'errorInvalidPhone'});
     });
 
     test('binus.edu needs lecturer or staff', () {
@@ -177,6 +197,20 @@ void main() {
         submitted: submitted,
       );
       expect(r, (next: AfterOtp.continueSignup, phoneChanged: false));
+    });
+
+    test('an empty phone is not reported as replaced', () {
+      final r = afterOtp(
+        hasPassword: false,
+        storedPhone: '+62899999999',
+        submitted: validateRegistration(
+          fullName: 'A',
+          email: 'a@binus.ac.id',
+          phone: '',
+          campus: Campus.base,
+        ).registration!,
+      );
+      expect(r.phoneChanged, isFalse);
     });
 
     test('a released (null) phone is not reported as kept', () {
