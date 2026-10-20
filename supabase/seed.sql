@@ -36,3 +36,8 @@ select vault.create_secret(
   'http://supabase_kong_BeeKas:8000/functions/v1/send-decision-emails', 'decision_emails_url');
 -- The header pg_cron sends and the function checks. Local value only; cloud sets its own.
 select vault.create_secret('local-decision-emails-cron-secret', 'decision_emails_cron_secret');
+
+-- #41: where pg_cron calls delete-expired-photos, and its header secret. Local values only.
+select vault.create_secret(
+  'http://supabase_kong_BeeKas:8000/functions/v1/delete-expired-photos', 'photo_retention_url');
+select vault.create_secret('local-photo-retention-cron-secret', 'photo_retention_cron_secret');

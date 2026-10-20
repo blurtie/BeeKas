@@ -121,6 +121,34 @@ bash supabase/tests/http/decision-emails-auth.sh
 
 Skrip ini menjeda `pg_cron` sebentar, membuat satu email uji ke admin seed, lalu memeriksa empat hal: panggilan tanpa header, dengan header salah, dan dengan header kosong dibalas 401 tanpa mengklaim baris; panggilan dengan header benar dibalas 200 dan mengirim email itu ke Mailpit. Setelah selesai, baris uji dihapus dan `pg_cron` diaktifkan lagi. Exit code 0 berarti semua lolos. Skrip ini tidak dijalankan di CI.
 
+## 7. Penghapusan foto 30 hari
+
+Foto kartu dan selfie sebuah percobaan dihapus paling lambat 30 hari setelah diputuskan (D-07, #41). Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:00 UTC. Status, admin, waktu, riwayat penolakan, dan persetujuan tetap disimpan; setiap penghapusan dicatat di `public.photo_deletions` (percobaan, jumlah file, waktu).
+
+Menjalankannya manual (Git Bash, Supabase lokal menyala dengan seed):
+
+1. Lihat yang sudah jatuh tempo di Studio (http://127.0.0.1:54323) → SQL editor:
+   ```sql
+   select * from public.expired_verification_photos();
+   ```
+   Untuk mencoba dengan akun uji, mundurkan tanggal keputusannya dulu, misalnya
+   `update public.profiles set approved_at = now() - interval '31 days' where email = 't41-a@binus.ac.id';`
+   atau `update public.verification_rejections set rejected_at = now() - interval '31 days' where profile_id = '<id>';`.
+2. Panggil function dengan secret lokal dari `seed.sql`:
+   ```bash
+   curl -X POST -H 'x-cron-secret: local-photo-retention-cron-secret' http://127.0.0.1:54321/functions/v1/delete-expired-photos
+   ```
+   Balasannya `{"attempts":<jumlah percobaan>,"deleted":<jumlah file>}`.
+3. Cek buktinya: `select * from public.photo_deletions order by id desc;`.
+
+Untuk memeriksa bahwa function hanya bisa dipanggil dengan secret yang benar:
+
+```bash
+bash supabase/tests/http/photo-retention-auth.sh
+```
+
+Skrip ini mengunggah satu foto palsu ke folder admin seed dan memundurkan `approved_at` admin 31 hari, lalu memeriksa: panggilan tanpa header, dengan header salah, dan dengan header kosong dibalas 401 tanpa menghapus apa pun; panggilan dengan header benar dibalas 200, file hilang dari bucket, dan penghapusannya tercatat. Setelah selesai, foto, catatan, dan `approved_at` dikembalikan. Exit code 0 berarti semua lolos. Skrip ini tidak dijalankan di CI.
+
 ## Masalah umum
 
 - **Build Android gagal dengan `Could not close incremental caches ... different roots`**: terjadi bila repo dan pub cache ada di drive berbeda (misalnya repo di `D:`, pub cache di `C:`). Biasanya build tetap selesai; bila gagal, jalankan `flutter clean` lalu ulangi.

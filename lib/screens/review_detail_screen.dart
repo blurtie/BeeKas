@@ -34,6 +34,10 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
   bool _busy = false;
   String? _error;
 
+  String get _missingKey => widget.account.photosDeleted
+      ? 'reviewPhotoDeleted'
+      : 'reviewPhotoMissing';
+
   Future<Uint8List?> _load(String? path) async =>
       path == null ? null : widget.repository.photo(path);
 
@@ -123,9 +127,13 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _Photo(t('reviewCardPhoto'), _card)),
+                Expanded(
+                  child: _Photo(t('reviewCardPhoto'), _card, _missingKey),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _Photo(t('reviewSelfie'), _selfie)),
+                Expanded(
+                  child: _Photo(t('reviewSelfie'), _selfie, _missingKey),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -180,10 +188,12 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
 
 /// One photo at 3:4; tap to view it full screen and zoom.
 class _Photo extends StatelessWidget {
-  const _Photo(this.label, this.bytes);
+  const _Photo(this.label, this.bytes, this.missingKey);
 
   final String label;
   final Future<Uint8List?> bytes;
+  // Copy key shown when there is no photo.
+  final String missingKey;
 
   @override
   Widget build(BuildContext context) {
@@ -212,11 +222,7 @@ class _Photo extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
-                        t(
-                          snapshot.hasError
-                              ? 'reviewPhotoFailed'
-                              : 'reviewPhotoMissing',
-                        ),
+                        t(snapshot.hasError ? 'reviewPhotoFailed' : missingKey),
                         textAlign: TextAlign.center,
                         style: textTheme.bodySmall,
                       ),
