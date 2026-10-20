@@ -35,3 +35,26 @@ Untuk cloud, pakai `supabase db push` (tanpa `--include-seed`).
 ## 5. Firewall lokal tidak relevan
 
 Aturan Windows Firewall dan peringatan `com.docker.backend.exe` di `docs/local-setup.md` hanya berlaku untuk Supabase lokal di laptop. Project cloud tidak memerlukannya, dan `adb reverse` juga tidak dibutuhkan.
+
+## 6. Email keputusan verifikasi (#33)
+
+Email disetujui/ditolak dikirim Edge Function `send-decision-emails` lewat **API HTTP** penyedia email, bukan SMTP: Edge Functions cloud memblokir port keluar 25 dan 587 ([Supabase: Limits](https://supabase.com/docs/guides/functions/limits)). Penyedia belum dipilih. Pilihannya harus punya API kirim HTTP dan domain pengirim terverifikasi. Pengirim untuk penyedia itu baru ditulis di `supabase/functions/send-decision-emails/index.ts` setelah dipilih.
+
+1. Deploy function: `supabase functions deploy send-decision-emails --no-verify-jwt`.
+2. Di **Edge Functions → Secrets**, isi `EMAIL_API` (nama mode penyedia), `EMAIL_FROM`, dan kunci API penyedia. Kunci **tidak pernah** ditulis di repo, issue, PR, atau chat. Selama `EMAIL_API` kosong atau belum dikenal, function hanya mencatat peringatan dan antrean tetap `pending` tanpa menambah `attempts`.
+3. Di SQL editor, simpan URL function untuk `pg_cron` (sekali saja):
+   ```sql
+   select vault.create_secret('https://<project-ref>.supabase.co/functions/v1/send-decision-emails', 'decision_emails_url');
+   ```
+4. Pantau dan antrekan ulang. Baris yang gagal kirim 5 kali berstatus `failed` dan tidak dicoba lagi:
+   ```sql
+   -- Melihat yang gagal
+   select id, profile_id, kind, attempts, last_error, created_at
+   from public.decision_emails where status = 'failed' order by id;
+
+   -- Mengantrekan ulang (setelah penyebabnya diperbaiki)
+   update public.decision_emails
+   set status = 'pending', attempts = 0, last_error = null
+   where status = 'failed';
+   ```
+   Pengiriman bersifat *at-least-once*: bila function mati setelah email terkirim tapi sebelum ditandai `sent`, email bisa terkirim dua kali.

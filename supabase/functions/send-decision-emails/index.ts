@@ -1,0 +1,64 @@
+// #33: drains public.decision_emails. Called every minute by pg_cron. Delivery is
+// at-least-once (see the migration). Sends over HTTP with fetch: Edge Functions block
+// outgoing ports 25 and 587, so no SMTP.
+
+type Email = { id: number; recipient: string; subject: string; body: string };
+type Send = (e: Email) => Promise<void>;
+
+const env = (k: string) => Deno.env.get(k) ?? "";
+
+// One sender per EMAIL_API mode. The cloud provider is added once it is chosen.
+const senders: Record<string, Send> = {
+  mailpit: async (e) => {
+    const from = parseFrom(env("EMAIL_FROM"));
+    const res = await fetch(`${env("MAILPIT_URL")}/api/v1/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ From: from, To: [{ Email: e.recipient }], Subject: e.subject, Text: e.body }),
+    });
+    if (!res.ok) throw new Error(`mailpit ${res.status}: ${await res.text()}`);
+  },
+};
+
+// "Name <a@b>" -> { Name, Email }
+function parseFrom(s: string) {
+  const m = s.match(/^(.*)<(.+)>$/);
+  return m ? { Name: m[1].trim(), Email: m[2].trim() } : { Email: s.trim() };
+}
+
+async function rpc(name: string, args: unknown) {
+  const res = await fetch(`${env("SUPABASE_URL")}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: env("SUPABASE_SERVICE_ROLE_KEY"),
+      Authorization: `Bearer ${env("SUPABASE_SERVICE_ROLE_KEY")}`,
+    },
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) throw new Error(`${name} ${res.status}: ${await res.text()}`);
+  return res.status === 204 ? null : res.json();
+}
+
+Deno.serve(async () => {
+  const mode = env("EMAIL_API");
+  const send = senders[mode];
+  // Not configured is not a send failure: claim nothing, rows stay pending with attempts as is.
+  if (!send) {
+    console.warn(`send-decision-emails: EMAIL_API "${mode}" is not configured or not implemented; nothing sent`);
+    return Response.json({ sent: 0, skipped: true });
+  }
+  const emails: Email[] = await rpc("claim_decision_emails", {});
+  let sent = 0;
+  for (const e of emails) {
+    try {
+      await send(e);
+      await rpc("finish_decision_email", { p_id: e.id, p_error: null });
+      sent++;
+    } catch (err) {
+      console.error(`send-decision-emails: row ${e.id} failed: ${err}`);
+      await rpc("finish_decision_email", { p_id: e.id, p_error: String(err).slice(0, 500) });
+    }
+  }
+  return Response.json({ sent, claimed: emails.length });
+});
