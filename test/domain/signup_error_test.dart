@@ -63,6 +63,15 @@ void main() {
       SignupError.tooSoon,
     );
     expect(signupErrorFrom('weak_password', 'x'), SignupError.weakPassword);
+    expect(
+      signupErrorFrom('invalid_credentials', 'Invalid login credentials'),
+      SignupError.invalidCredentials,
+    );
+  });
+
+  test('maps the review functions (review.sql)', () {
+    expect(signupErrorFrom('23514', 'not_pending'), SignupError.notPending);
+    expect(signupErrorFrom('42501', 'not_admin'), SignupError.notAdmin);
   });
 
   test('reads the wait from a rate-limit message', () {

@@ -13,10 +13,14 @@ class RegisterScreen extends StatefulWidget {
     super.key,
     required this.repository,
     required this.onCodeSent,
+    this.debugEntry,
   });
 
   final SignupRepository repository;
   final ValueChanged<Registration> onCodeSent;
+
+  /// Debug builds only: the temporary admin entry until Masuk (#31).
+  final Widget? debugEntry;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -176,6 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     )
                   : Text(t('next')),
             ),
+            ?widget.debugEntry,
           ],
         ),
       ),

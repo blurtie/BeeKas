@@ -25,6 +25,11 @@ enum SignupError {
   invalidCode('errorInvalidCode'),
   tooSoon('errorTooSoon'),
   weakPassword('errorWeakPassword'),
+  invalidCredentials('errorInvalidCredentials'),
+  // From approve_verification: decided by another admin meanwhile.
+  notPending('errorNotPending'),
+  // From the review functions: the account is not an admin.
+  notAdmin('errorNotAdmin'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -51,6 +56,9 @@ SignupError signupErrorFrom(String? code, String message) {
     ('otp_expired', _) => SignupError.invalidCode,
     ('over_email_send_rate_limit', _) => SignupError.tooSoon,
     ('weak_password', _) => SignupError.weakPassword,
+    ('invalid_credentials', _) => SignupError.invalidCredentials,
+    ('23514', 'not_pending') => SignupError.notPending,
+    ('42501', 'not_admin') => SignupError.notAdmin,
     _ => SignupError.unknown,
   };
 }
