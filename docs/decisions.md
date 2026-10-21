@@ -562,3 +562,11 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Kata kunci yang sama dengan salah satu kata label kategori dalam bahasa Inggris atau Indonesia (tidak peka huruf besar-kecil, "&" diabaikan) mencocokkan kategori itu. Contoh: "buku" dan "books" → Buku & Alat Tulis; "sepatu" → Sepatu; "book" tidak mencocokkan kategori (K-02).
 - Kecocokan kategori digabung dengan OR dengan pencarian nama barang dan nama penjual. Kata kunci tanpa kecocokan label hanya menjadi pencarian teks.
 - Label tetap di `copy.dart` (D-11); aplikasi mengirim kode kategori yang cocok ke `catalog_listings` (`p_query_categories`). Grup pintasan Beranda (`p_categories`) tetap membatasi hasil (AND).
+
+## D-42 — Saldo awal kuota listing
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (tiket #81, PR #98: K-08)
+
+**Keputusan:**
+- Saldo awal 1 kuota diberikan oleh trigger database saat akun pertama kali berstatus approved, termasuk akun yang dibuat langsung berstatus approved (INSERT, mis. admin lewat SQL manual), sekali seumur akun; ditolak lalu disetujui ulang tidak memberi saldo lagi (K-08).
+- Akun yang sudah approved saat migrasi kuota dijalankan mendapat saldo 1 satu kali lewat backfill, tercatat di `quota_ledger` dengan alasan `migration_start` supaya terbedakan dari saldo awal biasa. Akun ini tidak pernah mendapat saldo awal kedua dari trigger (K-08).
