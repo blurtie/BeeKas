@@ -5,7 +5,13 @@ create table public.phone_releases (
   profile_id uuid references public.profiles on delete set null,
   released_by uuid references public.profiles on delete set null,
   released_at timestamptz not null default now(),
-  note text not null check (btrim(note) <> '')
+  -- No phone number in the note (D-26): 8+ digits in a row once spaces, dots and dashes are
+  -- dropped. Same rule in release_phone and lib/domain/phone_release.dart.
+  note text not null check (
+    btrim(note) <> ''
+    and char_length(note) <= 500
+    and regexp_replace(note, '[[:space:].-]', '', 'g') !~ '[0-9]{8}'
+  )
 );
 
 -- Written only by release_phone; admins read it, members do not.
@@ -30,6 +36,12 @@ begin
   end if;
   if note is null then
     raise exception 'note_missing' using errcode = 'check_violation';
+  end if;
+  if char_length(note) > 500 then
+    raise exception 'note_too_long' using errcode = 'check_violation';
+  end if;
+  if regexp_replace(note, '[[:space:].-]', '', 'g') ~ '[0-9]{8}' then
+    raise exception 'note_has_phone' using errcode = 'check_violation';
   end if;
   update public.profiles set phone = null where id = p_id and phone is not null;
   if not found then

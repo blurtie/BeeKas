@@ -310,6 +310,12 @@ void main() {
     await tester.tap(confirmRelease);
     await tester.pumpAndSettle();
     expect(find.text(t('releasePhoneNoteRequired')), findsOneWidget);
+    expect(find.text(t('releasePhoneNoteHelper')), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'nomor 0812-3456-7890');
+    await tester.tap(confirmRelease);
+    await tester.pumpAndSettle();
+    expect(find.text(t('errorNoteHasPhone')), findsOneWidget);
     expect(repo.released, isEmpty);
 
     await tester.enterText(find.byType(TextField), ' Pemilik asli ');

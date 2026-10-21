@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(18);
 
 create function pg_temp.sign_up(p_id uuid, p_email text) returns void
 language sql as $$
@@ -47,6 +47,14 @@ reset role;
 select pg_temp.act_as(:admin);
 select throws_ok($$ select public.release_phone('44444444-0000-4000-8000-000000000001', '  ') $$,
   '23514', 'note_missing', 'release needs a note');
+select throws_ok($$ select public.release_phone('44444444-0000-4000-8000-000000000001', 'nomor 0812-3456-7890') $$,
+  '23514', 'note_has_phone', 'a note with a dashed local number is refused');
+select throws_ok($$ select public.release_phone('44444444-0000-4000-8000-000000000001', '+62 812 3456 7890') $$,
+  '23514', 'note_has_phone', 'a note with a spaced +62 number is refused');
+select throws_ok($$ select public.release_phone('44444444-0000-4000-8000-000000000001', repeat('a', 501)) $$,
+  '23514', 'note_too_long', 'a note over 500 characters is refused');
+select is((select phone from public.profiles where id = :h), '+6281240000001',
+  'refused notes leave the phone');
 select throws_ok($$ select public.release_phone('44444444-0000-4000-8000-000000000002', 'x') $$,
   '23514', 'no_phone', 'an account without a phone cannot be released');
 select throws_ok(

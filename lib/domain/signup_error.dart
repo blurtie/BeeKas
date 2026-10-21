@@ -34,6 +34,10 @@ enum SignupError {
   reasonMissing('errorReasonMissing'),
   // From release_phone: the form checks the note first.
   noteMissing('errorNoteMissing'),
+  // From release_phone: the note holds a phone number (D-26) or is too long;
+  // the form checks both first.
+  noteHasPhone('errorNoteHasPhone'),
+  noteTooLong('errorNoteTooLong'),
   // From release_phone: released by another admin meanwhile.
   noPhone('errorNoPhone'),
   // From the review functions: the account is not an admin.
@@ -69,6 +73,8 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'reason_missing') => SignupError.reasonMissing,
     ('23514', 'note_missing') => SignupError.noteMissing,
     ('23514', 'no_phone') => SignupError.noPhone,
+    ('23514', 'note_has_phone') => SignupError.noteHasPhone,
+    ('23514', 'note_too_long') => SignupError.noteTooLong,
     ('42501', 'not_admin') => SignupError.notAdmin,
     _ => SignupError.unknown,
   };

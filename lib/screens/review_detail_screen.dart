@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/review_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/phone_release.dart';
 import '../domain/rejection.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
@@ -398,9 +399,8 @@ class _ReleasePhoneDialogState extends State<_ReleasePhoneDialog> {
   }
 
   void _submit() {
-    final note = _note.text.trim();
-    if (note.isNotEmpty) {
-      Navigator.pop(context, note);
+    if (releaseNoteError(_note.text) == null) {
+      Navigator.pop(context, _note.text.trim());
     } else {
       setState(() => _tried = true);
     }
@@ -419,9 +419,13 @@ class _ReleasePhoneDialogState extends State<_ReleasePhoneDialog> {
           label: t('releasePhoneNote'),
           helperText: t('releasePhoneNoteHelper'),
           controller: _note,
-          errorText: _tried && _note.text.trim().isEmpty
-              ? t('releasePhoneNoteRequired')
-              : null,
+          errorText: switch (_tried ? releaseNoteError(_note.text) : null) {
+            null => null,
+            final SignupError e when e == SignupError.noteMissing => t(
+              'releasePhoneNoteRequired',
+            ),
+            final e => t(e.copyKey),
+          },
           onChanged: (_) => setState(() {}),
         ),
       ],

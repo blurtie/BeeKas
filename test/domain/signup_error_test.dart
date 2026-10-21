@@ -80,6 +80,11 @@ void main() {
     );
     expect(signupErrorFrom('23514', 'note_missing'), SignupError.noteMissing);
     expect(signupErrorFrom('23514', 'no_phone'), SignupError.noPhone);
+    expect(
+      signupErrorFrom('23514', 'note_has_phone'),
+      SignupError.noteHasPhone,
+    );
+    expect(signupErrorFrom('23514', 'note_too_long'), SignupError.noteTooLong);
     expect(signupErrorFrom('42501', 'not_admin'), SignupError.notAdmin);
   });
 
