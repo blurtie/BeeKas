@@ -129,7 +129,7 @@ file_size_limit = "50MiB"
 [storage.buckets.listing-photos]
 public = true
 file_size_limit = "5MiB"
-allowed_mime_types = ["image/png", "image/jpeg"]
+allowed_mime_types = ["image/jpeg"]
 objects_path = "./seed-photos"
 
 # Allow connections via S3 compatible clients

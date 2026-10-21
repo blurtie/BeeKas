@@ -10,6 +10,8 @@ abstract final class BeeAssets {
   static const findItems = 'assets/images/ilustrasi/onboarding-cari-barang.png';
   static const trusted = 'assets/images/ilustrasi/onboarding-transaksi.png';
   static const buySell = 'assets/images/ilustrasi/onboarding-jual-beli.png';
+  static const sellItem = 'assets/images/ikon/listing/jual-barang.png';
+  static const donateItem = 'assets/images/ikon/listing/donasi-barang.png';
 
   /// Daftar-12 tiles, by ListingCategory.code.
   static const categories = {
@@ -45,6 +47,8 @@ abstract final class BeeAssets {
     findItems,
     trusted,
     buySell,
+    sellItem,
+    donateItem,
     ...categories.values,
     ...groups.values,
   ];

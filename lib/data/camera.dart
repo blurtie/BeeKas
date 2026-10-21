@@ -10,12 +10,36 @@ import '../domain/photo.dart';
 /// the camera. image_picker's temp file is deleted right after reading, so the
 /// photo lives only in memory until L10 uploads it; closing the app loses it.
 Future<Uint8List?> takePhoto(CameraDevice camera) async {
+  final raw = await _pick(ImageSource.camera, camera);
+  return raw == null ? null : preparePhoto(raw);
+}
+
+/// A listing photo from the camera or the gallery (D-28), as a JPEG without
+/// metadata (K-05), or null when the seller backs out. image_picker
+/// re-encodes opaque images as JPEG but keeps PNG for images with alpha; on
+/// Android MainActivity converts those. iOS has no converter yet (D-27), so
+/// preparePhoto refuses a non-JPEG there.
+Future<Uint8List?> pickListingPhoto(ImageSource source) async {
+  var raw = await _pick(source, CameraDevice.rear);
+  if (raw == null) return null;
+  if (!isJpeg(raw) && Platform.isAndroid) {
+    try {
+      raw = await _settings.invokeMethod<Uint8List>('toJpeg', raw) ?? raw;
+    } on PlatformException {
+      throw const PhotoException(PhotoError.unsupported);
+    }
+  }
+  return preparePhoto(raw);
+}
+
+Future<Uint8List?> _pick(ImageSource source, CameraDevice camera) async {
   final XFile? file;
   try {
     file = await ImagePicker().pickImage(
-      source: ImageSource.camera,
+      source: source,
       preferredCameraDevice: camera,
-      // Readable card or face, a few hundred KB: far below the 5 MB bucket limit.
+      // Readable card, face or product, a few hundred KB: far below the 5 MB
+      // bucket limit, and small enough to convert without running out of memory.
       maxWidth: 1600,
       maxHeight: 1600,
       imageQuality: 85,
@@ -29,9 +53,8 @@ Future<Uint8List?> takePhoto(CameraDevice camera) async {
     );
   }
   if (file == null) return null;
-  final Uint8List raw;
   try {
-    raw = await file.readAsBytes();
+    return await file.readAsBytes();
   } on FileSystemException {
     throw const PhotoException(PhotoError.failed);
   } finally {
@@ -41,7 +64,6 @@ Future<Uint8List?> takePhoto(CameraDevice camera) async {
       // Already gone.
     }
   }
-  return preparePhoto(raw);
 }
 
 const _settings = MethodChannel('beekas/settings');

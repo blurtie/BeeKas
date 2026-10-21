@@ -271,7 +271,7 @@ void main() {
 
     test('a broken file is a failed photo', () {
       expect(
-        () => preparePhoto(Uint8List(3)),
+        () => preparePhoto(Uint8List.fromList([0xFF, 0xD8, 0xFF])),
         throwsA(
           isA<PhotoException>().having(
             (e) => e.error,
@@ -280,6 +280,28 @@ void main() {
           ),
         ),
       );
+    });
+
+    // Android converts PNG and WebP to JPEG first; iOS does not yet (D-27).
+    test('a PNG, WebP or anything not starting FF D8 FF is unsupported', () {
+      final png = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A]);
+      final webp = Uint8List.fromList('RIFF    WEBP'.codeUnits);
+      for (final bytes in [
+        png,
+        webp,
+        Uint8List.fromList([0xFF, 0xD8]),
+      ]) {
+        expect(
+          () => preparePhoto(bytes),
+          throwsA(
+            isA<PhotoException>().having(
+              (e) => e.error,
+              'error',
+              PhotoError.unsupported,
+            ),
+          ),
+        );
+      }
     });
   });
 }

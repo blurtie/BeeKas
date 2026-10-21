@@ -137,3 +137,75 @@ int? discountPercent(int price, int? previousPrice) =>
     previousPrice == null || previousPrice <= price
     ? null
     : ((previousPrice - price) * 100 / previousPrice).round();
+
+/// What K5 and K6 hold before Pasang (PRD-katalog 5.2). [specs] is the raw
+/// text, one spec per line.
+typedef ListingDraft = ({
+  bool isDonation,
+  ListingCategory? category,
+  int photoCount,
+  String title,
+  String description,
+  ListingCondition? condition,
+  int? price,
+  int? stock,
+  String specs,
+});
+
+enum ListingField {
+  category,
+  photos,
+  title,
+  description,
+  condition,
+  price,
+  stock,
+  specs;
+
+  String get copyKey => 'listingError_$name';
+}
+
+/// The fields on K5; the rest are on K6.
+const k5Fields = {
+  ListingField.category,
+  ListingField.photos,
+  ListingField.title,
+  ListingField.description,
+};
+
+const maxListingPhotos = 5;
+const maxTitleLength = 100;
+const maxDescriptionLength = 500;
+const minPrice = 1000;
+const maxPrice = 50000000;
+const maxSpecLines = 10;
+
+List<String> specLines(String text) => [
+  for (final line in text.split('\n'))
+    if (line.trim().isNotEmpty) line.trim(),
+];
+
+/// Donations are always Rp0 (D-28).
+int listingPrice(ListingDraft d) => d.isDonation ? 0 : d.price!;
+
+/// Rule 1 (PRD-katalog 6.1); the listings constraints enforce the same.
+Set<ListingField> validateListing(ListingDraft d) {
+  final title = d.title.trim();
+  final description = d.description.trim();
+  final price = d.price;
+  final stock = d.stock;
+  return {
+    if (d.category == null) ListingField.category,
+    if (d.photoCount < 1 || d.photoCount > maxListingPhotos)
+      ListingField.photos,
+    if (title.isEmpty || title.length > maxTitleLength) ListingField.title,
+    if (description.isEmpty || description.length > maxDescriptionLength)
+      ListingField.description,
+    if (d.condition == null) ListingField.condition,
+    if (!d.isDonation &&
+        (price == null || price < minPrice || price > maxPrice))
+      ListingField.price,
+    if (stock == null || stock < 1) ListingField.stock,
+    if (specLines(d.specs).length > maxSpecLines) ListingField.specs,
+  };
+}
