@@ -6,6 +6,7 @@ import 'config/copy.dart';
 import 'data/auth_repository.dart';
 import 'data/camera.dart';
 import 'data/catalog_repository.dart';
+import 'data/chat_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
@@ -17,6 +18,7 @@ import 'domain/registration.dart';
 import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/catalog_screens.dart';
+import 'screens/chat_screens.dart';
 import 'screens/consent_screen.dart';
 import 'screens/help.dart';
 import 'screens/legal_screen.dart';
@@ -203,6 +205,23 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
+        onChats: () =>
+            _push(context, ChatListScreen(repository: _chatRepository)),
+        // Chat Penjual (5.8). Status Booking adds its own entry with #85.
+        onChat: (listing) => _push(
+          context,
+          ChatRoomScreen(
+            repository: _chatRepository,
+            title: listing.sellerName,
+            listingId: listing.id,
+            item: (
+              title: listing.title,
+              price: listing.price,
+              isDonation: listing.isDonation,
+              photo: listing.photos.firstOrNull,
+            ),
+          ),
+        ),
       ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
@@ -213,6 +232,8 @@ Widget _screenFor(BuildContext context, Account account) =>
             builder: (_) => PaymentListScreen(repository: _paymentRepository),
           ),
         ),
+        onAnnouncements: () =>
+            _push(context, PostAnnouncementScreen(repository: _chatRepository)),
       ),
     };
 
@@ -385,3 +406,8 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
         LegalScreen(titleKey: titleKey, bodyKey: '${titleKey}Body'),
   ),
 );
+
+final _chatRepository = SupabaseChatRepository(Supabase.instance.client);
+
+void _push(BuildContext context, Widget screen) =>
+    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => screen));

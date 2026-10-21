@@ -50,6 +50,10 @@ enum SignupError {
   invalidAmount('errorInvalidAmount'),
   // From submit_payment, or its unique index when two submits race (D-43).
   paymentPending('errorPaymentPending'),
+  // From send_message: not approved, or frozen (the app cannot see freezes).
+  chatNotAllowed('errorChatNotAllowed'),
+  // From send_message: the listing is no longer on air.
+  listingUnavailable('errorListingUnavailable'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -90,6 +94,8 @@ SignupError signupErrorFrom(String? code, String message) {
     ('42501', 'not_admin') => SignupError.notAdmin,
     ('23514', 'no_quota') => SignupError.noQuota,
     ('42501', 'not_allowed') => SignupError.notAllowed,
+    ('42501', 'chat_not_allowed') => SignupError.chatNotAllowed,
+    ('23514', 'listing_unavailable') => SignupError.listingUnavailable,
     _ => SignupError.unknown,
   };
 }

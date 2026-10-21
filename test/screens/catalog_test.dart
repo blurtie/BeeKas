@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:beekas/config/copy.dart';
 import 'package:beekas/data/signup_repository.dart';
+import 'package:beekas/domain/access.dart';
 import 'package:beekas/domain/catalog.dart';
 import 'package:beekas/screens/catalog_screens.dart';
 import 'package:beekas/ui/theme.dart';
@@ -62,6 +63,9 @@ Future<void> _pump(
   FakeCatalogRepository repository, {
   VoidCallback? onSignOut,
   VoidCallback? onQuota,
+  AccountStatus? status,
+  void Function(Listing)? onChat,
+  VoidCallback? onChats,
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -73,6 +77,9 @@ Future<void> _pump(
         repository: repository,
         onSignOut: onSignOut,
         onQuota: onQuota,
+        status: status,
+        onChat: onChat,
+        onChats: onChats,
       ),
     ),
   );
@@ -309,11 +316,59 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('3/3'), findsOneWidget);
 
-    for (final key in ['chatSeller', 'booking24h', 'buyNow']) {
+    for (final key in ['booking24h', 'buyNow']) {
       await tester.tap(find.text(t(key)));
       await tester.pump();
       expect(find.text(t('comingSoon')), findsOneWidget, reason: key);
     }
+    // Guests cannot chat (D-31).
+    await tester.tap(find.text(t('chatSeller')));
+    await tester.pump();
+    expect(find.text(t('chatNeedsApproval')), findsOneWidget);
+  });
+
+  testWidgets('Chat Penjual opens the chat for approved members (5.8)', (
+    tester,
+  ) async {
+    final chatted = <Listing>[];
+    await _pump(
+      tester,
+      FakeCatalogRepository([_macbook]),
+      status: AccountStatus.approved,
+      onChat: chatted.add,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Macbook Air M1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('chatSeller')));
+    await tester.pump();
+    expect(chatted.single.title, 'Macbook Air M1');
+  });
+
+  testWidgets('the Chat tab opens K14 for approved members only', (
+    tester,
+  ) async {
+    var opened = 0;
+    await _pump(
+      tester,
+      FakeCatalogRepository([]),
+      status: AccountStatus.pending,
+      onChats: () => opened++,
+    );
+    await tester.tap(find.text(t('navChat')));
+    await tester.pump();
+    expect(find.text(t('chatNeedsApproval')), findsOneWidget);
+    expect(opened, 0);
+
+    await _pump(
+      tester,
+      FakeCatalogRepository([]),
+      status: AccountStatus.approved,
+      onChats: () => opened++,
+    );
+    await tester.tap(find.text(t('navChat')));
+    await tester.pump();
+    expect(opened, 1);
   });
 
   testWidgets('Detail of a donation shows Free and no struck price', (

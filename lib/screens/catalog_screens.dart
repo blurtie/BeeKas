@@ -43,6 +43,8 @@ class CatalogShell extends StatefulWidget {
     this.status,
     this.onSell,
     this.onQuota,
+    this.onChats,
+    this.onChat,
   });
 
   final CatalogRepository repository;
@@ -56,6 +58,16 @@ class CatalogShell extends StatefulWidget {
 
   /// Opens K8 Kuota Listing (#84) from Profil, for signed-in members.
   final VoidCallback? onQuota;
+
+  /// K14 Daftar Chat and K15 for a listing (#86). The tab and Chat Penjual
+  /// use them only for accounts that may chat (D-31); frozen accounts are
+  /// refused by send_message (K-26).
+  final VoidCallback? onChats;
+  final void Function(Listing)? onChat;
+
+  /// [onChat] when this account may chat, else null.
+  void Function(Listing)? get chatAllowed =>
+      canChat(status, frozen: false) ? onChat : null;
 
   @override
   State<CatalogShell> createState() => _CatalogShellState();
@@ -84,6 +96,14 @@ class _CatalogShellState extends State<CatalogShell> {
       setState(() => _refresh++);
       _snack(t('sellPosted'));
     }
+  }
+
+  void _chats() {
+    final onChats = widget.onChats;
+    if (!canChat(widget.status, frozen: false) || onChats == null) {
+      return _snack(t('chatNeedsApproval'));
+    }
+    onChats();
   }
 
   /// Temporary Profil until K17: Kuota and Keluar for members; guests and
@@ -150,7 +170,7 @@ class _CatalogShellState extends State<CatalogShell> {
             ? setState(() => _tab = i)
             : i == 3
             ? _profile()
-            : showComingSoon(context),
+            : _chats(),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
@@ -583,7 +603,14 @@ class _ListingCard extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(
-            builder: (context) => ListingDetailScreen(listing: listing),
+            builder: (_) => ListingDetailScreen(
+              listing: listing,
+              // Read from the shell this card sits in, not threaded through
+              // every feed widget.
+              onChat: context
+                  .findAncestorWidgetOfExactType<CatalogShell>()
+                  ?.chatAllowed,
+            ),
           ),
         ),
         child: Column(
@@ -810,8 +837,11 @@ class _CategoryViewState extends State<_CategoryView> {
 
 /// Detail barang (Daftar-14).
 class ListingDetailScreen extends StatefulWidget {
-  const ListingDetailScreen({super.key, required this.listing});
+  const ListingDetailScreen({super.key, required this.listing, this.onChat});
   final Listing listing;
+
+  /// Opens K15; null for accounts that may not chat.
+  final void Function(Listing)? onChat;
 
   @override
   State<ListingDetailScreen> createState() => _ListingDetailScreenState();
@@ -1025,7 +1055,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: soon,
+                      onPressed: () => switch (widget.onChat) {
+                        final onChat? => onChat(l),
+                        null =>
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(content: Text(t('chatNeedsApproval'))),
+                            ),
+                      },
                       child: Text(t('chatSeller')),
                     ),
                   ),
