@@ -80,9 +80,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   late var _overview = widget.repository.overview();
   var _filter = ChatFilter.all;
 
-  void _push(Widget screen) =>
-      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => screen));
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -175,12 +172,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     name: c.otherName,
                     body: c.lastBody,
                     at: c.lastAt,
-                    onTap: () => _push(
-                      ChatRoomScreen(
-                        repository: widget.repository,
-                        title: c.otherName,
-                        conversationId: c.id,
-                        item: c.item,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => ChatRoomScreen(
+                          repository: widget.repository,
+                          title: c.otherName,
+                          conversationId: c.id,
+                          item: c.item,
+                        ),
                       ),
                     ),
                   ),
@@ -188,10 +188,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   name: t('adminBeeKas'),
                   body: data.announcement?.body ?? t('announcementsEmpty'),
                   at: data.announcement?.createdAt,
-                  onTap: () => _push(
-                    AnnouncementsScreen(
-                      repository: widget.repository,
-                      now: widget.now,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => AnnouncementsScreen(
+                        repository: widget.repository,
+                        now: widget.now,
+                      ),
                     ),
                   ),
                 ),
@@ -413,7 +416,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         _id = id;
         _messages = widget.repository.messages(id);
       }
-    } on SignupException catch (e) {
+    } on Object catch (e) {
       _error = _errorText('chatSendFailed', e);
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -617,7 +620,7 @@ class _PostAnnouncementScreenState extends State<PostAnnouncementScreen> {
       _text.clear();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(t('announcementSent'))));
-    } on SignupException catch (e) {
+    } on Object catch (e) {
       _error = _errorText('announcementFailed', e);
     } finally {
       if (mounted) setState(() => _sending = false);

@@ -26,6 +26,42 @@ void showComingSoon(BuildContext context, {VoidCallback? onSignOut}) {
     );
 }
 
+/// The one chat gate (D-31): [open] for accounts that may chat, else why
+/// not. Freezes are invisible to the app; send_message refuses those (K-26).
+void _tryChat(BuildContext context, AccountStatus? status, VoidCallback? open) {
+  if (canChat(status, frozen: false) && open != null) return open();
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(t('chatNeedsApproval'))));
+}
+
+/// Chat access for listing cards below the shell and the routes they push.
+class _ChatScope extends InheritedWidget {
+  const _ChatScope({
+    required this.status,
+    required this.onChat,
+    required super.child,
+  });
+
+  /// The scope above [context], or none, around [child].
+  static Widget copy(BuildContext context, {required Widget child}) {
+    final scope = of(context);
+    return scope == null
+        ? child
+        : _ChatScope(status: scope.status, onChat: scope.onChat, child: child);
+  }
+
+  static _ChatScope? of(BuildContext context) =>
+      // Read in tap callbacks, so not a dependency.
+      context.getInheritedWidgetOfExactType<_ChatScope>();
+
+  final AccountStatus? status;
+  final void Function(Listing)? onChat;
+
+  @override
+  bool updateShouldNotify(_ChatScope old) => false;
+}
+
 String _categoryLabel(ListingCategory c) => t(c.copyKey);
 
 /// A category's label in every language, for search (D-41).
@@ -65,10 +101,6 @@ class CatalogShell extends StatefulWidget {
   final VoidCallback? onChats;
   final void Function(Listing)? onChat;
 
-  /// [onChat] when this account may chat, else null.
-  void Function(Listing)? get chatAllowed =>
-      canChat(status, frozen: false) ? onChat : null;
-
   @override
   State<CatalogShell> createState() => _CatalogShellState();
 }
@@ -96,14 +128,6 @@ class _CatalogShellState extends State<CatalogShell> {
       setState(() => _refresh++);
       _snack(t('sellPosted'));
     }
-  }
-
-  void _chats() {
-    final onChats = widget.onChats;
-    if (!canChat(widget.status, frozen: false) || onChats == null) {
-      return _snack(t('chatNeedsApproval'));
-    }
-    onChats();
   }
 
   /// Temporary Profil until K17: Kuota and Keluar for members; guests and
@@ -145,17 +169,21 @@ class _CatalogShellState extends State<CatalogShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _tab == 0
-            ? _HomeView(
-                key: ValueKey(_refresh),
-                repository: widget.repository,
-                onSoon: _soon,
-              )
-            : _CategoryView(
-                key: ValueKey(_refresh),
-                repository: widget.repository,
-                onBack: () => setState(() => _tab = 0),
-              ),
+        child: _ChatScope(
+          status: widget.status,
+          onChat: widget.onChat,
+          child: _tab == 0
+              ? _HomeView(
+                  key: ValueKey(_refresh),
+                  repository: widget.repository,
+                  onSoon: _soon,
+                )
+              : _CategoryView(
+                  key: ValueKey(_refresh),
+                  repository: widget.repository,
+                  onBack: () => setState(() => _tab = 0),
+                ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: t('navSell'),
@@ -170,7 +198,7 @@ class _CatalogShellState extends State<CatalogShell> {
             ? setState(() => _tab = i)
             : i == 3
             ? _profile()
-            : _chats(),
+            : _tryChat(context, widget.status, widget.onChats),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
@@ -544,15 +572,19 @@ void _openResults(
 ) => Navigator.push(
   context,
   MaterialPageRoute<void>(
-    builder: (context) => Scaffold(
-      appBar: BeeHeader(title: Text(title)),
-      body: CustomScrollView(
-        slivers: [
-          _ListingFeed(
-            repository: repository,
-            search: (text: null, matched: null, categories: categories),
-          ),
-        ],
+    // Pushed above the shell: carry its chat access along.
+    builder: (_) => _ChatScope.copy(
+      context,
+      child: Scaffold(
+        appBar: BeeHeader(title: Text(title)),
+        body: CustomScrollView(
+          slivers: [
+            _ListingFeed(
+              repository: repository,
+              search: (text: null, matched: null, categories: categories),
+            ),
+          ],
+        ),
       ),
     ),
   ),
@@ -605,11 +637,8 @@ class _ListingCard extends StatelessWidget {
           MaterialPageRoute<void>(
             builder: (_) => ListingDetailScreen(
               listing: listing,
-              // Read from the shell this card sits in, not threaded through
-              // every feed widget.
-              onChat: context
-                  .findAncestorWidgetOfExactType<CatalogShell>()
-                  ?.chatAllowed,
+              status: _ChatScope.of(context)?.status,
+              onChat: _ChatScope.of(context)?.onChat,
             ),
           ),
         ),
@@ -837,10 +866,18 @@ class _CategoryViewState extends State<_CategoryView> {
 
 /// Detail barang (Daftar-14).
 class ListingDetailScreen extends StatefulWidget {
-  const ListingDetailScreen({super.key, required this.listing, this.onChat});
+  const ListingDetailScreen({
+    super.key,
+    required this.listing,
+    this.status,
+    this.onChat,
+  });
   final Listing listing;
 
-  /// Opens K15; null for accounts that may not chat.
+  /// Null for guests.
+  final AccountStatus? status;
+
+  /// Opens K15 (#86); [status] decides whether it may.
   final void Function(Listing)? onChat;
 
   @override
@@ -1053,21 +1090,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => switch (widget.onChat) {
-                        final onChat? => onChat(l),
-                        null =>
-                          ScaffoldMessenger.of(context)
-                            ..hideCurrentSnackBar()
-                            ..showSnackBar(
-                              SnackBar(content: Text(t('chatNeedsApproval'))),
-                            ),
-                      },
-                      child: Text(t('chatSeller')),
+                  // Not on the member's own listing.
+                  if (!l.isMine) ...[
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _tryChat(
+                          context,
+                          widget.status,
+                          switch (widget.onChat) {
+                            final onChat? => () => onChat(l),
+                            null => null,
+                          },
+                        ),
+                        child: Text(t('chatSeller')),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: soon,

@@ -66,6 +66,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
           sellerName: row['seller_name'] as String,
           sellerCampus: campus(row['seller_campus']),
           sellerVerified: row['seller_verified'] as bool,
+          isMine: row['is_mine'] as bool,
           createdAt: row['created_at'] as String,
         ),
     ];

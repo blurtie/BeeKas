@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'signup_repository.dart';
@@ -53,15 +55,57 @@ class SupabaseChatRepository implements ChatRepository {
   SupabaseChatRepository(this._client);
   final SupabaseClient _client;
 
+  /// Loads once, then again on every new message or announcement Realtime
+  /// lets through RLS. Only the newest load reaches the screen.
   @override
-  Stream<ChatOverview> overview() => _client
-      .from('messages')
-      .stream(primaryKey: ['id'])
-      .asyncMap((_) => guardBackend(_overview));
+  Stream<ChatOverview> overview() {
+    late final StreamController<ChatOverview> out;
+    RealtimeChannel? channel;
+    var latest = 0;
+    Future<void> load() async {
+      final run = ++latest;
+      try {
+        final overview = await guardBackend(_overview);
+        if (run == latest && !out.isClosed) out.add(overview);
+      } on Object catch (e) {
+        if (run == latest && !out.isClosed) out.addError(e);
+      }
+    }
+
+    out = StreamController(
+      onListen: () {
+        void reload(PostgresChangePayload _) => load();
+        channel = _client
+            .channel('chat-overview-${DateTime.now().microsecondsSinceEpoch}')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.insert,
+              schema: 'public',
+              table: 'messages',
+              callback: reload,
+            )
+            .onPostgresChanges(
+              event: PostgresChangeEvent.insert,
+              schema: 'public',
+              table: 'announcements',
+              callback: reload,
+            )
+            .subscribe();
+        load();
+      },
+      onCancel: () async {
+        final c = channel;
+        if (c != null) await _client.removeChannel(c);
+        await out.close();
+      },
+    );
+    return out.stream;
+  }
 
   Future<ChatOverview> _overview() async {
-    final rows = await _client.rpc<List<dynamic>>('my_conversations');
-    final latest = await announcements();
+    final (rows, latest) = await (
+      _client.rpc<List<dynamic>>('my_conversations'),
+      announcements(),
+    ).wait;
     final photos = _client.storage.from('listing-photos');
     return (
       conversations: [

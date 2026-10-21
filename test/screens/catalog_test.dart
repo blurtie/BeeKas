@@ -345,6 +345,38 @@ void main() {
     expect(chatted.single.title, 'Macbook Air M1');
   });
 
+  testWidgets('Chat Penjual works from shortcut results too', (tester) async {
+    final chatted = <Listing>[];
+    await _pump(
+      tester,
+      FakeCatalogRepository([_jaket]),
+      status: AccountStatus.approved,
+      onChat: chatted.add,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('group_fashion')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Jaket Uniqlo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('chatSeller')));
+    await tester.pump();
+    expect(chatted.single.title, 'Jaket Uniqlo');
+  });
+
+  testWidgets('no Chat Penjual on my own listing', (tester) async {
+    await _pump(
+      tester,
+      FakeCatalogRepository([fakeListing('Punyaku', isMine: true)]),
+      status: AccountStatus.approved,
+      onChat: (_) {},
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Punyaku'));
+    await tester.pumpAndSettle();
+    expect(find.text(t('chatSeller')), findsNothing);
+    expect(find.text(t('buyNow')), findsOneWidget);
+  });
+
   testWidgets('the Chat tab opens K14 for approved members only', (
     tester,
   ) async {

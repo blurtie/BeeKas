@@ -256,6 +256,20 @@ void main() {
       expect(find.text('Halo'), findsOneWidget);
     });
 
+    testWidgets('any other send failure shows the generic error', (
+      tester,
+    ) async {
+      final repo = await room(tester);
+      repo.room('c1').add([]);
+      await tester.pump();
+      repo.errors['send'] = StateError('socket closed');
+      await tester.enterText(find.byType(TextField), 'Halo');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      expect(find.text("Couldn't send the message."), findsOneWidget);
+      expect(find.text('Halo'), findsOneWidget);
+    });
+
     testWidgets('error state with retry', (tester) async {
       final repo = await room(tester);
       repo.room('c1').addError(const SignupException(SignupError.unknown));

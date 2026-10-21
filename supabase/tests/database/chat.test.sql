@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(40);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -22,6 +22,7 @@ $$;
 \set g '''86868686-1111-4000-8000-000000000002'''
 \set e '''86868686-1111-4000-8000-000000000003'''
 \set fl '''86868686-1111-4000-8000-000000000004'''
+\set lc '''86868686-1111-4000-8000-000000000005'''
 
 insert into auth.users (id, email, raw_user_meta_data, aud, role)
 select ('86868686-0000-4000-8000-00000000000' || n)::uuid, 't86-' || n || '@binus.ac.id',
@@ -40,7 +41,8 @@ values
   (:l, :s, 'Kalkulator', 'Masih bagus', 'laptop_computer', 'like_new', 50000, 'bandung', true, now() + interval '30 days'),
   (:g, :s, 'Buku', 'Lengkap', 'books_stationery', 'like_new', 20000, 'bandung', false, now() + interval '30 days'),
   (:e, :s, 'Meja', 'Kokoh', 'other', 'like_new', 90000, 'bandung', true, now() - interval '1 day'),
-  (:fl, :f, 'Kursi', 'Kokoh', 'other', 'like_new', 90000, 'bandung', true, now() + interval '30 days');
+  (:fl, :f, 'Kursi', 'Kokoh', 'other', 'like_new', 90000, 'bandung', true, now() + interval '30 days'),
+  (:lc, :c, 'Lampu', 'Terang', 'other', 'like_new', 30000, 'bandung', true, now() + interval '30 days');
 
 -- Starting a chat ---------------------------------------------------------------------
 
@@ -92,6 +94,33 @@ select throws_ok(format('select public.send_message(%L, (select id from public.c
   '23514', null, 'messages over 1.000 characters are refused (K-21)');
 select lives_ok(format('select public.send_message(%L, (select id from public.conversations))', repeat('a', 1000)),
   '1.000 characters are allowed');
+reset role;
+
+-- The item card only takes this seller's live listings.
+select pg_temp.act_as(:a);
+select throws_ok($$ select public.send_message('x', (select id from public.conversations),
+  '86868686-1111-4000-8000-000000000002') $$,
+  '23514', 'listing_unavailable', 'a taken-down listing cannot become the card');
+select throws_ok($$ select public.send_message('x', (select id from public.conversations),
+  '86868686-1111-4000-8000-000000000005') $$,
+  '23514', 'listing_unavailable', 'another seller''s listing cannot become the card');
+select is((select listing_id from public.conversations), '86868686-1111-4000-8000-000000000001'::uuid,
+  'the card stays');
+reset role;
+
+-- Own listings (Chat Penjual hidden) ---------------------------------------------------
+
+select pg_temp.act_as(:s);
+select is((select is_mine from public.catalog_listings() where id = :l), true,
+  'the seller sees the listing as theirs');
+reset role;
+select pg_temp.act_as(:a);
+select is((select is_mine from public.catalog_listings() where id = :l), false,
+  'others do not');
+reset role;
+set local role anon;
+select is((select is_mine from public.catalog_listings() where id = :l), false,
+  'guests do not');
 reset role;
 
 -- Only participants -------------------------------------------------------------------
@@ -152,6 +181,19 @@ reset role;
 select is((select count(*)::int from pg_publication_tables
   where pubname = 'supabase_realtime' and tablename = 'messages'), 1,
   'messages are published to Realtime');
+
+select is((select count(*)::int from pg_publication_tables
+  where pubname = 'supabase_realtime' and tablename = 'announcements'), 1,
+  'announcements are published to Realtime');
+
+-- The card disappears once the listing is no longer live.
+update public.listings set is_active = false where id = :l;
+select pg_temp.act_as(:a);
+select is((select row(listing_id, listing_title)::text from public.my_conversations()), '(,)',
+  'no card for a listing that is no longer live');
+select is((select last_body from public.my_conversations()), repeat('a', 1000),
+  'the conversation itself stays');
+reset role;
 
 select * from finish();
 rollback;

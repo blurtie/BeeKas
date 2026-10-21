@@ -205,20 +205,26 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
-        onChats: () =>
-            _push(context, ChatListScreen(repository: _chatRepository)),
-        // Chat Penjual (5.8). Status Booking adds its own entry with #85.
-        onChat: (listing) => _push(
+        onChats: () => Navigator.push(
           context,
-          ChatRoomScreen(
-            repository: _chatRepository,
-            title: listing.sellerName,
-            listingId: listing.id,
-            item: (
-              title: listing.title,
-              price: listing.price,
-              isDonation: listing.isDonation,
-              photo: listing.photos.firstOrNull,
+          MaterialPageRoute<void>(
+            builder: (_) => ChatListScreen(repository: _chatRepository),
+          ),
+        ),
+        // Chat Penjual (5.8). Status Booking adds its own entry with #85.
+        onChat: (listing) => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => ChatRoomScreen(
+              repository: _chatRepository,
+              title: listing.sellerName,
+              listingId: listing.id,
+              item: (
+                title: listing.title,
+                price: listing.price,
+                isDonation: listing.isDonation,
+                photo: listing.photos.firstOrNull,
+              ),
             ),
           ),
         ),
@@ -232,8 +238,12 @@ Widget _screenFor(BuildContext context, Account account) =>
             builder: (_) => PaymentListScreen(repository: _paymentRepository),
           ),
         ),
-        onAnnouncements: () =>
-            _push(context, PostAnnouncementScreen(repository: _chatRepository)),
+        onAnnouncements: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => PostAnnouncementScreen(repository: _chatRepository),
+          ),
+        ),
       ),
     };
 
@@ -408,6 +418,3 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
 );
 
 final _chatRepository = SupabaseChatRepository(Supabase.instance.client);
-
-void _push(BuildContext context, Widget screen) =>
-    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => screen));

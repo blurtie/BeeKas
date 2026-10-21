@@ -84,6 +84,8 @@ typedef Listing = ({
   String sellerName,
   Campus sellerCampus,
   bool sellerVerified,
+  // The signed-in member's own listing: no Chat Penjual.
+  bool isMine,
   String createdAt,
 });
 

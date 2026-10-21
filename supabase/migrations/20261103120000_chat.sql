@@ -55,7 +55,8 @@ create policy "announcements: members read"
   on public.announcements for select to authenticated
   using (true);
 
-alter publication supabase_realtime add table public.messages;
+-- K14 reloads on new messages and announcements.
+alter publication supabase_realtime add table public.messages, public.announcements;
 
 -- A listing that is on air: active, not expired, from a listed seller.
 create function public.is_live_listing(p_listing uuid)
@@ -96,6 +97,9 @@ begin
   if p_listing is not null then
     select seller_id into v_seller from public.listings
       where id = p_listing and public.is_live_listing(id);
+    if v_seller is null then
+      raise exception 'listing_unavailable' using errcode = 'check_violation';
+    end if;
   end if;
   if v_id is null then
     if v_seller is null or v_seller = auth.uid() then
@@ -108,13 +112,16 @@ begin
   elsif not exists (select 1 from public.conversations
       where id = v_id and auth.uid() in (buyer_id, seller_id)) then
     raise exception 'not_participant' using errcode = 'insufficient_privilege';
+  -- The card only shows this conversation's seller's live listings.
+  elsif p_listing is not null and not exists (select 1 from public.conversations
+      where id = v_id and seller_id = v_seller) then
+    raise exception 'listing_unavailable' using errcode = 'check_violation';
   end if;
   insert into public.messages (conversation_id, sender_id, body, listing_id)
     values (v_id, auth.uid(), p_body, p_listing);
   update public.conversations
     set last_message_at = clock_timestamp(),
-        -- Only a live listing of this conversation's seller becomes the card.
-        listing_id = case when v_seller = seller_id then p_listing else listing_id end
+        listing_id = coalesce(p_listing, listing_id)
     where id = v_id;
   return v_id;
 end;
@@ -154,7 +161,8 @@ as $$
       order by ph.position limit 1)
   from public.conversations c
   join public.profiles o on o.id = case when c.buyer_id = auth.uid() then c.seller_id else c.buyer_id end
-  left join public.listings l on l.id = c.listing_id
+  -- The card disappears once the listing is no longer live.
+  left join public.listings l on l.id = c.listing_id and public.is_live_listing(l.id)
   where auth.uid() in (c.buyer_id, c.seller_id)
   order by c.last_message_at desc nulls last, c.id;
 $$;
@@ -181,3 +189,68 @@ grant execute on function public.send_message(text, uuid, uuid),
   public.conversation_for_listing(uuid), public.my_conversations(),
   public.post_announcement(text)
   to authenticated;
+
+-- Detail Barang hides Chat Penjual on the member's own listing: catalog_listings
+-- says which rows are the caller's (seller ids stay private). Otherwise as in #77.
+drop function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]);
+
+create function public.catalog_listings(
+  p_query text default null,
+  p_categories public.listing_category[] default null,
+  p_limit integer default 20,
+  p_after_created_at timestamptz default null,
+  p_after_id uuid default null,
+  p_query_categories public.listing_category[] default null
+)
+returns table (
+  id uuid,
+  title text,
+  description text,
+  category public.listing_category,
+  condition public.listing_condition,
+  price integer,
+  previous_price integer,
+  stock integer,
+  campus public.campus,
+  warranty text,
+  specs text[],
+  is_donation boolean,
+  created_at timestamptz,
+  photos text[],
+  seller_name text,
+  seller_campus public.campus,
+  seller_verified boolean,
+  is_mine boolean
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select l.id, l.title, l.description, l.category, l.condition, l.price, l.previous_price,
+    l.stock, l.campus, l.warranty, l.specs, l.is_donation, l.created_at,
+    coalesce(
+      (select array_agg(ph.path order by ph.position) from public.listing_photos ph
+        where ph.listing_id = l.id),
+      '{}'
+    ),
+    p.full_name, p.campus, true, (l.seller_id = auth.uid()) is true
+  from public.listings l
+  join public.profiles p on p.id = l.seller_id
+  where l.is_active and public.is_listed_seller(l.seller_id)
+    -- strpos, not ilike: % and _ in the query stay plain text.
+    and (coalesce(btrim(p_query), '') = ''
+      or strpos(lower(l.title), lower(btrim(p_query))) > 0
+      or strpos(lower(p.full_name), lower(btrim(p_query))) > 0
+      or l.category = any (p_query_categories))
+    and (p_categories is null or l.category = any (p_categories))
+    and (p_after_created_at is null
+      or l.created_at < p_after_created_at
+      or (l.created_at = p_after_created_at and l.id > p_after_id))
+  order by l.created_at desc, l.id
+  limit least(greatest(coalesce(p_limit, 20), 1), 100);
+$$;
+
+revoke execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]) from public;
+grant execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]) to anon, authenticated;
+
