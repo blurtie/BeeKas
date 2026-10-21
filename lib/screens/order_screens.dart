@@ -31,11 +31,12 @@ String _two(int n) => n.toString().padLeft(2, '0');
 String _hoursMinutes(Duration d) =>
     '${_two(d.inHours)}:${_two(d.inMinutes % 60)}';
 
-String _dateTime(BuildContext context, DateTime at) {
-  final l = MaterialLocalizations.of(context);
-  final local = at.toLocal();
-  return '${l.formatMediumDate(local)}, '
-      '${l.formatTimeOfDay(TimeOfDay.fromDateTime(local), alwaysUse24HourFormat: true)}';
+/// "8 Oktober 2026, 14:20" in the app language (MaterialLocalizations is
+/// English only here; month names live in copy.dart).
+String _dateTime(DateTime at) {
+  final d = at.toLocal();
+  final month = t('monthNames').split(',')[d.month - 1];
+  return '${d.day} $month ${d.year}, ${_two(d.hour)}:${_two(d.minute)}';
 }
 
 /// Lokasi COD (D-30): campus plus optional free text. Null when cancelled.
@@ -349,12 +350,16 @@ class _BookingScreenState extends State<BookingScreen>
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.error, color: BeeColors.brandPrimary),
+                      // As wide as the clock avatar, so both texts line up.
+                      const SizedBox(
+                        width: 40,
+                        child: Icon(Icons.error, color: BeeColors.brandPrimary),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
                           t('bookingNoPayment'),
-                          style: textTheme.bodyMedium,
+                          style: textTheme.bodySmall,
                         ),
                       ),
                     ],
@@ -767,19 +772,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
       child: ListView(
         padding: const EdgeInsets.all(_pad),
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              spacing: 8,
-              children: [
-                for (final f in [null, ...OrderStatus.values])
-                  ChoiceChip(
-                    label: Text(t('orderFilter_${f?.name ?? 'all'}')),
-                    selected: _filter == f,
-                    onSelected: (_) => setState(() => _filter = f),
-                  ),
-              ],
-            ),
+          // Wrap: all five chips stay visible at 360 dp.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final f in [null, ...OrderStatus.values])
+                ChoiceChip(
+                  label: Text(t('orderFilter_${f?.name ?? 'all'}')),
+                  selected: _filter == f,
+                  onSelected: (_) => setState(() => _filter = f),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
           if (orders.isEmpty)
@@ -880,14 +884,21 @@ class _StatusBadge extends StatelessWidget {
         BeeColors.error,
       ),
     };
-    return Chip(
-      label: Text(t('orderStatus_${status.name}')),
-      labelStyle: Theme.of(context).textTheme.labelMedium
-          ?.copyWith(color: text, fontWeight: FontWeight.w600),
-      backgroundColor: surface,
-      side: BorderSide(color: border),
-      shape: const StadiumBorder(),
-      visualDensity: VisualDensity.compact,
+    // Not a Chip: a Chip clips its label to one line, and the full status
+    // must stay readable at 360 dp (daftar-8 badge).
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: surface,
+        shape: StadiumBorder(side: BorderSide(color: border)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Text(
+          t('orderStatus_${status.name}'),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: text, fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 }
@@ -945,10 +956,7 @@ class _OrderCard extends StatelessWidget {
                         ),
                         style: textTheme.bodySmall,
                       ),
-                    Text(
-                      _dateTime(context, o.createdAt),
-                      style: textTheme.bodySmall,
-                    ),
+                    Text(_dateTime(o.createdAt), style: textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -1158,11 +1166,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
           row(
             t('codTime'),
-            text(
-              o.codAt == null
-                  ? t('codTimeUnset')
-                  : _dateTime(context, o.codAt!),
-            ),
+            text(o.codAt == null ? t('codTimeUnset') : _dateTime(o.codAt!)),
           ),
           if (o.status == OrderStatus.waiting && o.holdUntil != null)
             row(
@@ -1206,7 +1210,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
               ),
           BeeOutlinedPillButton(
-            label: t('chatSeller'),
+            label: t(o.isBuyer ? 'chatSeller' : 'chatBuyer'),
             onPressed: () => _snack(context, t('comingSoon')),
           ),
         ],

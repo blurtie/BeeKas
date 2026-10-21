@@ -710,6 +710,8 @@ Changes to these terms are announced in the app. These terms are governed by the
     'errorNotParty': "You're not part of this order.",
     'errorCodTimeMissing': 'Set the COD time.',
     'errorCodTimePast': 'Choose a COD time from now on.',
+    'chatBuyer': 'Chat Buyer',
+    'monthNames': 'January,February,March,April,May,June,July,August,September,October,November,December',
     'codPlaceTooLong': 'Up to 200 characters.',
   },
   Lang.id: {
@@ -1404,6 +1406,8 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'errorNotParty': 'Kamu bukan pihak dalam pesanan ini.',
     'errorCodTimeMissing': 'Isi waktu COD.',
     'errorCodTimePast': 'Pilih waktu COD mulai sekarang.',
+    'chatBuyer': 'Chat Pembeli',
+    'monthNames': 'Januari,Februari,Maret,April,Mei,Juni,Juli,Agustus,September,Oktober,November,Desember',
     'codPlaceTooLong': 'Maksimal 200 karakter.',
   },
 };

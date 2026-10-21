@@ -184,6 +184,40 @@ void main() {
       expect(find.text(t('ordersEmpty')), findsOneWidget);
     });
 
+    testWidgets('dates and statuses follow the app language', (tester) async {
+      addTearDown(() => language.value = Lang.en);
+      language.value = Lang.id;
+      tester.view.physicalSize = const Size(900, 2400); // 360 dp
+      final repo = FakeOrderRepository()
+        ..add(createdAt: DateTime(2026, 10, 8, 14, 20));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: beeTheme(),
+          home: OrdersScreen(repository: repo, now: _now),
+        ),
+      );
+      addTearDown(tester.view.reset);
+      tester.view.devicePixelRatio = 2.5;
+      await tester.pumpAndSettle();
+      expect(find.text('8 Oktober 2026, 14:20'), findsOneWidget);
+      expect(find.text('Menunggu konfirmasi penjual'), findsOneWidget);
+      // Every chip is on screen, none scrolled away.
+      for (final key in [
+        'all',
+        'waiting',
+        'processing',
+        'completed',
+        'cancelled',
+      ]) {
+        expect(
+          find.widgetWithText(ChoiceChip, t('orderFilter_$key')).hitTestable(),
+          findsOneWidget,
+          reason: key,
+        );
+      }
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('an error offers Coba lagi', (tester) async {
       final repo = FakeOrderRepository()
         ..errors['mine'] = const SignupException(null)
@@ -280,6 +314,13 @@ void main() {
       await _tapText(tester, t('orderAction_requestExtension'));
       expect(repo.calls, ['requestExtension o0']);
       expect(find.text(t('orderAction_requestExtension')), findsNothing);
+    });
+
+    testWidgets('the seller chats with the buyer', (tester) async {
+      final repo = FakeOrderRepository()..add(isBuyer: false);
+      await open(tester, repo);
+      expect(find.text(t('chatBuyer')), findsOneWidget);
+      expect(find.text(t('chatSeller')), findsNothing);
     });
 
     testWidgets('seller accepts with a COD time', (tester) async {

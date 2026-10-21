@@ -325,13 +325,13 @@ reset role;
 
 -- Now: B waits on L2 (booking), C on D2 (buy) and D3. Nothing is due yet.
 select public.run_order_timers(now() + interval '23 hours');
-select is((select count(*)::int from public.orders where status = 'waiting'), 3,
+select is((select count(*)::int from public.orders where status = 'waiting' and listing_id::text like '85858585-%'), 3,
   'before 24 hours nothing is cancelled');
 select public.run_order_timers(now() + interval '24 hours');
-select is((select count(*)::int from public.orders where status = 'waiting'), 0,
+select is((select count(*)::int from public.orders where status = 'waiting' and listing_id::text like '85858585-%'), 0,
   'after 24 hours waiting orders are cancelled');
 select is((select bool_and(cancelled_by is null and cancel_reason is null and cancelled_at is not null)
-  from public.orders where status = 'cancelled' and cancelled_by is null), true,
+  from public.orders where status = 'cancelled' and cancelled_by is null and listing_id::text like '85858585-%'), true,
   'cancelled by the system, without a reason');
 select is(pg_temp.stock(:l2) + pg_temp.stock(:d2) + pg_temp.stock(:d3), 4, 'their units return');
 
