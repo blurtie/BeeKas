@@ -94,3 +94,6 @@ select vault.create_secret('local-decision-emails-cron-secret', 'decision_emails
 select vault.create_secret(
   'http://supabase_kong_BeeKas:8000/functions/v1/delete-expired-photos', 'photo_retention_url');
 select vault.create_secret('local-photo-retention-cron-secret', 'photo_retention_cron_secret');
+
+-- #81 (D-42): the seed inserts its accounts as approved, past the first-approval trigger.
+select public.backfill_starting_quota();

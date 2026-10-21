@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(29);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -124,6 +124,33 @@ select throws_ok($$ select pg_temp.list(array['81818181-0000-4000-8000-000000000
 reset role;
 select is((select balance from public.quota_balances where member_id = :f), 1,
   'a refused listing keeps the quota');
+
+-- Backfill (D-42) ------------------------------------------------------------------
+
+-- B is approved with triggers off, like an account approved before quotas existed.
+\set b '''81818181-0000-4000-8000-000000000008'''
+insert into auth.users (id, email, raw_user_meta_data, aud, role)
+values (:b, 't81-8@binus.ac.id', '{"full_name": "T81 8", "campus": "bandung"}', 'authenticated', 'authenticated');
+set local session_replication_role = replica;
+update public.profiles set status = 'approved' where id = :b;
+set local session_replication_role = origin;
+select is((select count(*)::int from public.quota_balances where member_id = :b), 0,
+  'an account approved before quotas has no balance yet');
+select public.backfill_starting_quota();
+select public.backfill_starting_quota();
+select is((select balance from public.quota_balances where member_id = :b), 1,
+  'backfill gives an approved account a balance of 1, once');
+select is((select count(*)::int from public.quota_ledger where member_id = :b and reason = 'migration_start'), 1,
+  'backfill is recorded once as migration_start');
+-- approved never leaves approved legally; force it back to pending to fire the trigger.
+set local session_replication_role = replica;
+update public.profiles set status = 'pending' where id = :b;
+set local session_replication_role = origin;
+update public.profiles set status = 'approved' where id = :b;
+select is((select count(*)::int from public.quota_ledger where member_id = :b and reason = 'starting'), 0,
+  'a backfilled account gets no starting grant on re-approval');
+select is((select balance from public.quota_balances where member_id = :b), 1,
+  'a backfilled account keeps a balance of 1 after re-approval');
 
 select * from finish();
 rollback;

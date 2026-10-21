@@ -6,10 +6,10 @@ create table public.quota_balances (
   balance integer not null check (balance >= 0)
 );
 
-create type public.quota_reason as enum ('starting', 'purchase', 'listing', 'correction');
+create type public.quota_reason as enum ('starting', 'migration_start', 'purchase', 'listing', 'correction');
 
 -- The PRD-katalog 7.2 amounts: +1 starting (K-08), +3 package, -1 listing, +1 admin
--- correction with the admin and a note.
+-- correction with the admin and a note. migration_start is the one-time +1 backfill (D-42).
 create table public.quota_ledger (
   id bigint generated always as identity primary key,
   member_id uuid not null references public.profiles on delete cascade,
@@ -22,6 +22,7 @@ create table public.quota_ledger (
   created_at timestamptz not null default now(),
   constraint quota_ledger_amount check (case reason
     when 'starting' then delta = 1
+    when 'migration_start' then delta = 1
     when 'purchase' then delta = 3
     when 'listing' then delta = -1
     when 'correction' then delta = 1 and admin_id is not null and note is not null
@@ -63,6 +64,29 @@ create trigger profiles_starting_quota
   after update of status on public.profiles
   for each row when (new.status = 'approved' and old.status is distinct from 'approved')
   execute function public.grant_starting_quota();
+
+-- D-42: accounts already approved before quotas existed never pass through the trigger,
+-- so they get their 1 here, under its own ledger reason. The balance row then blocks a
+-- second grant from the trigger. Idempotent; seed.sql calls it again for its sellers.
+create function public.backfill_starting_quota()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  with granted as (
+    insert into public.quota_balances (member_id, balance)
+    select id, 1 from public.profiles where status = 'approved'
+    on conflict (member_id) do nothing
+    returning member_id
+  )
+  insert into public.quota_ledger (member_id, delta, reason)
+  select member_id, 1, 'migration_start' from granted;
+$$;
+
+revoke execute on function public.backfill_starting_quota() from public, anon, authenticated;
+
+select public.backfill_starting_quota();
 
 -- Null for listings made before quotas; expired-listing filtering comes later (K-07).
 alter table public.listings add column expires_at timestamptz;

@@ -551,3 +551,13 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Peran admin cloud diberikan dengan SQL manual satu kali per orang; satu akun per anggota tim (K-39, D-21).
 - APK dibagikan langsung lewat QR di booth, bukan Play Store. Kunci signing rilis dibuat di T12 dan disimpan di luar repo (K-40).
 - Backup `pg_dump` manual sebelum Festival dan setiap hari selama Festival bila memakai paket Free (K-41).
+
+---
+
+## D-42 — Saldo awal kuota listing
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (tiket #81, PR #98: K-08)
+
+**Keputusan:**
+- Saldo awal 1 kuota diberikan oleh trigger database saat akun pertama kali berstatus approved, sekali seumur akun; ditolak lalu disetujui ulang tidak memberi saldo lagi (K-08).
+- Akun yang sudah approved saat migrasi kuota dijalankan mendapat saldo 1 satu kali lewat backfill, tercatat di `quota_ledger` dengan alasan `migration_start` supaya terbedakan dari saldo awal biasa. Akun ini tidak pernah mendapat saldo awal kedua dari trigger (K-08).
