@@ -4,6 +4,7 @@ import 'package:beekas/config/copy.dart';
 import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/catalog.dart';
 import 'package:beekas/domain/registration.dart';
+import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/my_listings_screen.dart';
 import 'package:beekas/ui/components.dart';
 import 'package:beekas/ui/theme.dart';
@@ -36,6 +37,7 @@ MyListing _listing(
   warranty: null,
   specs: const [],
   photos: const [],
+  createdAt: _now.subtract(const Duration(days: 1)),
   expiresAt: _now.add(expiresIn),
   removedAt: removed ? _now : null,
   removalReason: removed ? 'Barang terlarang' : null,
@@ -118,6 +120,60 @@ void main() {
     expect(_inCard('Macbook', find.text(t('myListingsRelist'))), findsNothing);
     expect(_inCard('Jam', find.text(t('edit'))), findsNothing);
     expect(_inCard('Hoodie', find.text(t('myListingsWithdraw'))), findsNothing);
+  });
+
+  testWidgets(
+    'a frozen or unapproved seller sees hidden items, withdraw only',
+    (tester) async {
+      final repo = FakeListingRepository(
+        mine: [_listing('3', 'Buku', expiresIn: const Duration(days: -1))],
+      )..sellerListed = false;
+      await _pump(tester, repo);
+      await tester.pumpAndSettle();
+      expect(
+        _inCard('Buku', find.text(t(ListingStatus.hidden.copyKey))),
+        findsOneWidget,
+      );
+      expect(_inCard('Buku', find.text(t('edit'))), findsNothing);
+      expect(_inCard('Buku', find.text(t('myListingsRelist'))), findsNothing);
+      expect(
+        _inCard('Buku', find.text(t('myListingsWithdraw'))),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('refused by the server: says the item changed and reloads', (
+    tester,
+  ) async {
+    final repo = FakeListingRepository(
+      mine: [_listing('3', 'Buku', expiresIn: const Duration(days: -1))],
+    )..failAction = const SignupException(SignupError.notAllowed);
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+    repo.sellerListed = false;
+    await tester.tap(find.text(t('myListingsRelist')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('myListingsStale')), findsOneWidget);
+    expect(
+      _inCard('Buku', find.text(t(ListingStatus.hidden.copyKey))),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a failed reload after an action shows the error state', (
+    tester,
+  ) async {
+    final repo = FakeListingRepository(
+      mine: [_listing('3', 'Buku', expiresIn: const Duration(days: -1))],
+    );
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+    repo.failMine = const SignupException(null);
+    await tester.tap(find.text(t('myListingsRelist')));
+    await tester.pumpAndSettle();
+    expect(find.text(t('myListingsLoadFailed')), findsOneWidget);
+    expect(find.text('Buku'), findsNothing);
   });
 
   testWidgets('empty', (tester) async {

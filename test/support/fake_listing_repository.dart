@@ -66,6 +66,7 @@ class FakeListingRepository implements ListingRepository {
   }
 
   List<MyListing> mine;
+  var sellerListed = true;
   Object? failMine;
   Object? failAction;
   Completer<void>? mineGate;
@@ -73,11 +74,11 @@ class FakeListingRepository implements ListingRepository {
   final edits = <ListingEdit>[];
 
   @override
-  Future<List<MyListing>> myListings() async {
+  Future<MyListings> myListings() async {
     await mineGate?.future;
     final error = failMine;
     if (error != null) throw error;
-    return List.of(mine);
+    return (listings: List.of(mine), sellerListed: sellerListed);
   }
 
   Future<void> _act(
@@ -112,6 +113,7 @@ class FakeListingRepository implements ListingRepository {
         warranty: edit.warranty.isEmpty ? null : edit.warranty,
         specs: specLines(edit.specs),
         photos: l.photos,
+        createdAt: l.createdAt,
         expiresAt: l.expiresAt,
         removedAt: l.removedAt,
         removalReason: l.removalReason,
@@ -139,6 +141,7 @@ class FakeListingRepository implements ListingRepository {
       warranty: l.warranty,
       specs: l.specs,
       photos: l.photos,
+      createdAt: l.createdAt,
       expiresAt: l.expiresAt,
       removedAt: l.removedAt,
       removalReason: l.removalReason,
@@ -165,6 +168,7 @@ class FakeListingRepository implements ListingRepository {
       warranty: l.warranty,
       specs: l.specs,
       photos: l.photos,
+      createdAt: l.createdAt,
       expiresAt: DateTime.now().add(const Duration(days: 60)),
       removedAt: l.removedAt,
       removalReason: l.removalReason,

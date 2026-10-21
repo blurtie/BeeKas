@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 final _now = DateTime.utc(2026, 11, 1, 12);
 
 MyListing _listing({
+  String description = 'desc',
   bool isDonation = false,
   int stock = 2,
   int stockLeft = 2,
@@ -16,7 +17,7 @@ MyListing _listing({
   title: 'Macbook',
   category: ListingCategory.laptopComputer,
   isDonation: isDonation,
-  description: 'desc',
+  description: description,
   condition: ListingCondition.likeNew,
   price: isDonation ? 0 : 50000,
   previousPrice: null,
@@ -26,6 +27,7 @@ MyListing _listing({
   warranty: null,
   specs: const [],
   photos: const [],
+  createdAt: _now.subtract(const Duration(days: 1)),
   expiresAt: expiresAt ?? _now.add(const Duration(days: 10)),
   removedAt: removedAt,
   removalReason: removedAt == null ? null : 'penipuan',
@@ -98,11 +100,64 @@ void main() {
     );
   });
 
+  test('a frozen or unapproved seller hides the listing', () {
+    expect(
+      listingStatus(_listing(), _now, sellerListed: false),
+      ListingStatus.hidden,
+    );
+    expect(
+      listingStatus(_listing(withdrawnAt: _now), _now, sellerListed: false),
+      ListingStatus.withdrawn,
+    );
+  });
+
+  test('sortMyListings: by status, then newest first', () {
+    MyListing at(String id, int day, {DateTime? withdrawnAt}) {
+      final l = _listing(withdrawnAt: withdrawnAt);
+      return (
+        id: id,
+        title: l.title,
+        category: l.category,
+        isDonation: false,
+        description: l.description,
+        condition: l.condition,
+        price: l.price,
+        previousPrice: null,
+        stock: 2,
+        stockLeft: 2,
+        campus: l.campus,
+        warranty: null,
+        specs: const [],
+        photos: const [],
+        createdAt: DateTime.utc(2026, 10, day),
+        expiresAt: l.expiresAt,
+        removedAt: null,
+        removalReason: null,
+        withdrawnAt: withdrawnAt,
+      );
+    }
+
+    final sorted = sortMyListings([
+      at('old', 1),
+      at('down', 9, withdrawnAt: _now),
+      at('new', 5),
+    ], _now);
+    expect(sorted.map((p) => p.$1.id), ['new', 'old', 'down']);
+    expect(sorted.first.$2, ListingStatus.live);
+  });
+
   test('actions per status', () {
     for (final s in ListingStatus.values) {
-      final open = s != ListingStatus.removed && s != ListingStatus.withdrawn;
+      final open =
+          s == ListingStatus.live ||
+          s == ListingStatus.soldOut ||
+          s == ListingStatus.expired;
       expect(canEditListing(s), open, reason: '$s edit');
-      expect(canWithdrawListing(s), open, reason: '$s withdraw');
+      expect(
+        canWithdrawListing(s),
+        open || s == ListingStatus.hidden,
+        reason: '$s withdraw',
+      );
       expect(canRelistListing(s), s == ListingStatus.expired, reason: '$s');
     }
   });
@@ -126,6 +181,21 @@ void main() {
       expect(validateEdit(_listing(), _edit(description: ' ')), {
         ListingField.description,
       });
+    });
+
+    test('an unchanged description passes even over the limit', () {
+      final long = 'x' * 600;
+      expect(
+        validateEdit(_listing(description: long), _edit(description: long)),
+        isEmpty,
+      );
+      expect(
+        validateEdit(
+          _listing(description: long),
+          _edit(description: '${long}y'),
+        ),
+        {ListingField.description},
+      );
     });
 
     test('a donation needs no price', () {

@@ -9,6 +9,8 @@ import 'signup_repository.dart';
 
 typedef SellerInfo = ({int quota, Campus campus});
 
+typedef MyListings = ({List<MyListing> listings, bool sellerListed});
+
 /// What Pasang sends: the draft's id (newListingId, same on every retry), the
 /// K5-K6 fields, the location (K6) and the warranty.
 typedef NewListing = ({
@@ -32,8 +34,9 @@ abstract interface class ListingRepository {
   /// an id that already has the seller's listing changes nothing.
   Future<void> createListing(NewListing listing, List<String> photos);
 
-  /// K7 Barang Saya (#83): every own listing, newest first.
-  Future<List<MyListing>> myListings();
+  /// K7 Barang Saya (#83): every own listing, and whether the seller is
+  /// listed (approved, not frozen); the app cannot read freezes itself.
+  Future<MyListings> myListings();
 
   /// update_listing; name, category, sale/donation and photos stay (K-06).
   Future<void> updateListing(String id, ListingEdit edit);
@@ -146,17 +149,22 @@ class SupabaseListingRepository implements ListingRepository {
       });
 
   @override
-  Future<List<MyListing>> myListings() => guardBackend(() async {
+  Future<MyListings> myListings() => guardBackend(() async {
+    final listed = await _client.rpc<bool>(
+      'is_listed_seller',
+      params: {'p_seller': _uid},
+    );
     final rows = await _client
         .from('listings')
         .select('*, listing_photos(path, position)')
         .eq('seller_id', _uid)
         .order('created_at', ascending: false);
-    return [
+    final listings = [
       for (final row in rows)
         (
           id: row['id'] as String,
           title: row['title'] as String,
+          createdAt: DateTime.parse(row['created_at'] as String),
           category: ListingCategory.fromCode(row['category'] as String),
           isDonation: row['is_donation'] as bool,
           description: row['description'] as String,
@@ -184,6 +192,7 @@ class SupabaseListingRepository implements ListingRepository {
           withdrawnAt: _time(row['withdrawn_at']),
         ),
     ];
+    return (listings: listings, sellerListed: listed);
   });
 
   static DateTime? _time(Object? value) =>

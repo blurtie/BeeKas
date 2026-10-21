@@ -105,6 +105,7 @@ class _CatalogShellState extends State<CatalogShell> {
           children: [
             if (onMyListings != null)
               ListTile(
+                leading: const Icon(Icons.grid_view_outlined),
                 title: Text(t('profileMyListings')),
                 onTap: () {
                   Navigator.pop(sheet);

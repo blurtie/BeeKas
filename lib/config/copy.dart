@@ -591,6 +591,9 @@ Changes to these terms are announced in the app. These terms are governed by the
     'listingStatus_expired': 'Expired',
     'listingStatus_removed': 'Taken down by admin',
     'listingStatus_withdrawn': 'Taken down by you',
+    'listingStatus_hidden': 'Hidden: account not active',
+    'myListingsStale':
+        'This item or your account has changed. The list is refreshed.',
     'quotaLeft': 'Listing quota left: {n}',
     'quotaBuy': 'Buy a Package · {price} = 3 listings',
     'quotaHistory': 'Purchase history',
@@ -1213,6 +1216,8 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'listingStatus_expired': 'Kedaluwarsa',
     'listingStatus_removed': 'Diturunkan admin',
     'listingStatus_withdrawn': 'Diturunkan sendiri',
+    'listingStatus_hidden': 'Tersembunyi: akun tidak aktif',
+    'myListingsStale': 'Barang atau akunmu sudah berubah. Daftar dimuat ulang.',
     'quotaLeft': 'Sisa kuota listing: {n}',
     'quotaBuy': 'Beli Paket · {price} = 3 listing',
     'quotaHistory': 'Riwayat pembelian',

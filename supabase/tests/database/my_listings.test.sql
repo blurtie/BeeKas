@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(36);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -113,6 +113,10 @@ reset role;
 select pg_temp.act_as(:s);
 select lives_ok($$ select pg_temp.edit('83838383-0000-4000-8000-0000000000a1', 40000, 3) $$,
   'the owner edits');
+select throws_ok($$ select public.update_listing(p_id => '83838383-0000-4000-8000-0000000000a1',
+    p_description => repeat('x', 501), p_condition => 'used_good', p_price => 40000,
+    p_stock => 3, p_campus => 'senayan', p_warranty => null, p_specs => null) $$,
+  '23514', null, 'a changed description over 500 characters is refused (K-04)');
 reset role;
 select is((select (description, condition::text, price, previous_price, stock, stock_left,
     campus::text, warranty, specs)::text from public.listings where id = :live),
@@ -120,6 +124,10 @@ select is((select (description, condition::text, price, previous_price, stock, s
   'the edit lands; the price drop is struck through; added stock is left');
 
 select pg_temp.act_as(:s);
+select lives_ok($$ select public.update_listing(p_id => '83838383-0000-4000-8000-0000000000a1',
+    p_description => 'new desc', p_condition => 'used_good', p_price => 40000,
+    p_stock => 3, p_campus => 'senayan', p_warranty => '1 month', p_specs => array['8GB']) $$,
+  'saving with the description unchanged passes');
 select throws_ok($$ select public.update_listing(p_id => '83838383-0000-4000-8000-0000000000a1',
     p_title => 'Other item', p_description => 'd', p_condition => 'used_good', p_price => 1000,
     p_stock => 1, p_campus => 'bandung', p_warranty => null, p_specs => null) $$,

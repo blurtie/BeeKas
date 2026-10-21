@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 
 import '../config/copy.dart';
 import '../data/listing_repository.dart';
+import '../data/signup_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/registration.dart';
+import '../domain/signup_error.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
 
@@ -26,10 +28,12 @@ class MyListingsScreen extends StatefulWidget {
 }
 
 class _MyListingsScreenState extends State<MyListingsScreen> {
-  List<MyListing>? _listings;
+  // Sorted with their status once per load (sortMyListings).
+  List<(MyListing, ListingStatus)>? _items;
+  late DateTime _loadedAt;
   var _failed = false;
-  // The listing whose action is running; its buttons are disabled.
-  String? _busy;
+  // One action at a time: every button is disabled while it runs.
+  var _busy = false;
 
   @override
   void initState() {
@@ -38,11 +42,24 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _failed = false);
+    setState(() {
+      _failed = false;
+      _items = null;
+    });
     try {
-      final listings = await widget.repository.myListings();
-      if (mounted) setState(() => _listings = listings);
+      final mine = await widget.repository.myListings();
+      final now = widget.now();
+      if (!mounted) return;
+      setState(() {
+        _loadedAt = now;
+        _items = sortMyListings(
+          mine.listings,
+          now,
+          sellerListed: mine.sellerListed,
+        );
+      });
     } catch (_) {
+      // Never keep a stale list: show the error state.
       if (mounted) setState(() => _failed = true);
     }
   }
@@ -51,21 +68,24 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(t(key))));
 
-  Future<void> _act(
-    String id,
-    Future<void> Function() action,
-    String done,
-  ) async {
-    setState(() => _busy = id);
+  Future<void> _act(Future<void> Function() action, String done) async {
+    setState(() => _busy = true);
     try {
       await action();
       if (!mounted) return;
       _snack(done);
       await _load();
-    } catch (_) {
-      if (mounted) _snack('myListingsActionFailed');
+    } catch (e) {
+      if (!mounted) return;
+      // not_allowed: the listing or the account changed since loading.
+      if (e is SignupException && e.error == SignupError.notAllowed) {
+        _snack('myListingsStale');
+        await _load();
+      } else {
+        _snack('myListingsActionFailed');
+      }
     } finally {
-      if (mounted) setState(() => _busy = null);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -91,7 +111,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     );
     if (sure != true || !mounted) return;
     await _act(
-      l.id,
       () => widget.repository.withdrawListing(l.id),
       'myListingsWithdrawn',
     );
@@ -105,20 +124,18 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
             EditListingScreen(repository: widget.repository, listing: l),
       ),
     );
-    if (saved == true && mounted) {
-      _snack('myListingsSaved');
-      await _load();
-    }
+    if (!mounted) return;
+    if (saved == true) _snack('myListingsSaved');
+    await _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    final listings = _listings;
-    final now = widget.now();
+    final items = _items;
     return Scaffold(
       appBar: BeeHeader(title: Text(t('myListingsTitle'))),
       body: SafeArea(
-        child: switch (listings) {
+        child: switch (items) {
           null when _failed => Center(
             child: Padding(
               padding: const EdgeInsets.all(BeeSpacing.screenX),
@@ -142,22 +159,15 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           _ => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              for (final l
-                  in [...listings]..sort(
-                    (a, b) => listingStatus(
-                      a,
-                      now,
-                    ).index.compareTo(listingStatus(b, now).index),
-                  ))
+              for (final (l, status) in items)
                 _MyListingCard(
                   listing: l,
-                  status: listingStatus(l, now),
-                  daysLeft: daysLeft(l, now),
-                  busy: _busy == l.id,
+                  status: status,
+                  daysLeft: daysLeft(l, _loadedAt),
+                  busy: _busy,
                   onEdit: () => _edit(l),
                   onWithdraw: () => _withdraw(l),
                   onRelist: () => _act(
-                    l.id,
                     () => widget.repository.relistListing(l.id),
                     'myListingsRelisted',
                   ),
@@ -288,7 +298,8 @@ class _EditListingScreenState extends State<EditListingScreen> {
   late Campus _campus = _l.campus;
   var _errors = <ListingField>{};
   var _saving = false;
-  var _failed = false;
+  // The copy key of the last save failure.
+  String? _failed;
 
   @override
   void dispose() {
@@ -315,18 +326,20 @@ class _EditListingScreenState extends State<EditListingScreen> {
     final edit = _edit;
     setState(() {
       _errors = validateEdit(_l, edit);
-      _failed = false;
+      _failed = null;
     });
     if (_errors.isNotEmpty) return;
     setState(() => _saving = true);
     try {
       await widget.repository.updateListing(_l.id, edit);
       if (mounted) Navigator.pop(context, true);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _saving = false;
-          _failed = true;
+          _failed = e is SignupException && e.error == SignupError.notAllowed
+              ? 'myListingsStale'
+              : 'myListingsActionFailed';
         });
       }
     }
@@ -414,9 +427,9 @@ class _EditListingScreenState extends State<EditListingScreen> {
               value: _campus,
               onChanged: (c) => setState(() => _campus = c ?? _campus),
             ),
-            if (_failed) ...[
+            if (_failed case final key?) ...[
               const SizedBox(height: 16),
-              BeeFormError(t('myListingsActionFailed')),
+              BeeFormError(t(key)),
             ],
             const SizedBox(height: 24),
             FilledButton(

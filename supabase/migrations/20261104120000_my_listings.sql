@@ -91,6 +91,8 @@ as $$
     p.full_name, p.campus, true
   from public.listings l
   join public.profiles p on p.id = l.seller_id
+  -- The removed_at/withdrawn_at tests repeat is_live inline so the planner can use
+  -- listings_live_page, whose predicate is exactly these two.
   where l.removed_at is null and l.withdrawn_at is null and public.is_live(l)
     -- strpos, not ilike: % and _ in the query stay plain text.
     and (coalesce(btrim(p_query), '') = ''
@@ -105,6 +107,8 @@ as $$
   limit least(greatest(coalesce(p_limit, 20), 1), 100);
 $$;
 
+-- The description limit is listings_description_check (K-04, 500). It was validated
+-- on every row when added (#82), so an unchanged description always passes it.
 -- Edit (D-28, K-06): name, category, sale/donation and photos are not parameters, so
 -- they cannot change. Added or removed stock moves stock_left with it; stock below the
 -- units already taken fails listings_stock_left. A price drop is struck through by

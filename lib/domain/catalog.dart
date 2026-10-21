@@ -241,6 +241,7 @@ typedef MyListing = ({
   String? warranty,
   List<String> specs,
   List<String> photos,
+  DateTime createdAt,
   DateTime expiresAt,
   DateTime? removedAt,
   String? removalReason,
@@ -253,16 +254,25 @@ enum ListingStatus {
   soldOut,
   expired,
   removed,
-  withdrawn;
+  withdrawn,
+  // The seller is frozen or no longer approved (K-26); the server hides the
+  // listing and refuses edit and relist.
+  hidden;
 
   String get copyKey => 'listingStatus_$name';
 }
 
-/// Removed by an admin outranks withdrawn, which outranks expired, which
-/// outranks sold out: expired stays relistable even with no stock left.
-ListingStatus listingStatus(MyListing l, DateTime now) {
+/// Removed by an admin outranks withdrawn, which outranks a hidden seller
+/// ([sellerListed] false: frozen or not approved), then expired, then sold
+/// out: expired stays relistable even with no stock left.
+ListingStatus listingStatus(
+  MyListing l,
+  DateTime now, {
+  bool sellerListed = true,
+}) {
   if (l.removedAt != null) return ListingStatus.removed;
   if (l.withdrawnAt != null) return ListingStatus.withdrawn;
+  if (!sellerListed) return ListingStatus.hidden;
   if (!l.expiresAt.isAfter(now)) return ListingStatus.expired;
   if (l.stockLeft <= 0) return ListingStatus.soldOut;
   return ListingStatus.live;
@@ -276,9 +286,29 @@ int daysLeft(MyListing l, DateTime now) {
 }
 
 bool canEditListing(ListingStatus s) =>
-    s != ListingStatus.removed && s != ListingStatus.withdrawn;
+    s == ListingStatus.live ||
+    s == ListingStatus.soldOut ||
+    s == ListingStatus.expired;
 
-bool canWithdrawListing(ListingStatus s) => canEditListing(s);
+/// A hidden seller may still withdraw.
+bool canWithdrawListing(ListingStatus s) =>
+    canEditListing(s) || s == ListingStatus.hidden;
+
+/// K7 order: by status, newest first within one; computed once per load.
+List<(MyListing, ListingStatus)> sortMyListings(
+  List<MyListing> listings,
+  DateTime now, {
+  bool sellerListed = true,
+}) =>
+    [
+      for (final l in listings)
+        (l, listingStatus(l, now, sellerListed: sellerListed)),
+    ]..sort((a, b) {
+      final byStatus = a.$2.index.compareTo(b.$2.index);
+      return byStatus != 0
+          ? byStatus
+          : b.$1.createdAt.compareTo(a.$1.createdAt);
+    });
 
 /// K-07: free, another 60 days.
 bool canRelistListing(ListingStatus s) => s == ListingStatus.expired;
@@ -302,7 +332,8 @@ typedef ListingEdit = ({
 });
 
 /// Rule 1 on the edited fields, and stock no lower than the units already
-/// taken (update_listing enforces the same).
+/// taken (update_listing enforces the same). An unchanged description is
+/// never an error: it was valid when listed.
 Set<ListingField> validateEdit(MyListing l, ListingEdit e) {
   final errors = validateListing((
     isDonation: l.isDonation,
@@ -315,6 +346,7 @@ Set<ListingField> validateEdit(MyListing l, ListingEdit e) {
     stock: e.stock,
     specs: e.specs,
   )).difference(lockedAfterListing);
+  if (e.description == l.description) errors.remove(ListingField.description);
   final stock = e.stock;
   if (stock != null && stock < l.stock - l.stockLeft) {
     errors.add(ListingField.stock);
