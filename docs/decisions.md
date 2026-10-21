@@ -456,3 +456,98 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Pembekuan akun disimpan di kolom terpisah, bukan status akun, dan butuh persetujuan dua admin (#76).
 - Banding lewat Bantuan, diperiksa admin lain.
 - Barang terlarang: alkohol, rokok/vape, makanan, hewan, dan obat.
+
+---
+
+## D-34 — Listing: pencarian, foto, edit, dan tayang ulang
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-02–K-07)
+
+**Keputusan:**
+- Label kategori tetap di `lib/config/copy.dart`. Aplikasi mengubah kata kunci yang cocok dengan label kategori (bahasa aktif) menjadi filter kode kategori; server mencari nama barang dan nama penjual (K-02).
+- Halaman profil penjual publik belum dibuat untuk Festival; detail barang menampilkan nama, kampus, dan Verified (K-03).
+- Deskripsi maksimal 500 karakter, mengikuti desain Tambah Barang (K-04).
+- Foto listing: aplikasi menerima JPEG, PNG, dan WebP, lalu mengonversinya ke JPEG dan membuang metadata lokasi sebelum unggah. Bucket hanya menerima JPEG (K-05).
+- Setelah tayang, nama barang, kategori, jenis (jual/donasi), dan foto tidak bisa diubah (K-06).
+- Listing kedaluwarsa (60 hari, D-28) bisa ditayangkan ulang gratis tanpa memotong kuota; masa tayang mulai lagi 60 hari (K-07, jawaban kuesioner 2.10).
+
+---
+
+## D-35 — Kuota dan pembayaran: rincian
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-08–K-10). K-11 menunggu persetujuan CFO.
+
+**Keputusan:**
+- "1 listing gratis" (D-29) = saldo kuota awal 1 yang diberikan sekali saat akun pertama kali `approved` (K-08).
+- Gambar QRIS disimpan di storage publik supaya bisa diganti tanpa rilis ulang APK; tidak di-commit sampai CFO setuju (K-09).
+- Bukti bayar dihapus setelah dikonfirmasi atau ditolak; bukti yang tidak diputuskan dihapus paling lambat 30 hari. Yang disimpan hanya nominal/alasan, waktu, dan admin (K-10).
+- Pembelian paket, Boost, dan Featured memakai satu jalur pembayaran dan satu layar admin.
+
+**Belum diputuskan:** nominal bayar yang tidak cocok (K-11). Usulan: ditolak dengan alasan dan dikembalikan manual oleh CFO. Menunggu persetujuan CFO karena menyentuh aturan refund D-29.
+
+---
+
+## D-36 — Pesanan: rincian Booking 24 Jam dan Beli Sekarang
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-12–K-19)
+
+**Keputusan:**
+- Batas 24 jam booking berlaku sampai penjual menerima (Diproses); setelah itu patokannya waktu COD (K-12).
+- Perpanjangan booking (sekali, D-30) menambah 24 jam (K-13).
+- Booking yang diterima penjual sudah menjadi transaksi berjalan; tidak ada konversi ke Beli Sekarang (K-14).
+- Pesanan Beli Sekarang yang tidak diterima penjual dalam 24 jam batal otomatis (K-15).
+- Daftar pesanan penjual = tab Penjualan di Pesanan Saya (K-16).
+- Penjual wajib mengisi tanggal-jam COD saat menerima pesanan; kedua pihak bisa mengubahnya selama Diproses. Lokasi COD diisi pembeli saat memesan (K-17).
+- Alasan batal dari daftar kode tetap (berubah pikiran, barang tidak sesuai, tidak bisa bertemu, sudah terjual di luar, lainnya) + catatan, wajib bila Lainnya (K-18).
+- Penjual donasi boleh membatalkan pemesan pertama dengan alasan; unitnya kembali ke stok (K-19).
+
+---
+
+## D-37 — Chat dan notifikasi untuk Festival
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-01, K-20, K-21)
+
+**Keputusan:**
+- Badge jumlah di tab Pesanan Saya dan Chat masuk lingkup Festival, tanpa push. Daftar notifikasi lengkap dibangun bila sempat. Email untuk hal penting dikirim setelah penyedia email dipilih (D-40). Ini memenuhi D-33 secara bertahap (K-01).
+- Peringatan kontak mendeteksi nomor HP, `wa.me`, `t.me`, `@username`, dan kata seperti "WA", "whatsapp", "line", "ig", "telegram", dengan batas kata. Tes wajib memuat contoh yang tidak boleh terdeteksi: "online", "deadline", "big", "1.500.000" (K-20).
+- Pesan chat maksimal 1.000 karakter (K-21).
+
+---
+
+## D-38 — Moderasi: lapor, penurunan listing, pembekuan
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-22–K-28)
+
+**Keputusan:**
+- Alasan lapor: barang terlarang, penipuan, barang tidak sesuai, konten tidak pantas, spam, lainnya (K-22).
+- Pesanan berjalan pada listing yang diturunkan admin dibatalkan otomatis (K-23).
+- Admin hanya bisa membaca pesan pada percakapan yang dilaporkan, selama laporan terbuka. Kebijakan Privasi wajib memuat aturan ini sebelum aplikasi dibuka ke pengguna (K-24).
+- Mencairkan pembekuan juga butuh dua admin berbeda (K-25).
+- Akun dibekukan: listing tidak tayang; tidak bisa memasang barang, memesan, chat, atau melapor; pesanan berjalan dibatalkan otomatis; tetap bisa masuk dan melihat katalog dengan banner dan tombol Bantuan (K-26).
+- Tidak ada pengumuman promo selama Festival; Admin BeeKas hanya untuk informasi layanan (K-27).
+- Menu Profil "Alamat Saya" dan "Metode Pembayaran (COD)" dihapus (K-28, D-22.3).
+
+---
+
+## D-39 — Definisi Boost dan Featured
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-29–K-36)
+
+**Keputusan:**
+- **Boost:** listing naik ke urutan atas di Rekomendasi Beranda dan hasil Kategori selama 3 hari, dengan label "Dipromosikan". Hasil pencarian dengan kata kunci tidak terpengaruh (K-29–K-31).
+- **Featured:** listing tampil di banner Beranda selama 3 hari, maksimal 5 bersamaan; bila penuh, pembelian ditolak sebelum bayar (K-29, K-32).
+- Masa 3 hari mulai saat admin mengonfirmasi pembayaran. Boleh untuk donasi (K-33). Promosi berhenti tanpa refund bila listing habis, kedaluwarsa, atau diturunkan, kecuali karena kesalahan admin (K-34). Bisa diperpanjang; masa ditambahkan di ujung (K-35).
+- Urutan katalog: boost aktif dulu, lalu terbaru; cursor paginasi ikut menyimpan status boost supaya listing tidak tampil dua kali (K-36).
+
+---
+
+## D-40 — Supabase cloud dan distribusi Festival
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PRD katalog, PR #79: K-37–K-41)
+
+**Keputusan:**
+- Region Singapura. Paket diputuskan CFO. Bila Free, risikonya project di-pause saat tidak dipakai dan tidak ada backup harian; backup manual wajib (K-37).
+- Penyedia email adalah penghambat Festival: OTP pendaftaran di cloud butuh penyedia email sendiri. Tiket T0 memilih dan memasangnya sebelum pindah ke cloud, dengan batas paket gratis dicek dari dokumentasi resmi penyedia. Pilihan penyedia tetap diajukan untuk disetujui (K-38).
+- Peran admin cloud diberikan dengan SQL manual satu kali per orang; satu akun per anggota tim (K-39, D-21).
+- APK dibagikan langsung lewat QR di booth, bukan Play Store. Kunci signing rilis dibuat di T12 dan disimpan di luar repo (K-40).
+- Backup `pg_dump` manual sebelum Festival dan setiap hari selama Festival bila memakai paket Free (K-41).
