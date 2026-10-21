@@ -138,18 +138,21 @@ void main() {
     expect(find.byType(BeeStepper), findsOneWidget);
   });
 
-  testWidgets('L11 offers Lihat katalog and Keluar', (tester) async {
-    var browsed = false, signedOut = false;
+  testWidgets('L11 offers Lihat katalog, Keluar and Bantuan', (tester) async {
+    var browsed = false, signedOut = false, helped = false;
     await _pump(
       tester,
       PendingScreen(
         onBrowse: () => browsed = true,
+        onHelp: () => helped = true,
         onSignOut: () => signedOut = true,
       ),
     );
     expect(find.text(t('pendingTitle')), findsOneWidget);
     await tester.tap(find.text(t('browseCatalog')));
     await tester.tap(find.text(t('signOut')));
-    expect(browsed && signedOut, isTrue);
+    await tester.ensureVisible(find.text(t('help')));
+    await tester.tap(find.text(t('help')));
+    expect(browsed && signedOut && helped, isTrue);
   });
 }

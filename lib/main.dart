@@ -13,6 +13,7 @@ import 'domain/registration.dart';
 import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/consent_screen.dart';
+import 'screens/help.dart';
 import 'screens/legal_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/otp_screen.dart';
@@ -186,6 +187,7 @@ Widget _screenFor(BuildContext context, Account account) =>
           ),
         ),
         onBrowse: () => _catalog(context),
+        onHelp: () => _help(context),
         onSignOut: () => _signOut(context),
       ),
       // ponytail: Beranda is another PRD; a placeholder until then.
@@ -296,8 +298,24 @@ Widget _photos(
   ),
 );
 
+// Read at tap time: after Kirim, L11 has no Account in hand.
+Future<void> _help(BuildContext context) async {
+  try {
+    final account = await _auth.account();
+    if (context.mounted) await openHelp(context, account);
+  } on SignupException {
+    if (context.mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => const HelpAddressDialog(),
+      );
+    }
+  }
+}
+
 Widget _pendingScreen(BuildContext context) => PendingScreen(
   onBrowse: () => _catalog(context),
+  onHelp: () => _help(context),
   onSignOut: () => _signOut(context),
 );
 

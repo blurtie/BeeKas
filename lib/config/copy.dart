@@ -456,6 +456,12 @@ Changes to these terms are announced in the app. These terms are governed by the
     'approve': 'Approve',
     'approveConfirm': 'Approve {name}? They get full access to BeeKas.',
     'cancel': 'Cancel',
+    'close': 'Close',
+    'help': 'Help',
+    'helpNoMailTitle': 'No email app',
+    'helpNoMailBody': 'Email us from any email app at this address:',
+    'helpCopy': 'Copy address',
+    'helpCopied': 'Address copied.',
     'approved': '{name} is approved.',
   },
   Lang.id: {
@@ -899,6 +905,12 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'approveConfirm':
         'Setujui {name}? Akun ini akan mendapat akses penuh ke BeeKas.',
     'cancel': 'Batal',
+    'close': 'Tutup',
+    'help': 'Bantuan',
+    'helpNoMailTitle': 'Tidak ada aplikasi email',
+    'helpNoMailBody': 'Kirim email dari aplikasi email apa pun ke alamat ini:',
+    'helpCopy': 'Salin alamat',
+    'helpCopied': 'Alamat disalin.',
     'approved': '{name} disetujui.',
   },
 };
