@@ -21,8 +21,8 @@ BeeKas adalah marketplace jual dan donasi barang bekas untuk komunitas BINUS. Ke
 - Kartu digital (D-14).
 - Verifikasi nomor HP.
 - Pencocokan wajah otomatis.
-- Fitur katalog itu sendiri. Bagian ini hanya mengatur siapa yang boleh mengaksesnya.
-- Jurusan dan NIM tidak dikumpulkan. Angkatan (BINUSIAN) tidak dikumpulkan saat pendaftaran atau verifikasi, tetapi member boleh mengisinya sendiri di Edit Profil dari daftar label BINUSIAN (misalnya B28). Isian ini opsional dan tidak diverifikasi. Verifikasi hanya memastikan pengguna adalah Binusian.
+- Fitur katalog itu sendiri. Bagian ini hanya mengatur siapa yang boleh mengaksesnya. (Lihat D-27, D-28.)
+- Jurusan dan NIM tidak dikumpulkan. Angkatan (BINUSIAN) tidak dikumpulkan saat pendaftaran atau verifikasi, tetapi member boleh mengisinya sendiri di Edit Profil dari daftar label BINUSIAN (misalnya B28). Isian ini opsional dan tidak diverifikasi. Verifikasi hanya memastikan pengguna adalah Binusian. (Lihat D-32.)
 
 ## 4. Alur
 
@@ -208,7 +208,7 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
   - HP 1 lalu menerima email di mail server lokal dan bisa memakai semua fitur.
 - Jalur penolakan: menolak dengan alasan, alasan terlihat di HP 1, kirim ulang berhasil, dan status kembali `pending`.
 - Tamu, `incomplete`, `pending`, dan `rejected` tidak bisa menghubungi penjual atau memasang barang, baik di aplikasi maupun langsung lewat API (RLS).
-  - Uji RLS untuk menghubungi penjual dan memasang barang ditunda ke PRD katalog, karena tabel listing belum ada. Di bagian ini aturannya diuji di `lib/domain/` saja, dan tombol "Lihat katalog" serta beranda `approved` mengarah ke layar placeholder.
+  - Uji RLS untuk menghubungi penjual dan memasang barang ditunda ke PRD katalog, karena tabel listing belum ada. (Lihat D-28.) Di bagian ini aturannya diuji di `lib/domain/` saja, dan tombol "Lihat katalog" serta beranda `approved` mengarah ke layar placeholder.
 - Foto kartu dan selfie tidak bisa dibaca oleh akun non-admin.
 - Semua aturan di bagian 6 punya unit test di `test/domain/`.
 - Bahasa bisa diganti EN/ID di L1–L3 dan pilihan diingat.
@@ -224,9 +224,9 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 
 ## 10. Dicatat untuk sesi berikutnya (di luar lingkup login)
 
-- Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web). (Lihat D-22.)
-- Ikon favorit dan notifikasi di header Home.
+- Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web). (Lihat D-22, D-31.)
+- Ikon favorit dan notifikasi di header Home. (Lihat D-28, D-33.)
 - Kartu digital member: ide terbuka, belum punya fungsi (D-14).
-- Sesi katalog: nomor WhatsApp penjual hanya terlihat oleh member `approved` (D-06). Pertimbangkan pengingat bagi penjual bahwa nomornya akan terlihat oleh pembeli. (Lihat D-22.)
-- Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri".
+- Komunitas pembeli–penjual lewat chat di aplikasi (D-31); nomor HP tidak pernah ditampilkan ke pengguna lain (D-26).
+- Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri". (Lihat D-32.)
 - Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama. (Lihat D-22.)
