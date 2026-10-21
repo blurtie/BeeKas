@@ -46,6 +46,8 @@ enum SignupError {
   // no longer approved or is frozen (the app cannot see freezes).
   noQuota('errorNoQuota'),
   notAllowed('errorNotAllowedToList'),
+  // From confirm_payment: the form checks it first.
+  invalidAmount('errorInvalidAmount'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -75,6 +77,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('over_request_rate_limit', _) => SignupError.rateLimited,
     ('23514', 'not_pending') => SignupError.notPending,
     ('23514', 'reason_missing') => SignupError.reasonMissing,
+    ('23514', 'invalid_amount') => SignupError.invalidAmount,
     ('23514', 'note_missing') => SignupError.noteMissing,
     ('23514', 'no_phone') => SignupError.noPhone,
     ('23514', 'note_has_phone') => SignupError.noteHasPhone,

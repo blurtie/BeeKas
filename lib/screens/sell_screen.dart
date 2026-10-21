@@ -442,23 +442,3 @@ class _PhotoTile extends StatelessWidget {
     );
   }
 }
-
-/// K8 placeholder: #84 builds the package purchase here.
-class BuyQuotaScreen extends StatelessWidget {
-  const BuyQuotaScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: BeeHeader(title: Text(t('buyQuotaTitle'))),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(BeeSpacing.screenX),
-          child: Center(
-            child: Text(t('buyQuotaSoon'), textAlign: TextAlign.center),
-          ),
-        ),
-      ),
-    );
-  }
-}

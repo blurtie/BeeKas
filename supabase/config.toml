@@ -132,6 +132,14 @@ file_size_limit = "5MiB"
 allowed_mime_types = ["image/jpeg"]
 objects_path = "./seed-photos"
 
+# Local only: an example QRIS clearly marked "not a real QRIS" (#84, K-09). The real image
+# is uploaded on cloud by the project owner (docs/cloud-checklist.md 8).
+[storage.buckets.payment-qris]
+public = true
+file_size_limit = "1MiB"
+allowed_mime_types = ["image/png", "image/jpeg"]
+objects_path = "./seed-qris"
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

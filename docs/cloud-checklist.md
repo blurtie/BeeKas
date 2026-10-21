@@ -85,3 +85,18 @@ Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:0
    order by start_time desc limit 5;
    ```
    Kegagalan per percobaan tercatat di log function sebagai `delete-expired-photos: <profile>/<attempt> failed: ...` dan dicoba lagi pada run berikutnya.
+
+## 8. Pembayaran QRIS (#84, D-29, D-35)
+
+1. **Gambar QRIS (K-09).** Setelah CFO setuju, unggah gambar QRIS asli ke bucket publik `payment-qris` dengan nama tepat `qris.png` (PNG atau JPEG, ≤ 1 MB) lewat **Storage** di dashboard. Gambar dan nama CFO **tidak** di-commit. Gambar contoh `supabase/seed-qris/qris.png` ("CONTOH, BUKAN QRIS ASLI") hanya untuk lokal dan tidak boleh diunggah ke cloud. Mengganti gambar cukup menimpa file yang sama; aplikasi tidak perlu dirilis ulang.
+2. **Penghapusan bukti bayar (K-10).** Bukti di bucket privat `payment-proofs` dihapus oleh Edge Function `delete-expired-photos` yang sama (langkah 7): bukti pembayaran yang sudah dikonfirmasi/ditolak pada run harian berikutnya, dan bukti yang belum diputuskan (atau tanpa pembayaran) paling lambat hari ke-30. Tidak ada secret atau entri Vault baru; cron dan secret dari langkah 7 dipakai. Deploy migration dan function bersamaan: `supabase db push`, lalu langsung `supabase functions deploy delete-expired-photos --no-verify-jwt`.
+3. Pemantauan:
+   ```sql
+   -- Bukti yang sudah jatuh tempo tapi belum terhapus (harus kosong setelah run harian)
+   select * from public.expired_payment_proofs();
+
+   -- Pembayaran menunggu lebih dari 24 jam (janji 1×24 jam, D-29)
+   select id, member_id, created_at from public.payments
+   where status = 'pending' and created_at < now() - interval '24 hours' order by created_at;
+   ```
+   Kegagalan tercatat di log function sebagai `delete-expired-photos: payment proofs failed: ...` dan dicoba lagi pada run berikutnya.

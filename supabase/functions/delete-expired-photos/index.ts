@@ -3,6 +3,7 @@
 // Called daily by pg_cron. Files go through the Storage API; a SQL DELETE on
 // storage.objects would orphan them in the bucket. Each deletion is logged in
 // public.photo_deletions (attempt, count, time).
+// #84 (K-10): also deletes payment proofs once their payment is decided, or after 30 days.
 import { env, fromCron, rpc, serviceHeaders } from "../_shared/cron.ts";
 
 type Due = { profile_id: string; attempt: string; names: string[]; reason: "decided" | "never_submitted" };
@@ -46,5 +47,21 @@ Deno.serve(async (req) => {
       console.error(`delete-expired-photos: ${d.profile_id}/${d.attempt} failed: ${err}`);
     }
   }
-  return Response.json({ attempts: due.length, deleted });
+  // Proofs leave no record: the payment row already keeps the amount/reason, time and admin.
+  let proofs = 0;
+  try {
+    const names: string[] = await rpc("expired_payment_proofs", {});
+    if (names.length > 0) {
+      const res = await fetch(`${env("SUPABASE_URL")}/storage/v1/object/payment-proofs`, {
+        method: "DELETE",
+        headers: serviceHeaders(),
+        body: JSON.stringify({ prefixes: names }),
+      });
+      if (!res.ok) throw new Error(`storage ${res.status}: ${await res.text()}`);
+      proofs = (await res.json()).length;
+    }
+  } catch (err) {
+    console.error(`delete-expired-photos: payment proofs failed: ${err}`);
+  }
+  return Response.json({ attempts: due.length, deleted, proofs });
 });

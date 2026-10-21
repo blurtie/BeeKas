@@ -14,11 +14,15 @@ class ReviewListScreen extends StatefulWidget {
     super.key,
     required this.repository,
     required this.onSignOut,
+    this.onPayments,
     this.now = DateTime.now,
   });
 
   final ReviewRepository repository;
   final VoidCallback onSignOut;
+
+  /// K18 Pembayaran (#84). This is the admin home, so only admins see it.
+  final VoidCallback? onPayments;
   final DateTime Function() now;
 
   @override
@@ -68,6 +72,11 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
       appBar: AppBar(
         title: Text(t('reviewTitle')),
         actions: [
+          if (widget.onPayments != null)
+            TextButton(
+              onPressed: widget.onPayments,
+              child: Text(t('paymentsAdminTitle')),
+            ),
           IconButton(
             tooltip: t('signOut'),
             icon: const Icon(Icons.logout),
