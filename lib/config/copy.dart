@@ -709,6 +709,8 @@ Changes to these terms are announced in the app. These terms are governed by the
         'This order changed in the meantime. Its current status is shown.',
     'errorNotParty': "You're not part of this order.",
     'errorCodTimeMissing': 'Set the COD time.',
+    'errorCodTimePast': 'Choose a COD time from now on.',
+    'codPlaceTooLong': 'Up to 200 characters.',
   },
   Lang.id: {
     'back': 'Kembali',
@@ -1401,5 +1403,7 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
         'Pesanan ini sudah berubah. Status terbarunya ditampilkan.',
     'errorNotParty': 'Kamu bukan pihak dalam pesanan ini.',
     'errorCodTimeMissing': 'Isi waktu COD.',
+    'errorCodTimePast': 'Pilih waktu COD mulai sekarang.',
+    'codPlaceTooLong': 'Maksimal 200 karakter.',
   },
 };

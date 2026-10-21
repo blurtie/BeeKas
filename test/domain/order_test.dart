@@ -148,6 +148,16 @@ void main() {
       expect(isValidCancellation(CancelReason.other, 'a' * 501), isFalse);
     });
 
+    test('length counts characters as the database does (code points)', () {
+      // A family emoji is one grapheme but 7 code points.
+      const family = '\u{1F468}‍\u{1F469}‍\u{1F467}‍\u{1F466}';
+      expect(isValidCancellation(CancelReason.other, family * 72), isFalse);
+      expect(isValidCancellation(CancelReason.other, family * 71), isTrue);
+      expect(isValidCodPlace(family * 29), isFalse);
+      expect(isValidCodPlace(family * 28), isTrue);
+      expect(isValidCodPlace(''), isTrue, reason: 'the place is optional');
+    });
+
     test('no reason is not a cancellation', () {
       expect(isValidCancellation(null, 'x'), isFalse);
     });

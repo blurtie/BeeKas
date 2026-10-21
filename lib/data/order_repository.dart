@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/order.dart';
 import '../domain/registration.dart';
+import '../domain/signup_error.dart';
 import 'signup_repository.dart';
 
 /// One of the member's orders as Pesanan Saya (K12) and Detail Pesanan (K13)
@@ -41,8 +42,8 @@ OrderRole roleOf(Order o) => o.isBuyer ? OrderRole.buyer : OrderRole.seller;
 /// Orders (#85). The backend checks every rule again; failures are
 /// [SignupException]s.
 abstract interface class OrderRepository {
-  /// place_order: returns the new order's id.
-  Future<String> place(
+  /// place_order: returns when the server's 24-hour hold ends (K10).
+  Future<DateTime> place(
     String listingId,
     OrderKind kind,
     Campus codCampus,
@@ -75,13 +76,13 @@ class SupabaseOrderRepository implements OrderRepository {
       guardBackend(() => _client.rpc<void>(name, params: params));
 
   @override
-  Future<String> place(
+  Future<DateTime> place(
     String listingId,
     OrderKind kind,
     Campus codCampus,
     String codPlace,
-  ) => guardBackend(
-    () => _client.rpc<String>(
+  ) => guardBackend(() async {
+    final until = await _client.rpc<String>(
       'place_order',
       params: {
         'p_listing': listingId,
@@ -89,12 +90,23 @@ class SupabaseOrderRepository implements OrderRepository {
         'p_cod_campus': codCampus.code,
         'p_cod_place': codPlace.trim(),
       },
-    ),
-  );
+    );
+    return DateTime.parse(until);
+  });
 
   @override
   Future<List<Order>> mine() => guardBackend(() async {
     final rows = await _client.rpc<List<dynamic>>('my_orders');
+    try {
+      return _orders(rows);
+    } on Object {
+      // A row this app version cannot read (a new campus or status): the
+      // screens show their error state instead of failing half-way.
+      throw const SignupException(SignupError.unknown);
+    }
+  });
+
+  List<Order> _orders(List<dynamic> rows) {
     final bucket = _client.storage.from('listing-photos');
     DateTime? time(Object? v) => v == null ? null : DateTime.parse(v as String);
     return [
@@ -127,7 +139,7 @@ class SupabaseOrderRepository implements OrderRepository {
           otherName: row['other_name'] as String,
         ),
     ];
-  });
+  }
 
   @override
   Future<void> accept(String id, DateTime codAt) => _rpc('accept_order', {

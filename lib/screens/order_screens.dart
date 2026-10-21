@@ -60,6 +60,15 @@ class _LocationDialog extends StatefulWidget {
 class _LocationDialogState extends State<_LocationDialog> {
   late var _campus = widget.campus;
   late final _place = TextEditingController(text: widget.place);
+  var _tooLong = false;
+
+  void _save() {
+    if (!isValidCodPlace(_place.text)) {
+      setState(() => _tooLong = true);
+      return;
+    }
+    Navigator.pop(context, (_campus, _place.text.trim()));
+  }
 
   @override
   void dispose() {
@@ -87,10 +96,11 @@ class _LocationDialogState extends State<_LocationDialog> {
           const SizedBox(height: 16),
           TextField(
             controller: _place,
-            maxLength: maxCodPlace,
+            // Counted like the database (code points), not by maxLength.
             decoration: InputDecoration(
               labelText: t('codPlace'),
               hintText: t('codPlaceHint'),
+              errorText: _tooLong ? t('codPlaceTooLong') : null,
             ),
           ),
         ],
@@ -100,11 +110,7 @@ class _LocationDialogState extends State<_LocationDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(t('cancel')),
         ),
-        TextButton(
-          onPressed: () =>
-              Navigator.pop(context, (_campus, _place.text.trim())),
-          child: Text(t('save')),
-        ),
+        TextButton(onPressed: _save, child: Text(t('save'))),
       ],
     );
   }
@@ -194,10 +200,28 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-/// Mixin for the two order forms: a busy flag and the refusal text.
+/// K9 and K11: the Lokasi COD being chosen (default: the listing's
+/// campus), a busy flag and the refusal text.
 mixin _Placing<T extends StatefulWidget> on State<T> {
+  Listing get listing;
+  late var campus = listing.campus;
+  var place = '';
   var busy = false;
   String? error;
+
+  Widget locationCard() => _LocationCard(
+    campus: campus,
+    place: place,
+    onChange: () async {
+      final picked = await _editLocation(context, campus, place);
+      if (picked != null) {
+        setState(() {
+          campus = picked.$1;
+          place = picked.$2;
+        });
+      }
+    },
+  );
 
   Future<void> run(Future<void> Function() call) async {
     setState(() {
@@ -232,14 +256,18 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen>
     with _Placing<BookingScreen> {
-  late var _campus = widget.listing.campus;
-  var _place = '';
+  @override
+  Listing get listing => widget.listing;
 
   Future<void> _book() => run(() async {
     final l = widget.listing;
-    await widget.repository.place(l.id, OrderKind.booking, _campus, _place);
+    final until = await widget.repository.place(
+      l.id,
+      OrderKind.booking,
+      campus,
+      place,
+    );
     if (!mounted) return;
-    final until = holdUntil(widget.now());
     await Navigator.pushReplacement(
       context,
       MaterialPageRoute<void>(
@@ -335,19 +363,7 @@ class _BookingScreenState extends State<BookingScreen>
               ),
             ),
             const SizedBox(height: 16),
-            _LocationCard(
-              campus: _campus,
-              place: _place,
-              onChange: () async {
-                final picked = await _editLocation(context, _campus, _place);
-                if (picked != null) {
-                  setState(() {
-                    _campus = picked.$1;
-                    _place = picked.$2;
-                  });
-                }
-              },
-            ),
+            locationCard(),
             const SizedBox(height: 24),
             if (error != null) ...[
               BeeFormError(error!),
@@ -563,15 +579,15 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen>
     with _Placing<CheckoutScreen> {
-  late var _campus = widget.listing.campus;
-  var _place = '';
+  @override
+  Listing get listing => widget.listing;
 
   Future<void> _confirm() => run(() async {
     await widget.repository.place(
       widget.listing.id,
       OrderKind.buy,
-      _campus,
-      _place,
+      campus,
+      place,
     );
     if (!mounted) return;
     await Navigator.pushReplacement(
@@ -603,19 +619,7 @@ class _CheckoutScreenState extends State<CheckoutScreen>
       body: ListView(
         padding: const EdgeInsets.all(_pad),
         children: [
-          _LocationCard(
-            campus: _campus,
-            place: _place,
-            onChange: () async {
-              final picked = await _editLocation(context, _campus, _place);
-              if (picked != null) {
-                setState(() {
-                  _campus = picked.$1;
-                  _place = picked.$2;
-                });
-              }
-            },
-          ),
+          locationCard(),
           const SizedBox(height: 16),
           Text(t('paymentMethod'), style: textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -706,9 +710,6 @@ class _CheckoutScreenState extends State<CheckoutScreen>
   }
 }
 
-/// The K12 chips (D-36): every status, or one.
-enum _Filter { all, waiting, processing, completed, cancelled }
-
 /// K12 Pesanan Saya (daftar-8 with the COD statuses): Pembelian and
 /// Penjualan tabs (K-16), filtered by status.
 class OrdersScreen extends StatefulWidget {
@@ -726,7 +727,9 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _orders = widget.repository.mine();
-  var _filter = _Filter.all;
+
+  /// The K12 chip (D-36); null is Semua.
+  OrderStatus? _filter;
 
   void _reload() {
     setState(() {
@@ -742,18 +745,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
           order: order,
           repository: widget.repository,
           now: widget.now,
+          // K13 already read the orders again after its action.
+          onRefreshed: (orders) {
+            if (!mounted) return;
+            setState(() {
+              _orders = Future.value(orders);
+            });
+          },
         ),
       ),
     );
-    if (mounted) _reload();
   }
 
   Widget _list(List<Order> all, bool buyer) {
     final orders = [
       for (final o in all)
-        if (o.isBuyer == buyer &&
-            (_filter == _Filter.all || o.status.name == _filter.name))
-          o,
+        if (o.isBuyer == buyer && (_filter == null || o.status == _filter)) o,
     ];
     return RefreshIndicator(
       onRefresh: () async => _reload(),
@@ -765,9 +772,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
             child: Row(
               spacing: 8,
               children: [
-                for (final f in _Filter.values)
+                for (final f in [null, ...OrderStatus.values])
                   ChoiceChip(
-                    label: Text(t('orderFilter_${f.name}')),
+                    label: Text(t('orderFilter_${f?.name ?? 'all'}')),
                     selected: _filter == f,
                     onSelected: (_) => setState(() => _filter = f),
                   ),
@@ -961,10 +968,14 @@ class OrderDetailScreen extends StatefulWidget {
     required this.order,
     required this.repository,
     this.now = DateTime.now,
+    this.onRefreshed,
   });
   final Order order;
   final OrderRepository repository;
   final DateTime Function() now;
+
+  /// The orders as read after an action, for the K12 list.
+  final ValueChanged<List<Order>>? onRefreshed;
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
@@ -976,31 +987,39 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _act(Future<void> Function() call) async {
     setState(() => _busy = true);
-    String message;
+    var message = t('errorSignupUnknown');
     try {
       await call();
       message = t('orderUpdated');
     } on SignupException catch (e) {
       message = _errorText(e);
+    } finally {
+      // Read once, also after a refusal: the order may have moved on.
+      try {
+        final fresh = await widget.repository.mine();
+        _order = fresh.firstWhere(
+          (o) => o.id == _order.id,
+          orElse: () => _order,
+        );
+        widget.onRefreshed?.call(fresh);
+      } on SignupException {
+        // Keep what is shown; pulling the list reads it again.
+      }
+      if (mounted) {
+        setState(() => _busy = false);
+        _snack(context, message);
+      }
     }
-    try {
-      final fresh = await widget.repository.mine();
-      _order = fresh.firstWhere((o) => o.id == _order.id, orElse: () => _order);
-    } on SignupException {
-      // Keep what is shown; the list reloads on the way back.
-    }
-    if (!mounted) return;
-    setState(() => _busy = false);
-    _snack(context, message);
   }
 
   /// A date, then a time, from now on; null when backed out.
   Future<DateTime?> _pickCodTime() async {
     final now = widget.now().toLocal();
-    final start = _order.codAt?.toLocal() ?? now;
+    final codAt = _order.codAt?.toLocal();
+    final start = codAt != null && codAt.isAfter(now) ? codAt : now;
     final day = await showDatePicker(
       context: context,
-      initialDate: start.isBefore(now) ? now : start,
+      initialDate: start,
       firstDate: DateTime(now.year, now.month, now.day),
       lastDate: now.add(const Duration(days: 60)),
     );
@@ -1009,8 +1028,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       context: context,
       initialTime: TimeOfDay.fromDateTime(start),
     );
-    if (time == null) return null;
-    return DateTime(day.year, day.month, day.day, time.hour, time.minute);
+    if (time == null || !mounted) return null;
+    final at = DateTime(day.year, day.month, day.day, time.hour, time.minute);
+    // The current minute still counts; anything earlier is refused (K-17).
+    final minute = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    if (at.isBefore(minute)) {
+      _snack(context, t('errorCodTimePast'));
+      return null;
+    }
+    return at;
   }
 
   Future<void> _run(OrderAction action) async {
@@ -1240,7 +1266,6 @@ class _CancelDialogState extends State<_CancelDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _note,
-              maxLength: maxCancelNote,
               maxLines: 3,
               minLines: 1,
               decoration: InputDecoration(labelText: t('cancelNote')),

@@ -72,6 +72,17 @@ void main() {
     }
   });
 
+  testWidgets('approved without an order backend: Segera hadir', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      ListingDetailScreen(listing: _macbook, status: AccountStatus.approved),
+    );
+    await _tapText(tester, t('booking24h'));
+    expect(find.text(t('comingSoon')), findsOneWidget);
+  });
+
   group('K9-K10 Booking 24 Jam', () {
     testWidgets('confirm, then the countdown', (tester) async {
       final repo = FakeOrderRepository();
@@ -89,13 +100,13 @@ void main() {
       expect(repo.calls, ['place Macbook Air M1 booking alam_sutera ']);
       expect(find.text(t('bookingDone')), findsOneWidget);
       expect(find.text('Macbook Air M1'), findsOneWidget);
-      // Held 24 hours from now.
-      expect(find.text('24'), findsOneWidget);
-      expect(find.text('00'), findsNWidgets(2));
+      // Counts down to the server's hold, 23:48:12 from now.
+      expect(find.text('23'), findsOneWidget);
+      expect(find.text('48'), findsOneWidget);
+      expect(find.text('12'), findsOneWidget);
       _clock = _start.add(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
-      expect(find.text('23'), findsOneWidget);
-      expect(find.text('59'), findsNWidgets(2));
+      expect(find.text('11'), findsOneWidget);
     });
 
     testWidgets('a refusal stays on K9 with the reason', (tester) async {
@@ -282,6 +293,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(repo.calls, ['accept o0']);
+      // The current minute is still allowed.
+      final local = _start.toLocal();
+      expect(
+        repo.acceptedAt,
+        DateTime(local.year, local.month, local.day, local.hour, local.minute),
+      );
       expect(find.text(t('orderStatus_processing')), findsOneWidget);
     });
 

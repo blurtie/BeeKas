@@ -60,6 +60,7 @@ enum SignupError {
   orderTransition('errorOrderTransition'),
   notParty('errorNotParty'),
   codTimeMissing('errorCodTimeMissing'),
+  codTimePast('errorCodTimePast'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -110,6 +111,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'order_transition') => SignupError.orderTransition,
     ('42501', 'not_party') => SignupError.notParty,
     ('23514', 'cod_time_missing') => SignupError.codTimeMissing,
+    ('23514', 'cod_time_past') => SignupError.codTimePast,
     _ => SignupError.unknown,
   };
 }

@@ -13,7 +13,8 @@ create type public.cancel_reason as enum (
 
 create table public.orders (
   id uuid primary key default gen_random_uuid(),
-  listing_id uuid not null references public.listings on delete cascade,
+  -- Restrict: an order keeps its listing (title, photo) for both parties.
+  listing_id uuid not null references public.listings on delete restrict,
   buyer_id uuid not null references public.profiles on delete cascade,
   seller_id uuid not null references public.profiles on delete cascade,
   kind public.order_kind not null,
@@ -64,20 +65,21 @@ create policy "orders: parties read their own"
   using ((select auth.uid()) in (buyer_id, seller_id));
 
 -- Booking 24 Jam or Beli Sekarang: one unit, held 24 hours for the seller (K-15).
+-- Answers the hold's end, which K10 counts down to.
 create function public.place_order(
   p_listing uuid,
   p_kind public.order_kind,
   p_cod_campus public.campus,
   p_cod_place text
 )
-returns uuid
+returns timestamptz
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
   v_listing public.listings;
-  v_id uuid;
+  v_until timestamptz;
 begin
   if auth.uid() is null or not public.is_listed_seller(auth.uid()) then
     raise exception 'not_allowed' using errcode = 'insufficient_privilege';
@@ -112,8 +114,8 @@ begin
     hold_until, cod_campus, cod_place)
   values (p_listing, auth.uid(), v_listing.seller_id, p_kind, v_listing.price,
     v_listing.is_donation, now() + interval '24 hours', p_cod_campus, nullif(btrim(p_cod_place), ''))
-  returning id into v_id;
-  return v_id;
+  returning hold_until into v_until;
+  return v_until;
 end;
 $$;
 
@@ -151,6 +153,30 @@ begin
 end;
 $$;
 
+-- A waiting order whose hold has run out is the timers' to cancel, even before they run.
+create function public.order_hold_over(p_order public.orders) returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select p_order.status = 'waiting' and p_order.hold_until <= now();
+$$;
+
+-- K-17: a COD time is agreed for the future.
+create function public.check_cod_time(p_cod_at timestamptz) returns void
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if p_cod_at is null then
+    raise exception 'cod_time_missing' using errcode = 'check_violation';
+  end if;
+  if p_cod_at < now() then
+    raise exception 'cod_time_past' using errcode = 'check_violation';
+  end if;
+end;
+$$;
+
 -- Terima: the seller sets the COD time agreed in chat (K-17).
 create function public.accept_order(p_id uuid, p_cod_at timestamptz)
 returns void
@@ -161,12 +187,10 @@ as $$
 declare
   v_order public.orders := public.order_for_party(p_id, 'seller');
 begin
-  if v_order.status <> 'waiting' then
+  if v_order.status <> 'waiting' or public.order_hold_over(v_order) then
     perform public.order_transition();
   end if;
-  if p_cod_at is null then
-    raise exception 'cod_time_missing' using errcode = 'check_violation';
-  end if;
+  perform public.check_cod_time(p_cod_at);
   update public.orders set status = 'processing', cod_at = p_cod_at, accepted_at = now()
     where id = p_id;
 end;
@@ -226,7 +250,7 @@ declare
   v_order public.orders := public.order_for_party(p_id, 'buyer');
 begin
   if v_order.status <> 'waiting' or v_order.kind <> 'booking'
-      or v_order.extension_requested or v_order.extended then
+      or v_order.extension_requested or v_order.extended or public.order_hold_over(v_order) then
     perform public.order_transition();
   end if;
   update public.orders set extension_requested = true where id = p_id;
@@ -243,7 +267,8 @@ as $$
 declare
   v_order public.orders := public.order_for_party(p_id, 'seller');
 begin
-  if v_order.status <> 'waiting' or not v_order.extension_requested or v_order.extended then
+  if v_order.status <> 'waiting' or not v_order.extension_requested or v_order.extended
+      or public.order_hold_over(v_order) then
     perform public.order_transition();
   end if;
   update public.orders set extended = true, hold_until = hold_until + interval '24 hours'
@@ -270,8 +295,9 @@ begin
       or (v_order.status = 'waiting' and p_cod_at is not null) then
     perform public.order_transition();
   end if;
-  if v_order.status = 'processing' and p_cod_at is null then
-    raise exception 'cod_time_missing' using errcode = 'check_violation';
+  -- An unchanged time may already be past (moving only the place after the COD).
+  if v_order.status = 'processing' and p_cod_at is distinct from v_order.cod_at then
+    perform public.check_cod_time(p_cod_at);
   end if;
   update public.orders set cod_campus = p_cod_campus,
       cod_place = nullif(btrim(p_cod_place), ''), cod_at = p_cod_at
@@ -329,6 +355,7 @@ as $$
 $$;
 
 revoke execute on function public.order_for_party(uuid, text), public.order_transition(),
+  public.order_hold_over(public.orders), public.check_cod_time(timestamptz),
   public.run_order_timers(timestamptz)
   from public, anon, authenticated;
 revoke execute on function

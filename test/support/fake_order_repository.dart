@@ -9,6 +9,7 @@ import 'package:beekas/domain/registration.dart';
 class FakeOrderRepository implements OrderRepository {
   final orders = <Order>[];
   final calls = <String>[];
+  DateTime? acceptedAt;
   final errors = <String, Object>{};
   Completer<void>? gate;
   var _ids = 0;
@@ -81,8 +82,11 @@ class FakeOrderRepository implements OrderRepository {
     otherName: o.otherName,
   );
 
+  /// What place_order answers: the hold the server set.
+  DateTime serverHold = DateTime.utc(2026, 11, 24, 9);
+
   @override
-  Future<String> place(
+  Future<DateTime> place(
     String listingId,
     OrderKind kind,
     Campus codCampus,
@@ -90,7 +94,8 @@ class FakeOrderRepository implements OrderRepository {
   ) async {
     _fail('place');
     calls.add('place $listingId ${kind.name} ${codCampus.code} $codPlace');
-    return add(kind: kind).id;
+    add(kind: kind, holdUntil: serverHold);
+    return serverHold;
   }
 
   @override
@@ -104,6 +109,7 @@ class FakeOrderRepository implements OrderRepository {
   Future<void> accept(String id, DateTime codAt) async {
     _fail('accept');
     calls.add('accept $id');
+    acceptedAt = codAt;
     _set(id, (o) => _with(o, status: OrderStatus.processing));
   }
 

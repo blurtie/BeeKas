@@ -906,7 +906,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     void soon() => showComingSoon(context);
     void order(Widget Function(OrderRepository) screen) {
       final orders = widget.orders;
-      if (!canOrder(widget.status, frozen: false) || orders == null) {
+      if (!canOrder(widget.status, frozen: false)) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
@@ -918,6 +918,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           );
         return;
       }
+      // Approved but no order backend wired (only in tests and previews).
+      if (orders == null) return soon();
       Navigator.push<void>(
         context,
         MaterialPageRoute(builder: (_) => screen(orders)),

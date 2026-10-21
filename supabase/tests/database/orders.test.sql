@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(76);
+select plan(85);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -47,6 +47,7 @@ select pg_temp.listing(4, 1, true);
 select pg_temp.listing(5, 1, true);
 select pg_temp.listing(6, 1, false, false);
 select pg_temp.listing(7, 1, false, true, now() - interval '1 day');
+select pg_temp.listing(8, 1, false);
 \set l1 '''85858585-1111-4000-8000-000000000001'''
 \set l2 '''85858585-1111-4000-8000-000000000002'''
 \set d1 '''85858585-1111-4000-8000-000000000003'''
@@ -55,7 +56,7 @@ select pg_temp.listing(7, 1, false, true, now() - interval '1 day');
 \set li '''85858585-1111-4000-8000-000000000006'''
 \set le '''85858585-1111-4000-8000-000000000007'''
 
-create function pg_temp.place(p_listing uuid, p_kind text default 'booking') returns uuid
+create function pg_temp.place(p_listing uuid, p_kind text default 'booking') returns timestamptz
 language sql as $$
   select public.place_order(p_listing, p_kind::public.order_kind, 'bandung', 'Lobi');
 $$;
@@ -102,6 +103,12 @@ select is((select row(kind, status, price, is_donation, seller_id = :s, cod_camp
   '(buy,waiting,50000,f,t,bandung,Lobi)', 'waiting, at the listing price, with the Lokasi COD');
 select is((select hold_until - created_at from public.orders where buyer_id = :b and listing_id = :l2),
   interval '24 hours', 'held 24 hours (K-15)');
+select pg_temp.act_as(:c);
+select is(pg_temp.place('85858585-1111-4000-8000-000000000002', 'buy') - now(), interval '24 hours',
+  'place_order answers the hold the server set');
+select lives_ok(format('select public.cancel_order(id, ''changed_mind'', null) from public.orders where listing_id = %L and buyer_id = auth.uid()', :l2),
+  'C cancels it again');
+reset role;
 select is(pg_temp.stock(:l2), 1, 'stock_left drops by 1');
 
 select pg_temp.act_as(:b);
@@ -142,18 +149,18 @@ select throws_ok($$ insert into public.orders (listing_id, buyer_id, seller_id, 
   '42501', null, 'members cannot write orders directly');
 reset role;
 select pg_temp.act_as(:s);
-select is((select count(*)::int from public.orders), 2, 'sellers read orders on their listings');
+select is((select count(*)::int from public.orders), 3, 'sellers read orders on their listings');
 select is((select bool_and(not is_buyer) from public.my_orders()), true, 'as the seller');
 reset role;
 select pg_temp.act_as(:c);
-select is((select count(*)::int from public.orders), 0, 'other members read none');
+select is((select count(*)::int from public.orders where buyer_id <> auth.uid()), 0, 'other members read none');
 reset role;
 set local role anon;
 select throws_ok($$ select count(*) from public.orders $$, '42501', null, 'guests read none');
 reset role;
 
 select id as o1 from public.orders where listing_id = :l1 \gset
-select id as o2 from public.orders where listing_id = :l2 \gset
+select id as o2 from public.orders where listing_id = :l2 and buyer_id = :b \gset
 
 -- Extension (booking only, once) ----------------------------------------------------------
 
@@ -191,6 +198,8 @@ select throws_ok(format('select public.accept_order(%L, now())', :'o1'),
   '42501', 'not_party', 'strangers cannot accept');
 reset role;
 select pg_temp.act_as(:s);
+select throws_ok(format('select public.accept_order(%L, now() - interval ''1 minute'')', :'o1'),
+  '23514', 'cod_time_past', 'the COD time cannot be in the past');
 select throws_ok(format('select public.accept_order(%L, null)', :'o1'),
   '23514', 'cod_time_missing', 'Terima needs the COD time (K-17)');
 select lives_ok(format('select public.accept_order(%L, now() + interval ''1 day'')', :'o1'), 'seller accepts');
@@ -209,6 +218,8 @@ select throws_ok($$ update public.orders set cod_at = null where listing_id = '8
 select pg_temp.act_as(:b);
 select lives_ok(format('select public.update_cod(%L, ''bandung'', ''Kantin'', now() + interval ''2 days'')', :'o1'),
   'buyer moves the COD while Diproses');
+select throws_ok(format('select public.update_cod(%L, ''bandung'', ''Kantin'', now() - interval ''1 minute'')', :'o1'),
+  '23514', 'cod_time_past', 'nor moved into the past');
 select throws_ok(format('select public.update_cod(%L, ''bandung'', ''Kantin'', null)', :'o1'),
   '23514', 'cod_time_missing', 'the COD time stays set while Diproses');
 select throws_ok(format('select public.update_cod(%L, ''bandung'', ''Kantin'', now())', :'o2'),
@@ -270,7 +281,7 @@ select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000004', 
 select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000005') $$,
   '23514', 'donation_limit', 'the third running donation is refused');
 reset role;
-select is((select bool_and(is_donation and price = 0)::text from public.orders where buyer_id = :c),
+select is((select bool_and(is_donation and price = 0)::text from public.orders where buyer_id = :c and listing_id <> :l2),
   'true', 'donation orders are free');
 select pg_temp.act_as(:c);
 select lives_ok(format('select public.cancel_order(id, ''changed_mind'', null) from public.orders where listing_id = %L', :d1),
@@ -278,6 +289,31 @@ select lives_ok(format('select public.cancel_order(id, ''changed_mind'', null) f
 select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000005') $$,
   'a cancelled donation no longer counts');
 reset role;
+
+-- A hold that has run out (before the timers catch it) ---------------------------------------
+
+select pg_temp.act_as(:b);
+select pg_temp.place('85858585-1111-4000-8000-000000000008');
+reset role;
+select id as o4 from public.orders where listing_id = '85858585-1111-4000-8000-000000000008' and status = 'waiting' \gset
+update public.orders set hold_until = now() where id = :'o4';
+select pg_temp.act_as(:b);
+select throws_ok(format('select public.request_extension(%L)', :'o4'),
+  '23514', 'order_transition', 'no extension once the hold ran out');
+reset role;
+update public.orders set extension_requested = true where id = :'o4';
+select pg_temp.act_as(:s);
+select throws_ok(format('select public.approve_extension(%L)', :'o4'),
+  '23514', 'order_transition', 'no approval once the hold ran out');
+select throws_ok(format('select public.accept_order(%L, now() + interval ''1 day'')', :'o4'),
+  '23514', 'order_transition', 'no Terima once the hold ran out');
+select lives_ok(format('select public.cancel_order(%L, ''changed_mind'', null)', :'o4'), 'seller clears it');
+reset role;
+
+-- Listings with orders stay -------------------------------------------------------------------
+
+select throws_ok($$ delete from public.listings where id = '85858585-1111-4000-8000-000000000001' $$,
+  '23503', null, 'a listing with orders cannot be deleted');
 
 -- Timers (pg_cron) -------------------------------------------------------------------------
 

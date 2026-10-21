@@ -148,6 +148,7 @@ void main() {
       signupErrorFrom('23514', 'cod_time_missing'),
       SignupError.codTimeMissing,
     );
+    expect(signupErrorFrom('23514', 'cod_time_past'), SignupError.codTimePast);
   });
 
   test('anything else is unknown', () {

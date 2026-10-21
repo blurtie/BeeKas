@@ -99,11 +99,17 @@ bool canOrderDonation(int runningDonations) =>
 
 const maxCancelNote = 500;
 
+/// Text length as Postgres char_length counts it: code points, not
+/// graphemes (TextField.maxLength counts graphemes).
+int textLength(String text) => text.trim().runes.length;
+
 /// K-18: a code, plus a note when Lainnya.
 bool isValidCancellation(CancelReason? reason, String note) {
-  if (reason == null || note.trim().length > maxCancelNote) return false;
+  if (reason == null || textLength(note) > maxCancelNote) return false;
   return reason != CancelReason.other || note.trim().isNotEmpty;
 }
 
-/// Lokasi COD free text (D-30), next to the campus.
+/// Lokasi COD free text (D-30), next to the campus; optional.
 const maxCodPlace = 200;
+
+bool isValidCodPlace(String place) => textLength(place) <= maxCodPlace;
