@@ -255,7 +255,7 @@ Prinsip yang dibawa dari PRD login dan #75: member tidak punya INSERT/UPDATE/DEL
 - `quota_balances(member_id, balance)` dengan `check (balance >= 0)`; tidak ada grant tulis ke member. Saldo awal 1 diberikan oleh fungsi persetujuan verifikasi (K-08), idempoten.
 - Riwayat perubahan kuota (`quota_ledger`: +3 pembelian, −1 pasang, +1 koreksi admin, dengan admin dan catatan) supaya saldo bisa diaudit. Usulan; bisa dipangkas menjadi saldo saja bila waktu sempit.
 - `payments`: jenis, nominal yang diharapkan, listing (untuk Boost/Featured), status, path bukti, nominal diterima, admin, waktu. Member hanya membaca miliknya; menulis lewat `submit_payment(jenis, listing?)`.
-- Bucket `payment-proofs` privat: member hanya mengunggah ke folder sendiri (pola D-19), tidak bisa membaca; admin membaca.
+- Bucket `payment-proofs` privat: member hanya mengunggah ke folder sendiri (pola D-19); tidak bisa membaca bukti, kecuali bukti di foldernya sendiri yang belum tercatat di pembayaran mana pun, semata agar aplikasi bisa menghapus bukti yang gagal (D-44); admin membaca.
 - `confirm_payment(id, nominal)` / `reject_payment(id, alasan)`: hanya admin; menambah kuota atau mengaktifkan promosi dalam transaksi yang sama; menandai bukti untuk dihapus.
 - Bukti dihapus lewat Storage API oleh Edge Function terjadwal (pola `delete-expired-photos`), bukan `DELETE` SQL di `storage.objects`. Bisa diperluas dari function yang ada.
 

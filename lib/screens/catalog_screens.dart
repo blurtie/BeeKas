@@ -42,6 +42,7 @@ class CatalogShell extends StatefulWidget {
     this.onSignOut,
     this.status,
     this.onSell,
+    this.onQuota,
   });
 
   final CatalogRepository repository;
@@ -52,6 +53,9 @@ class CatalogShell extends StatefulWidget {
 
   /// Opens Pasang barang (#82); completes true once a listing is live.
   final Future<bool?> Function()? onSell;
+
+  /// Opens K8 Kuota Listing (#84) from Profil, for signed-in members.
+  final VoidCallback? onQuota;
 
   @override
   State<CatalogShell> createState() => _CatalogShellState();
@@ -82,6 +86,41 @@ class _CatalogShellState extends State<CatalogShell> {
     }
   }
 
+  /// Temporary Profil until K17: Kuota and Keluar for members; guests and
+  /// accounts without them get Segera hadir.
+  void _profile() {
+    final onQuota = widget.onQuota;
+    final onSignOut = widget.onSignOut;
+    if (onQuota == null) return showComingSoon(context, onSignOut: onSignOut);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: Text(t('profileQuota')),
+              onTap: () {
+                Navigator.pop(sheet);
+                onQuota();
+              },
+            ),
+            if (onSignOut != null)
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text(t('signOut')),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  onSignOut();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,10 +148,9 @@ class _CatalogShellState extends State<CatalogShell> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => i < 2
             ? setState(() => _tab = i)
-            : showComingSoon(
-                context,
-                onSignOut: i == 3 ? widget.onSignOut : null,
-              ),
+            : i == 3
+            ? _profile()
+            : showComingSoon(context),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),

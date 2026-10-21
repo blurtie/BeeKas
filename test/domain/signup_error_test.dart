@@ -93,6 +93,20 @@ void main() {
     expect(signupErrorFrom('42501', 'not_allowed'), SignupError.notAllowed);
   });
 
+  test('maps a second pending payment (D-43), checked or raced', () {
+    expect(
+      signupErrorFrom('23514', 'payment_pending'),
+      SignupError.paymentPending,
+    );
+    expect(
+      signupErrorFrom(
+        '23505',
+        'duplicate key value violates unique constraint "payments_one_pending"',
+      ),
+      SignupError.paymentPending,
+    );
+  });
+
   test('reads the wait from a rate-limit message', () {
     expect(
       retryAfterSeconds(
