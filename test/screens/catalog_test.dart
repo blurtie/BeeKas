@@ -309,11 +309,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('3/3'), findsOneWidget);
 
-    for (final key in ['chatSeller', 'booking24h', 'buyNow']) {
-      await tester.tap(find.text(t(key)));
-      await tester.pump();
-      expect(find.text(t('comingSoon')), findsOneWidget, reason: key);
-    }
+    await tester.tap(find.text(t('chatSeller')));
+    await tester.pump();
+    expect(find.text(t('comingSoon')), findsOneWidget);
   });
 
   testWidgets('Detail of a donation shows Free and no struck price', (

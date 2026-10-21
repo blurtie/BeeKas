@@ -9,6 +9,7 @@ import 'data/catalog_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
+import 'data/order_repository.dart';
 import 'data/payment_repository.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
@@ -203,6 +204,7 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
+        orders: _orderRepository,
       ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
@@ -352,6 +354,8 @@ void _catalog(BuildContext context, [AccountStatus? status]) => Navigator.push(
 final _listingRepository = SupabaseListingRepository(Supabase.instance.client);
 
 final _paymentRepository = SupabasePaymentRepository(Supabase.instance.client);
+
+final _orderRepository = SupabaseOrderRepository(Supabase.instance.client);
 
 /// K8 Kuota Listing (#84), from Pasang and from Profil.
 Future<void> _quota(BuildContext context) => Navigator.push<void>(

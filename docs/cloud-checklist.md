@@ -100,3 +100,24 @@ Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:0
    where status = 'pending' and created_at < now() - interval '24 hours' order by created_at;
    ```
    Kegagalan tercatat di log function sebagai `delete-expired-photos: payment proofs failed: ...` dan dicoba lagi pada run berikutnya.
+
+## 9. Pesanan: batal dan selesai otomatis (#85, D-30, D-36)
+
+Migration `20261102120000_orders.sql` menjadwalkan job `pg_cron` bernama `order-timers` setiap 10 menit. Job ini hanya memanggil fungsi SQL `public.run_order_timers()`: pesanan Menunggu yang lewat `hold_until` dibatalkan dan stoknya kembali +1; pesanan Diproses selesai 3 hari setelah waktu COD. Tidak ada Edge Function, secret, atau entri Vault.
+
+1. Pastikan ekstensi `pg_cron` aktif (sudah dibuat oleh migration #33; di dashboard: **Database → Extensions**). Lalu `supabase db push`.
+2. Setelah push, pastikan job terdaftar tepat satu kali:
+   ```sql
+   select jobid, schedule, command, active from cron.job where jobname = 'order-timers';
+   ```
+3. Pemantauan:
+   ```sql
+   -- Run terakhir dan error-nya
+   select status, return_message, start_time from cron.job_run_details
+   where jobid = (select jobid from cron.job where jobname = 'order-timers')
+   order by start_time desc limit 10;
+
+   -- Harus kosong (paling lambat 10 menit setelah jatuh tempo)
+   select id from public.orders where status = 'waiting' and hold_until < now() - interval '15 minutes';
+   select id from public.orders where status = 'processing' and cod_at < now() - interval '3 days 15 minutes';
+   ```
