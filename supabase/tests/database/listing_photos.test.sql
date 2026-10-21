@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(22);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -103,10 +103,26 @@ select throws_ok($$ select public.create_listing(p_title => 'T82 item',
     p_specs => null, p_is_donation => false,
     p_photos => array['82828282-0000-4000-8000-000000000001/two.jpg']) $$,
   '23514', null, 'a description over 500 characters is refused (K-04)');
-select public.create_listing(p_title => 'T82 item', p_description => repeat('x', 500),
-  p_category => 'other', p_condition => 'like_new', p_price => 50000, p_stock => 3,
-  p_campus => 'bandung', p_warranty => null, p_specs => null, p_is_donation => false,
-  p_photos => array['82828282-0000-4000-8000-000000000001/two.jpg']);
+create function pg_temp.list(p_id uuid) returns uuid
+language sql as $$
+  select public.create_listing(p_title => 'T82 item', p_description => repeat('x', 500),
+    p_category => 'other', p_condition => 'like_new', p_price => 50000, p_stock => 3,
+    p_campus => 'bandung', p_warranty => null, p_specs => null, p_is_donation => false,
+    p_photos => array['82828282-0000-4000-8000-000000000001/two.jpg'], p_id => p_id);
+$$;
+\set l '''82828282-1111-4000-8000-000000000001'''
+select is(pg_temp.list(:l), :l::uuid, 'create_listing uses the id the app sent');
+select is(pg_temp.list(:l), :l::uuid, 'the same id again returns the listing already made');
+reset role;
+select is((select count(*)::int from public.listings where id = :l), 1,
+  'a repeated id makes one listing');
+select is((select count(*)::int from public.quota_ledger
+    where member_id = :a and reason = 'listing'), 1,
+  'a repeated id takes the quota once');
+
+select pg_temp.act_as(:b);
+select throws_ok($$ select pg_temp.list('82828282-1111-4000-8000-000000000001') $$,
+  '42501', null, 'another seller cannot claim the id of someone else''s listing');
 reset role;
 
 set local role anon;

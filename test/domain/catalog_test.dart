@@ -2,6 +2,19 @@ import 'package:beekas/domain/catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('newListingId is a random UUID v4', () {
+    final id = newListingId();
+    expect(
+      id,
+      matches(
+        RegExp(
+          r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+        ),
+      ),
+    );
+    expect(newListingId(), isNot(id));
+  });
+
   test('formatRupiah groups thousands with dots', () {
     expect(formatRupiah(0), 'Rp 0');
     expect(formatRupiah(1000), 'Rp 1.000');

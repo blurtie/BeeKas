@@ -7,7 +7,9 @@ import 'package:beekas/data/signup_repository.dart';
 
 /// Plays the bucket and create_listing. [stored] is what sits in the bucket;
 /// [failUploadAt] fails that upload (0-based), [failCreate] makes
-/// create_listing throw, [gate] holds create_listing for the loading state.
+/// create_listing throw, [gate] holds create_listing for the loading state,
+/// [loseAnswer] commits but throws as if the answer were lost. Like the
+/// server, a repeated listing id is not created or charged twice.
 class FakeListingRepository implements ListingRepository {
   FakeListingRepository({this.quota = 1, this.campus = Campus.bandung});
   int quota;
@@ -16,8 +18,10 @@ class FakeListingRepository implements ListingRepository {
   Object? failCreate;
   Object? failSeller;
   Completer<void>? gate;
+  var loseAnswer = false;
   final stored = <String>{};
   final created = <NewListing>[];
+  final calls = <NewListing>[];
   var _uploads = 0;
 
   @override
@@ -43,10 +47,14 @@ class FakeListingRepository implements ListingRepository {
 
   @override
   Future<void> createListing(NewListing listing, List<String> photos) async {
+    calls.add(listing);
     await gate?.future;
     final error = failCreate;
     if (error != null) throw error;
-    created.add(listing);
-    quota--;
+    if (!created.any((l) => l.id == listing.id)) {
+      created.add(listing);
+      quota--;
+    }
+    if (loseAnswer) throw const SignupException(null);
   }
 }

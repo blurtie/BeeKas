@@ -3,6 +3,8 @@
 /// Pure Dart; the screens look labels up with each enum's copyKey.
 library;
 
+import 'dart:math';
+
 import 'registration.dart';
 
 /// The 9 categories of Daftar-12; [code] matches the listing_category enum.
@@ -208,4 +210,17 @@ Set<ListingField> validateListing(ListingDraft d) {
     if (stock == null || stock < 1) ListingField.stock,
     if (specLines(d.specs).length > maxSpecLines) ListingField.specs,
   };
+}
+
+/// A random UUID v4 for a new listing. The app picks it once per draft, so a
+/// retried create_listing (lost answer) finds the listing instead of
+/// charging quota twice.
+String newListingId([Random? random]) {
+  final r = random ?? Random.secure();
+  final b = List.generate(16, (_) => r.nextInt(256));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  final hex = b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+      '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
 }

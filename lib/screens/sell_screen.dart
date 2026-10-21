@@ -50,6 +50,9 @@ class _SellScreenState extends State<SellScreen> {
   final _warranty = TextEditingController();
   final _specs = TextEditingController();
 
+  // One id per draft: Pasang again after a lost answer must not list twice.
+  final _listingId = newListingId();
+  final _scroll = ScrollController();
   var _onDetails = false;
   var _errors = <ListingField>{};
   String? _photoError;
@@ -69,6 +72,7 @@ class _SellScreenState extends State<SellScreen> {
     for (final c in [_title, _description, _price, _stock, _warranty, _specs]) {
       c.dispose();
     }
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -123,7 +127,14 @@ class _SellScreenState extends State<SellScreen> {
       final photo = await widget.pickPhoto(camera: camera);
       if (photo != null && mounted) setState(() => _photos.add(photo));
     } on PhotoException catch (e) {
-      if (mounted) setState(() => _photoError = t(e.error.copyKey));
+      if (!mounted) return;
+      setState(
+        () => _photoError = t(
+          e.error == PhotoError.cameraDenied
+              ? 'sellCameraDenied'
+              : e.error.copyKey,
+        ),
+      );
     }
   }
 
@@ -133,6 +144,7 @@ class _SellScreenState extends State<SellScreen> {
       _errors = errors;
       if (errors.isEmpty) _onDetails = true;
     });
+    if (_onDetails && _scroll.hasClients) _scroll.jumpTo(0);
   }
 
   Future<void> _post() async {
@@ -145,6 +157,7 @@ class _SellScreenState extends State<SellScreen> {
     setState(() => _posting = true);
     try {
       await publishListing(widget.repository, (
+        id: _listingId,
         draft: _draft,
         campus: _campus ?? _seller!.campus,
         warranty: _warranty.text,
@@ -195,6 +208,7 @@ class _SellScreenState extends State<SellScreen> {
         ),
         body: SafeArea(
           child: ListView(
+            controller: _scroll,
             padding: const EdgeInsets.fromLTRB(
               BeeSpacing.screenX,
               16,
