@@ -17,7 +17,9 @@ create table public.freezes (
   constraint freeze_lift_after_approval check (lifted_at is null or approved_at is not null)
 );
 
-create index freezes_member on public.freezes (member_id);
+-- At most one open freeze (proposed or approved, not lifted) per member; also the
+-- lookup is_frozen runs on every catalog row.
+create unique index freezes_one_open on public.freezes (member_id) where lifted_at is null;
 
 alter table public.freezes enable row level security;
 revoke all on public.freezes from anon, authenticated;
@@ -48,8 +50,10 @@ as $$
     and not public.is_frozen(p_seller);
 $$;
 
-revoke execute on function public.is_frozen(uuid), public.is_listed_seller(uuid) from public;
-grant execute on function public.is_frozen(uuid), public.is_listed_seller(uuid) to anon, authenticated;
+-- RLS needs is_listed_seller; is_frozen stays server-side. Hiding listings already
+-- tells a viewer the seller is no longer listed, so is_listed_seller leaks nothing new.
+revoke execute on function public.is_frozen(uuid), public.is_listed_seller(uuid) from public, anon, authenticated;
+grant execute on function public.is_listed_seller(uuid) to anon, authenticated;
 
 drop policy "listings: everyone reads active" on public.listings;
 create policy "listings: everyone reads active from listed sellers"
@@ -59,10 +63,8 @@ create policy "listings: everyone reads active from listed sellers"
 drop policy "listing photos: everyone reads active listings' photos" on public.listing_photos;
 create policy "listing photos: everyone reads listed listings' photos"
   on public.listing_photos for select to anon, authenticated
-  using (exists (
-    select 1 from public.listings l
-    where l.id = listing_id and l.is_active and public.is_listed_seller(l.seller_id)
-  ));
+  -- The listings policy above filters this subquery.
+  using (exists (select 1 from public.listings l where l.id = listing_id));
 
 create or replace function public.catalog_listings()
 returns table (
@@ -99,6 +101,6 @@ as $$
     p.full_name, p.campus, true
   from public.listings l
   join public.profiles p on p.id = l.seller_id
-  where l.is_active and p.status = 'approved' and not public.is_frozen(l.seller_id)
+  where l.is_active and public.is_listed_seller(l.seller_id)
   order by l.created_at desc, l.id;
 $$;

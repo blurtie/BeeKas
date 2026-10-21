@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(22);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -55,6 +55,10 @@ select throws_ok($$ insert into public.freezes (member_id, reason, proposed_by, 
     '76767676-0000-4000-8000-000000000007', now()) $$,
   '23514', null, 'an admin cannot approve freezing themselves');
 
+select throws_ok($$ insert into public.freezes (member_id, reason, proposed_by)
+  values ('76767676-0000-4000-8000-000000000004', 'x', '76767676-0000-4000-8000-000000000007') $$,
+  '23505', null, 'one open freeze per member');
+
 select ok(public.is_frozen(:f), 'an approved freeze freezes');
 select ok(not public.is_frozen(:q), 'a bare proposal does not freeze');
 select ok(not public.is_frozen(:a), 'no freeze, not frozen');
@@ -69,6 +73,8 @@ select is((select count(*)::int from public.listing_photos where path like 't76/
 select is(array(select title from public.catalog_listings() where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
   'catalog shows guests approved, unfrozen sellers only');
 select throws_ok($$ select * from public.freezes $$, '42501', null, 'guest cannot read freezes');
+select throws_ok($$ select public.is_frozen('76767676-0000-4000-8000-000000000004') $$, '42501', null,
+  'guest cannot ask is_frozen');
 reset role;
 
 select pg_temp.act_as(:m);
@@ -79,6 +85,8 @@ select is((select count(*)::int from public.listing_photos where path like 't76/
 select is(array(select title from public.catalog_listings() where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
   'catalog shows members approved, unfrozen sellers only');
 select throws_ok($$ select * from public.freezes $$, '42501', null, 'member cannot read freezes');
+select throws_ok($$ select public.is_frozen('76767676-0000-4000-8000-000000000004') $$, '42501', null,
+  'member cannot ask is_frozen');
 select throws_ok($$ insert into public.freezes (member_id, reason, proposed_by)
   values ('76767676-0000-4000-8000-000000000001', 'x', '76767676-0000-4000-8000-000000000008') $$,
   '42501', null, 'member cannot propose a freeze');
