@@ -3,6 +3,8 @@
 /// Pure Dart; the screens look labels up with each enum's copyKey.
 library;
 
+import 'dart:math';
+
 import 'registration.dart';
 
 /// The 9 categories of Daftar-12; [code] matches the listing_category enum.
@@ -137,3 +139,88 @@ int? discountPercent(int price, int? previousPrice) =>
     previousPrice == null || previousPrice <= price
     ? null
     : ((previousPrice - price) * 100 / previousPrice).round();
+
+/// What K5 and K6 hold before Pasang (PRD-katalog 5.2). [specs] is the raw
+/// text, one spec per line.
+typedef ListingDraft = ({
+  bool isDonation,
+  ListingCategory? category,
+  int photoCount,
+  String title,
+  String description,
+  ListingCondition? condition,
+  int? price,
+  int? stock,
+  String specs,
+});
+
+enum ListingField {
+  category,
+  photos,
+  title,
+  description,
+  condition,
+  price,
+  stock,
+  specs;
+
+  String get copyKey => 'listingError_$name';
+}
+
+/// The fields on K5; the rest are on K6.
+const k5Fields = {
+  ListingField.category,
+  ListingField.photos,
+  ListingField.title,
+  ListingField.description,
+};
+
+const maxListingPhotos = 5;
+const maxTitleLength = 100;
+const maxDescriptionLength = 500;
+const minPrice = 1000;
+const maxPrice = 50000000;
+const maxSpecLines = 10;
+
+List<String> specLines(String text) => [
+  for (final line in text.split('\n'))
+    if (line.trim().isNotEmpty) line.trim(),
+];
+
+/// Donations are always Rp0 (D-28).
+int listingPrice(ListingDraft d) => d.isDonation ? 0 : d.price!;
+
+/// Rule 1 (PRD-katalog 6.1); the listings constraints enforce the same.
+Set<ListingField> validateListing(ListingDraft d) {
+  final title = d.title.trim();
+  final description = d.description.trim();
+  final price = d.price;
+  final stock = d.stock;
+  return {
+    if (d.category == null) ListingField.category,
+    if (d.photoCount < 1 || d.photoCount > maxListingPhotos)
+      ListingField.photos,
+    if (title.isEmpty || title.length > maxTitleLength) ListingField.title,
+    if (description.isEmpty || description.length > maxDescriptionLength)
+      ListingField.description,
+    if (d.condition == null) ListingField.condition,
+    if (!d.isDonation &&
+        (price == null || price < minPrice || price > maxPrice))
+      ListingField.price,
+    if (stock == null || stock < 1) ListingField.stock,
+    if (specLines(d.specs).length > maxSpecLines) ListingField.specs,
+  };
+}
+
+/// A random UUID v4 for a new listing. The app picks it once per draft, so a
+/// retried create_listing (lost answer) finds the listing instead of
+/// charging quota twice.
+String newListingId([Random? random]) {
+  final r = random ?? Random.secure();
+  final b = List.generate(16, (_) => r.nextInt(256));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  final hex = b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+      '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+}

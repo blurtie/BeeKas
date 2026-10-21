@@ -42,6 +42,10 @@ enum SignupError {
   noPhone('errorNoPhone'),
   // From the review functions: the account is not an admin.
   notAdmin('errorNotAdmin'),
+  // From create_listing: the balance ran out meanwhile, or the account is
+  // no longer approved or is frozen (the app cannot see freezes).
+  noQuota('errorNoQuota'),
+  notAllowed('errorNotAllowedToList'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -76,6 +80,8 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'note_has_phone') => SignupError.noteHasPhone,
     ('23514', 'note_too_long') => SignupError.noteTooLong,
     ('42501', 'not_admin') => SignupError.notAdmin,
+    ('23514', 'no_quota') => SignupError.noQuota,
+    ('42501', 'not_allowed') => SignupError.notAllowed,
     _ => SignupError.unknown,
   };
 }

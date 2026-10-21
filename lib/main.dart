@@ -7,9 +7,11 @@ import 'data/auth_repository.dart';
 import 'data/camera.dart';
 import 'data/catalog_repository.dart';
 import 'data/language.dart';
+import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
+import 'domain/access.dart';
 import 'domain/registration.dart';
 import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
@@ -27,6 +29,7 @@ import 'screens/rejected_screen.dart';
 import 'screens/reset_screens.dart';
 import 'screens/review_list_screen.dart';
 import 'screens/selfie_screen.dart';
+import 'screens/sell_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'ui/components.dart';
 import 'ui/theme.dart';
@@ -188,12 +191,14 @@ Widget _screenFor(BuildContext context, Account account) =>
             builder: (context) => _photos(context, account.accountType!),
           ),
         ),
-        onBrowse: () => _catalog(context),
+        onBrowse: () => _catalog(context, AccountStatus.rejected),
         onHelp: () => _help(context),
         onSignOut: () => _signOut(context),
       ),
       Destination.home => CatalogShell(
         repository: _catalogRepository,
+        status: account.status,
+        onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
       ),
       Destination.review => ReviewListScreen(
@@ -318,18 +323,38 @@ Future<void> _help(BuildContext context) async {
 }
 
 Widget _pendingScreen(BuildContext context) => PendingScreen(
-  onBrowse: () => _catalog(context),
+  onBrowse: () => _catalog(context, AccountStatus.pending),
   onHelp: () => _help(context),
   onSignOut: () => _signOut(context),
 );
 
 final _catalogRepository = SupabaseCatalogRepository(Supabase.instance.client);
 
-/// Lihat katalog for guests, pending and rejected accounts (D-06).
-void _catalog(BuildContext context) => Navigator.push(
+/// Lihat katalog for guests, pending and rejected accounts (D-06); [status]
+/// lets + explain why they cannot sell yet.
+void _catalog(BuildContext context, [AccountStatus? status]) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => CatalogShell(repository: _catalogRepository),
+    builder: (context) =>
+        CatalogShell(repository: _catalogRepository, status: status),
+  ),
+);
+
+final _listingRepository = SupabaseListingRepository(Supabase.instance.client);
+
+/// Pasang barang (#82), K5-K6.
+Future<bool?> _sell(BuildContext context) => Navigator.push<bool>(
+  context,
+  MaterialPageRoute(
+    builder: (context) => SellScreen(
+      repository: _listingRepository,
+      pickPhoto: ({required camera}) =>
+          pickListingPhoto(camera ? ImageSource.camera : ImageSource.gallery),
+      onBuyQuota: () => Navigator.push<void>(
+        context,
+        MaterialPageRoute(builder: (_) => const BuyQuotaScreen()),
+      ),
+    ),
   ),
 );
 

@@ -1,4 +1,5 @@
-/// Verification photos before they leave the device (D-07, D-19).
+/// Verification and listing photos before they leave the device (D-07, D-19,
+/// K-05).
 library;
 
 import 'dart:typed_data';
@@ -10,6 +11,7 @@ const maxPhotoBytes = 5 * 1024 * 1024;
 enum PhotoError {
   cameraDenied('errorCameraDenied'),
   tooLarge('errorPhotoTooLarge'),
+  unsupported('errorPhotoUnsupported'),
   failed('errorPhotoFailed');
 
   const PhotoError(this.copyKey);
@@ -21,9 +23,20 @@ class PhotoException implements Exception {
   final PhotoError error;
 }
 
+/// Starts with a JPEG's SOI and first marker (FF D8 FF).
+bool isJpeg(Uint8List bytes) =>
+    bytes.length >= 3 &&
+    bytes[0] == 0xFF &&
+    bytes[1] == 0xD8 &&
+    bytes[2] == 0xFF;
+
 /// The camera's JPEG made safe to keep and upload: no metadata, within the
 /// bucket limit.
 Uint8List preparePhoto(Uint8List jpeg) {
+  // The buckets take JPEG only; a PNG or WebP left unconverted stops here.
+  if (!isJpeg(jpeg)) {
+    throw const PhotoException(PhotoError.unsupported);
+  }
   final Uint8List clean;
   try {
     clean = stripJpegMetadata(jpeg);

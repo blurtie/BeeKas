@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../config/copy.dart';
 import 'tokens.dart';
@@ -21,6 +22,9 @@ class BeeTextField extends StatefulWidget {
     this.textInputAction,
     this.autofillHints,
     this.prefixIcon,
+    this.maxLines = 1,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   final String label;
@@ -34,6 +38,13 @@ class BeeTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final IconData? prefixIcon;
+
+  /// Null grows with the text, as in the Deskripsi box.
+  final int? maxLines;
+
+  /// Shows the "0/500" counter of the Deskripsi box.
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<BeeTextField> createState() => _BeeTextFieldState();
@@ -64,6 +75,10 @@ class _BeeTextFieldState extends State<BeeTextField> {
             onChanged: widget.onChanged,
             textInputAction: widget.textInputAction,
             autofillHints: widget.autofillHints,
+            maxLines: widget.password ? 1 : widget.maxLines,
+            minLines: widget.maxLines == null ? 3 : null,
+            maxLength: widget.maxLength,
+            inputFormatters: widget.inputFormatters,
             decoration: InputDecoration(
               hintText: widget.hint,
               prefixIcon: widget.prefixIcon == null
@@ -466,4 +481,66 @@ class _BeeLanguageScopeState extends State<BeeLanguageScope> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+/// A selectable card with an illustration: Jual Barang / Donasi Barang in
+/// daftar-11.png.
+class BeeChoiceCard extends StatelessWidget {
+  const BeeChoiceCard({
+    super.key,
+    required this.image,
+    required this.title,
+    required this.body,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String image;
+  final String title;
+  final String body;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Card.outlined(
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BeeRadius.banner),
+          side: BorderSide(
+            color: selected ? theme.colorScheme.primary : BeeColors.border,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(BeeRadius.banner),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                ExcludeSemantics(child: Image.asset(image, height: 72)),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

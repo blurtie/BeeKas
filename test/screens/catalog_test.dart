@@ -204,9 +204,7 @@ void main() {
     expect(find.text('Macbook Air M1'), findsNothing);
   });
 
-  testWidgets('+ says coming soon; Profil offers sign-out when signed in', (
-    tester,
-  ) async {
+  testWidgets('Profil offers sign-out when signed in', (tester) async {
     var signedOut = false;
     await _pump(
       tester,
@@ -214,10 +212,6 @@ void main() {
       onSignOut: () => signedOut = true,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip(t('navSell')));
-    await tester.pump();
-    expect(find.text(t('comingSoon')), findsOneWidget);
-
     await tester.tap(find.text(t('navProfile')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(t('signOut')));

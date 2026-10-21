@@ -88,6 +88,11 @@ void main() {
     expect(signupErrorFrom('42501', 'not_admin'), SignupError.notAdmin);
   });
 
+  test('maps create_listing refusals', () {
+    expect(signupErrorFrom('23514', 'no_quota'), SignupError.noQuota);
+    expect(signupErrorFrom('42501', 'not_allowed'), SignupError.notAllowed);
+  });
+
   test('reads the wait from a rate-limit message', () {
     expect(
       retryAfterSeconds(

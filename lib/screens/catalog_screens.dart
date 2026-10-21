@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
 import '../data/catalog_repository.dart';
+import '../domain/access.dart';
 import '../domain/catalog.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
@@ -35,10 +36,22 @@ Iterable<String> _categoryLabels(ListingCategory c) =>
 /// page through the catalog on the server (#77). Guests and every status
 /// browse it (D-06).
 class CatalogShell extends StatefulWidget {
-  const CatalogShell({super.key, required this.repository, this.onSignOut});
+  const CatalogShell({
+    super.key,
+    required this.repository,
+    this.onSignOut,
+    this.status,
+    this.onSell,
+  });
 
   final CatalogRepository repository;
   final VoidCallback? onSignOut;
+
+  /// Null for guests.
+  final AccountStatus? status;
+
+  /// Opens Pasang barang (#82); completes true once a listing is live.
+  final Future<bool?> Function()? onSell;
 
   @override
   State<CatalogShell> createState() => _CatalogShellState();
@@ -46,16 +59,41 @@ class CatalogShell extends StatefulWidget {
 
 class _CatalogShellState extends State<CatalogShell> {
   var _tab = 0;
+  // Bumped after a listing goes live, so the feeds load it.
+  var _refresh = 0;
 
   void _soon() => showComingSoon(context);
+
+  void _snack(String message) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
+
+  /// + : approved accounts open the form; the rest learn why not (D-06).
+  /// Freezes are invisible to the app; create_listing refuses those (K-26).
+  Future<void> _sell() async {
+    final status = widget.status;
+    final onSell = widget.onSell;
+    if (!canCreateListing(status, frozen: false) || onSell == null) {
+      return _snack(t('sellNeedsApproval_${status?.name ?? 'guest'}'));
+    }
+    if (await onSell() == true && mounted) {
+      setState(() => _refresh++);
+      _snack(t('sellPosted'));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: _tab == 0
-            ? _HomeView(repository: widget.repository, onSoon: _soon)
+            ? _HomeView(
+                key: ValueKey(_refresh),
+                repository: widget.repository,
+                onSoon: _soon,
+              )
             : _CategoryView(
+                key: ValueKey(_refresh),
                 repository: widget.repository,
                 onBack: () => setState(() => _tab = 0),
               ),
@@ -63,7 +101,7 @@ class _CatalogShellState extends State<CatalogShell> {
       floatingActionButton: FloatingActionButton(
         tooltip: t('navSell'),
         shape: const CircleBorder(),
-        onPressed: _soon,
+        onPressed: _sell,
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -228,7 +266,7 @@ class _ListingFeedState extends State<_ListingFeed> {
 const _pad = 16.0;
 
 class _HomeView extends StatefulWidget {
-  const _HomeView({required this.repository, required this.onSoon});
+  const _HomeView({super.key, required this.repository, required this.onSoon});
   final CatalogRepository repository;
   final VoidCallback onSoon;
 
@@ -609,7 +647,11 @@ class _Photo extends StatelessWidget {
 }
 
 class _CategoryView extends StatefulWidget {
-  const _CategoryView({required this.repository, required this.onBack});
+  const _CategoryView({
+    super.key,
+    required this.repository,
+    required this.onBack,
+  });
   final CatalogRepository repository;
   final VoidCallback onBack;
 
