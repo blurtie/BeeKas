@@ -227,6 +227,6 @@ Aturan 1, 2, 4, 7, 8, dan 9 ditegakkan juga di backend (constraint, RLS, atau fu
 - Tab "Chat" di Home bertentangan dengan keputusan lama bahwa komunikasi lewat WhatsApp (D-04 versi web). (Lihat D-22, D-31.)
 - Ikon favorit dan notifikasi di header Home. (Lihat D-28, D-33.)
 - Kartu digital member: ide terbuka, belum punya fungsi (D-14).
-- Sesi katalog: nomor WhatsApp penjual hanya terlihat oleh member `approved` (D-06). Pertimbangkan pengingat bagi penjual bahwa nomornya akan terlihat oleh pembeli. (Lihat D-22, D-31.)
+- Komunitas pembeli–penjual lewat chat di aplikasi (D-31); nomor HP tidak pernah ditampilkan ke pengguna lain (D-26).
 - Sesi profil, angkatan (BINUSIAN): daftar label sebaiknya diturunkan dari tahun berjalan, tidak ditulis tetap. Nilainya ditampilkan sebagai "diisi sendiri". (Lihat D-32.)
 - Catatan implementasi, masuk dengan nomor HP: butuh fungsi server yang mencari email dari nomor HP. Fungsi itu tidak boleh membocorkan apakah sebuah nomor terdaftar; nomor tidak dikenal dan sandi salah menghasilkan respons yang sama. (Lihat D-22.)
