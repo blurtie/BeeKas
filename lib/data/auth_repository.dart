@@ -47,7 +47,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final id = _client.auth.currentUser!.id;
     final profile = await _client
         .from('profiles')
-        .select('role, status, account_type, consent_at')
+        .select('full_name, email, role, status, account_type, consent_at')
         .eq('id', id)
         .single();
     final status = AccountStatus.values.byName(profile['status'] as String);
@@ -62,6 +62,8 @@ class SupabaseAuthRepository implements AuthRepository {
               .maybeSingle()
         : null;
     return (
+      fullName: profile['full_name'] as String,
+      email: profile['email'] as String,
       role: Role.values.byName(profile['role'] as String),
       status: status,
       // Null for seeded admins (D-18).

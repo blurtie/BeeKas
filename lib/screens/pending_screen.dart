@@ -5,15 +5,17 @@ import '../ui/assets.dart';
 import '../ui/tokens.dart';
 
 /// L11 Verifikasi Sedang Diproses, frame 459:184. The frame's back arrow and
-/// Kembali become Lihat katalog and Keluar (PRD); Bantuan comes with T12.
+/// Kembali become Lihat katalog and Keluar (PRD); Bantuan is D-14.
 class PendingScreen extends StatelessWidget {
   const PendingScreen({
     super.key,
     required this.onBrowse,
+    required this.onHelp,
     required this.onSignOut,
   });
 
   final VoidCallback onBrowse;
+  final VoidCallback onHelp;
   final VoidCallback onSignOut;
 
   @override
@@ -90,6 +92,8 @@ class PendingScreen extends StatelessWidget {
             FilledButton(onPressed: onBrowse, child: Text(t('browseCatalog'))),
             const SizedBox(height: 16),
             OutlinedButton(onPressed: onSignOut, child: Text(t('signOut'))),
+            const SizedBox(height: 16),
+            TextButton(onPressed: onHelp, child: Text(t('help'))),
           ],
         ),
       ),
