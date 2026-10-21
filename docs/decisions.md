@@ -551,3 +551,14 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Peran admin cloud diberikan dengan SQL manual satu kali per orang; satu akun per anggota tim (K-39, D-21).
 - APK dibagikan langsung lewat QR di booth, bukan Play Store. Kunci signing rilis dibuat di T12 dan disimpan di luar repo (K-40).
 - Backup `pg_dump` manual sebelum Festival dan setiap hari selama Festival bila memakai paket Free (K-41).
+
+---
+
+## D-41 — Pencarian kata label kategori dua bahasa
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PR #97, tiket #77: K-02)
+
+**Keputusan:**
+- Kata kunci yang sama dengan salah satu kata label kategori dalam bahasa Inggris atau Indonesia (tidak peka huruf besar-kecil, "&" diabaikan) mencocokkan kategori itu. Contoh: "buku" dan "books" → Buku & Alat Tulis; "sepatu" → Sepatu; "book" tidak mencocokkan kategori (K-02).
+- Kecocokan kategori digabung dengan OR dengan pencarian nama barang dan nama penjual. Kata kunci tanpa kecocokan label hanya menjadi pencarian teks.
+- Label tetap di `copy.dart` (D-11); aplikasi mengirim kode kategori yang cocok ke `catalog_listings` (`p_query_categories`). Grup pintasan Beranda (`p_categories`) tetap membatasi hasil (AND).
