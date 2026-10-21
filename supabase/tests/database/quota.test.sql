@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(29);
+select plan(31);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -151,6 +151,22 @@ select is((select count(*)::int from public.quota_ledger where member_id = :b an
   'a backfilled account gets no starting grant on re-approval');
 select is((select balance from public.quota_balances where member_id = :b), 1,
   'a backfilled account keeps a balance of 1 after re-approval');
+
+-- Inserted already approved (D-42) -------------------------------------------------
+
+-- I is inserted as approved directly, like an admin made by manual SQL on cloud.
+\set i '''81818181-0000-4000-8000-000000000009'''
+set constraints all deferred;
+insert into public.profiles (id, full_name, email, account_type, campus, status)
+values (:i, 'T81 9', 't81-9@binus.ac.id', 'student', 'bandung', 'approved');
+select is((select balance from public.quota_balances where member_id = :i), 1,
+  'an account inserted as approved gets a balance of 1');
+set local session_replication_role = replica;
+update public.profiles set status = 'pending' where id = :i;
+set local session_replication_role = origin;
+update public.profiles set status = 'approved' where id = :i;
+select is((select balance from public.quota_balances where member_id = :i), 1,
+  'an account inserted as approved keeps 1 after re-approval');
 
 select * from finish();
 rollback;

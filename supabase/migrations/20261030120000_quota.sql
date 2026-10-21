@@ -65,9 +65,15 @@ create trigger profiles_starting_quota
   for each row when (new.status = 'approved' and old.status is distinct from 'approved')
   execute function public.grant_starting_quota();
 
+-- An account inserted already approved (manual SQL on cloud, seed) gets it too.
+create trigger profiles_starting_quota_insert
+  after insert on public.profiles
+  for each row when (new.status = 'approved')
+  execute function public.grant_starting_quota();
+
 -- D-42: accounts already approved before quotas existed never pass through the trigger,
 -- so they get their 1 here, under its own ledger reason. The balance row then blocks a
--- second grant from the trigger. Idempotent; seed.sql calls it again for its sellers.
+-- second grant from the trigger. Idempotent.
 create function public.backfill_starting_quota()
 returns void
 language sql
