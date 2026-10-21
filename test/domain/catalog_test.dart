@@ -1,8 +1,6 @@
 import 'package:beekas/domain/catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../support/fake_catalog_repository.dart';
-
 void main() {
   test('formatRupiah groups thousands with dots', () {
     expect(formatRupiah(0), 'Rp 0');
@@ -18,17 +16,26 @@ void main() {
     expect(discountPercent(6500000, 6500000), isNull);
   });
 
-  test('search matches title, category label, or seller, ignoring case', () {
-    final listing = fakeListing(
-      'Macbook Air M1',
-      category: ListingCategory.laptopComputer,
-      sellerName: 'Nadia Contoh',
-    );
-    String label(ListingCategory c) => 'Laptop & Komputer';
-    for (final q in ['macbook', 'KOMPUTER', 'nadia', '  ', '']) {
-      expect(matchesSearch(listing, q, label), isTrue, reason: q);
-    }
-    expect(matchesSearch(listing, 'jaket', label), isFalse);
+  test('a category label, EN or ID, becomes a category filter; else text', () {
+    final en = {
+      ListingCategory.laptopComputer: 'Laptops & Computers',
+      ListingCategory.clothing: 'Clothing',
+    };
+    final id = {
+      ListingCategory.laptopComputer: 'Laptop & Komputer',
+      ListingCategory.clothing: 'Pakaian',
+    };
+    String Function(ListingCategory) labels(Map<ListingCategory, String> m) =>
+        (c) => m[c] ?? '-';
+
+    expect(_parts(catalogSearch(' laptops & COMPUTERS ', labels(en))), (
+      null,
+      'laptop_computer',
+    ));
+    expect(_parts(catalogSearch('pakaian', labels(id))), (null, 'clothing'));
+    expect(_parts(catalogSearch('Clothing', labels(id))), ('Clothing', null));
+    expect(_parts(catalogSearch(' macbook ', labels(en))), ('macbook', null));
+    expect(_parts(catalogSearch('  ', labels(en))), (null, null));
   });
 
   test('All has every category; Accessories is electronics and fashion', () {
@@ -52,3 +59,7 @@ void main() {
     }
   });
 }
+
+/// Lists compare by identity inside records; compare their contents.
+(String?, String?) _parts(CatalogSearch s) =>
+    (s.text, s.categories?.map((c) => c.code).join(','));

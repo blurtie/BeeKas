@@ -7,8 +7,14 @@ import 'signup_repository.dart';
 /// Read-only catalog (#74); everyone may read it, guests included (D-06).
 /// Failures are [SignupException]s.
 abstract interface class CatalogRepository {
-  /// Active listings, newest first.
-  Future<List<Listing>> listings();
+  /// One page of active listings, newest first: [catalogPageSize] of them
+  /// after [after]. [query] matches titles and seller names on the server;
+  /// [categories] null means all.
+  Future<List<Listing>> listings({
+    String? query,
+    List<ListingCategory>? categories,
+    Listing? after,
+  });
 }
 
 class SupabaseCatalogRepository implements CatalogRepository {
@@ -16,9 +22,21 @@ class SupabaseCatalogRepository implements CatalogRepository {
   final SupabaseClient _client;
 
   @override
-  // ponytail: the whole catalog in one call; paginate when it outgrows a demo.
-  Future<List<Listing>> listings() => guardBackend(() async {
-    final rows = await _client.rpc<List<dynamic>>('catalog_listings');
+  Future<List<Listing>> listings({
+    String? query,
+    List<ListingCategory>? categories,
+    Listing? after,
+  }) => guardBackend(() async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'catalog_listings',
+      params: {
+        'p_query': query,
+        'p_categories': categories?.map((c) => c.code).toList(),
+        'p_limit': catalogPageSize,
+        'p_after_created_at': after?.createdAt,
+        'p_after_id': after?.id,
+      },
+    );
     final bucket = _client.storage.from('listing-photos');
     Campus campus(Object? code) =>
         Campus.values.firstWhere((c) => c.code == code);
@@ -44,6 +62,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
           sellerName: row['seller_name'] as String,
           sellerCampus: campus(row['seller_campus']),
           sellerVerified: row['seller_verified'] as bool,
+          createdAt: row['created_at'] as String,
         ),
     ];
   });

@@ -1,4 +1,5 @@
-/// Catalog rules (#74): categories, the Beranda shortcuts, search and prices.
+/// Catalog rules (#74, #77): categories, the Beranda shortcuts, search and
+/// prices.
 /// Pure Dart; the screens look labels up with each enum's copyKey.
 library;
 
@@ -62,7 +63,8 @@ enum CategoryGroup {
 
 /// An active listing as the catalog shows it: the seller's public data only
 /// (D-26). [photos] are URLs, in order; [previousPrice] is the struck-through
-/// price after a drop.
+/// price after a drop. [createdAt] with [id] is the paging cursor; it stays
+/// the server's string, since a web DateTime drops the microseconds.
 typedef Listing = ({
   String id,
   String title,
@@ -80,22 +82,31 @@ typedef Listing = ({
   String sellerName,
   Campus sellerCampus,
   bool sellerVerified,
+  String createdAt,
 });
 
-/// Case-insensitive match on the title, the category label, or the seller's
-/// name; [categoryLabel] gives the label in the current language.
-bool matchesSearch(
-  Listing listing,
+/// Listings per catalog page; a shorter page is the last one.
+const catalogPageSize = 20;
+
+/// What the catalog asks the server for: [text] matches titles and seller
+/// names there; [categories] null means every category.
+typedef CatalogSearch = ({String? text, List<ListingCategory>? categories});
+
+/// A query equal to a category label in the current language ([label]),
+/// ignoring case, filters by that category; labels live in the app, not the
+/// database (K-02). Anything else is passed on as text.
+CatalogSearch catalogSearch(
   String query,
-  String Function(ListingCategory) categoryLabel,
+  String Function(ListingCategory) label,
 ) {
-  final q = query.trim().toLowerCase();
-  if (q.isEmpty) return true;
-  return [
-    listing.title,
-    categoryLabel(listing.category),
-    listing.sellerName,
-  ].any((field) => field.toLowerCase().contains(q));
+  final q = query.trim();
+  if (q.isEmpty) return (text: null, categories: null);
+  final match = ListingCategory.values
+      .where((c) => label(c).toLowerCase() == q.toLowerCase())
+      .toList();
+  return match.isEmpty
+      ? (text: q, categories: null)
+      : (text: null, categories: match);
 }
 
 /// "Rp 6.500.000".
