@@ -357,3 +357,102 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Di database hanya pemilik akun dan admin yang bisa membaca nomor HP.
 - Teks di bawah kolom: "Opsional. Hanya dipakai tim BeeKas bila perlu menghubungimu, tidak ditampilkan ke pengguna lain."
 - Kebijakan Privasi harus memuat tujuan yang sama persis.
+
+---
+
+## D-27 — Lingkup BINUS Festival
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Untuk BINUS Festival (23–25 November 2026): katalog, pasang barang, Booking 24 Jam dan Beli Sekarang, chat teks, kuota dengan konfirmasi admin, serta Boost dan Featured (dikerjakan terakhir).
+- Menyusul setelah Festival: ulasan, follow, dan notifikasi push.
+- Pengguna sungguhan memakai Supabase cloud. Android saja. Tanpa fitur listing AI.
+- Demo ke dosen Jumat, 23 Oktober 2026 memakai katalog baca (#75).
+
+---
+
+## D-28 — Katalog dan listing
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- 9 kategori, 5 di antaranya tampil sebagai pintasan di Beranda.
+- Kondisi: Seperti baru, Bekas – baik, Bekas – ada cacat.
+- Foto 1–5, dari kamera dan galeri. Metadata lokasi foto dibuang.
+- Harga Rp1.000–Rp50.000.000; donasi Rp0. Harga coret tampil otomatis bila penjual menurunkan harga.
+- Garansi dan spesifikasi opsional. Lokasi default kampus di profil penjual.
+- Listing langsung tayang; admin menurunkan listing yang dilaporkan. Masa tayang 60 hari.
+- Listing boleh diedit kecuali mengganti barang atau mengganti foto.
+- Stok boleh lebih dari 1. Setiap booking atau pembelian = 1 unit dan mengurangi stok.
+- Pencarian berdasarkan nama, kategori, dan penjual, dijalankan di server (#77).
+- Favorit bersifat pribadi.
+
+---
+
+## D-29 — Kuota listing dan pembayaran
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Paket Rp15.000 berisi 3 listing, berlaku juga untuk listing donasi. Penjual baru mendapat 1 listing gratis. Kuota tidak kedaluwarsa.
+- Tanpa refund, kecuali karena kesalahan sistem atau admin.
+- Pembayaran lewat QRIS atas nama CFO. Pengguna mengunggah bukti bayar; bukti dihapus setelah dikonfirmasi, yang disimpan hanya nominal, waktu, dan admin yang mengonfirmasi.
+- Konfirmasi admin paling lambat 1×24 jam.
+- Boost Rp3.000 per 3 hari, Featured Rp5.000 per 3 hari. Definisi tampilannya diputuskan di PRD.
+
+---
+
+## D-30 — Transaksi: Booking 24 Jam dan Beli Sekarang
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Booking = menahan barang tanpa janji beli. Batal otomatis setelah 24 jam; bisa diperpanjang sekali atas persetujuan penjual.
+- Beli Sekarang = janji beli dengan harga listing.
+- Status: Menunggu konfirmasi penjual → Diproses → Selesai / Dibatalkan. Selesai saat pembeli mengonfirmasi, atau otomatis 3 hari setelah waktu COD.
+- Pembatalan wajib menyertakan alasan, tanpa sanksi.
+- Tawar-menawar lewat chat; penjual yang mengubah harga listing.
+- Lokasi COD: teks bebas ditambah kampus.
+- Donasi: siapa cepat dia dapat, maksimal 2 donasi berjalan per orang.
+
+---
+
+## D-31 — Chat
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Satu percakapan per pasangan pembeli–penjual, dengan kartu barang.
+- Hanya akun `approved`, dan dimulai dari halaman barang.
+- Teks saja. Tanpa tanda dibaca dan status online.
+- "Admin BeeKas" adalah kanal pengumuman satu arah.
+- Lapor tersedia sejak awal; blokir menyusul.
+- Peringatan keamanan muncul bila pengguna berbagi kontak.
+
+**Konsekuensi:** Komunikasi lewat WhatsApp (D-04 versi web) tidak dipakai.
+
+---
+
+## D-32 — Ulasan dan profil
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Pembeli memberi ulasan sekali per pesanan setelah Selesai: bintang 1–5 dan teks. Bisa diedit selama 7 hari. Penjual boleh membalas sekali.
+- Follow: barang baru dari penjual yang diikuti muncul di Beranda dan di notifikasi.
+- Tanpa username; yang tampil nama lengkap.
+- "Verified BINUS" = akun `approved`. "BINUSIAN" = angkatan yang diisi sendiri.
+- Tamu bisa melihat profil dan rata-rata bintang; isi ulasan hanya untuk pengguna yang masuk.
+
+---
+
+## D-33 — Notifikasi dan moderasi
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (kuesioner tim)
+
+**Keputusan:**
+- Daftar notifikasi di aplikasi, ditambah email untuk hal penting. Push menyusul setelah Festival. Promo hanya untuk yang memilih ikut (opt-in).
+- Pembekuan akun disimpan di kolom terpisah, bukan status akun, dan butuh persetujuan dua admin (#76).
+- Banding lewat Bantuan, diperiksa admin lain.
+- Barang terlarang: alkohol, rokok/vape, makanan, hewan, dan obat.
