@@ -2,12 +2,18 @@ import 'package:beekas/domain/access.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('only approved accounts contact sellers and create listings', () {
+  test('only approved, unfrozen accounts act; everyone browses (rule 9)', () {
     for (final status in [null, ...AccountStatus.values]) {
-      final approved = status == AccountStatus.approved;
-      expect(canBrowseCatalog(status), isTrue, reason: '$status');
-      expect(canContactSeller(status), approved, reason: '$status');
-      expect(canCreateListing(status), approved, reason: '$status');
+      for (final frozen in [false, true]) {
+        final allowed = status == AccountStatus.approved && !frozen;
+        final why = '$status frozen=$frozen';
+        expect(canBrowseCatalog(status), isTrue, reason: why);
+        expect(canChat(status, frozen: frozen), allowed, reason: why);
+        expect(canOrder(status, frozen: frozen), allowed, reason: why);
+        expect(canCreateListing(status, frozen: frozen), allowed, reason: why);
+        expect(canReport(status, frozen: frozen), allowed, reason: why);
+        expect(canFavorite(status, frozen: frozen), allowed, reason: why);
+      }
     }
   });
 
