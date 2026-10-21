@@ -43,6 +43,7 @@ class CatalogShell extends StatefulWidget {
     this.status,
     this.onSell,
     this.onQuota,
+    this.onMyListings,
   });
 
   final CatalogRepository repository;
@@ -56,6 +57,9 @@ class CatalogShell extends StatefulWidget {
 
   /// Opens K8 Kuota Listing (#84) from Profil, for signed-in members.
   final VoidCallback? onQuota;
+
+  /// Opens K7 Barang Saya (#83) from Profil, for signed-in members.
+  final VoidCallback? onMyListings;
 
   @override
   State<CatalogShell> createState() => _CatalogShellState();
@@ -91,6 +95,7 @@ class _CatalogShellState extends State<CatalogShell> {
   void _profile() {
     final onQuota = widget.onQuota;
     final onSignOut = widget.onSignOut;
+    final onMyListings = widget.onMyListings;
     if (onQuota == null) return showComingSoon(context, onSignOut: onSignOut);
     showModalBottomSheet<void>(
       context: context,
@@ -98,6 +103,14 @@ class _CatalogShellState extends State<CatalogShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onMyListings != null)
+              ListTile(
+                title: Text(t('profileMyListings')),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  onMyListings();
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(t('profileQuota')),

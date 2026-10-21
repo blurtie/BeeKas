@@ -15,6 +15,7 @@ import 'data/signup_repository.dart';
 import 'domain/access.dart';
 import 'domain/registration.dart';
 import 'domain/sign_in.dart';
+import 'screens/my_listings_screen.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/catalog_screens.dart';
 import 'screens/consent_screen.dart';
@@ -203,6 +204,12 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
+        onMyListings: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => MyListingsScreen(repository: _listingRepository),
+          ),
+        ),
       ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),

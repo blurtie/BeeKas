@@ -62,6 +62,7 @@ Future<void> _pump(
   FakeCatalogRepository repository, {
   VoidCallback? onSignOut,
   VoidCallback? onQuota,
+  VoidCallback? onMyListings,
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -73,6 +74,7 @@ Future<void> _pump(
         repository: repository,
         onSignOut: onSignOut,
         onQuota: onQuota,
+        onMyListings: onMyListings,
       ),
     ),
   );
@@ -235,6 +237,23 @@ void main() {
     await tester.tap(find.text(t('navProfile')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(t('profileQuota')));
+    await tester.pumpAndSettle();
+    expect(opened, isTrue);
+  });
+
+  testWidgets('Profil opens Barang Saya (K7) for members', (tester) async {
+    var opened = false;
+    await _pump(
+      tester,
+      FakeCatalogRepository([_jaket]),
+      onSignOut: () {},
+      onQuota: () {},
+      onMyListings: () => opened = true,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('navProfile')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('profileMyListings')));
     await tester.pumpAndSettle();
     expect(opened, isTrue);
   });
