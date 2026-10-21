@@ -8,6 +8,7 @@ import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/registration.dart';
 import 'package:beekas/domain/rejection.dart';
 import 'package:beekas/domain/signup_error.dart';
+import 'package:beekas/screens/review_detail_screen.dart';
 import 'package:beekas/screens/review_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,11 +22,12 @@ PendingAccount _account(
   Duration waited, {
   List<Rejection> rejections = const [],
   bool photosDeleted = false,
+  String? phone = '+6281234567890',
 }) => (
   id: id,
   fullName: name,
   email: '$id@binus.ac.id',
-  phone: '+6281234567890',
+  phone: phone,
   accountType: AccountType.student,
   campus: Campus.values.first,
   submittedAt: _now.subtract(waited),
@@ -41,6 +43,7 @@ class _FakeReview implements ReviewRepository {
   final photos = <String, Uint8List>{};
   final approved = <String>[];
   final rejected = <(String, Set<RejectionReason>, String)>[];
+  final released = <(String, String)>[];
   int loads = 0;
 
   /// Completes [pending] when set; for the loading state.
@@ -77,6 +80,13 @@ class _FakeReview implements ReviewRepository {
     if (error != null) throw error;
     rejected.add((id, {...reasons}, note));
     accounts = accounts.where((a) => a.id != id).toList();
+  }
+
+  @override
+  Future<void> releasePhone(String id, String note) async {
+    final error = errors.remove('releasePhone');
+    if (error != null) throw error;
+    released.add((id, note));
   }
 }
 
@@ -268,6 +278,73 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(t('errorNotPending')), findsOneWidget);
     expect(repo.rejected, isEmpty);
+  });
+
+  Future<void> pumpDetail(
+    WidgetTester tester,
+    _FakeReview repo, {
+    String? phone = '+6281234567890',
+  }) => _pump(
+    tester,
+    ReviewDetailScreen(
+      repository: repo,
+      account: _account('e', 'Eka', Duration.zero, phone: phone),
+    ),
+  );
+  final confirmRelease = find.descendant(
+    of: find.byType(AlertDialog),
+    matching: find.widgetWithText(TextButton, t('releasePhone')),
+  );
+
+  testWidgets('L15 Lepas nomor HP confirms, needs a note, then hides', (
+    tester,
+  ) async {
+    final repo = _FakeReview();
+    await pumpDetail(tester, repo);
+    await tester.tap(find.widgetWithText(TextButton, t('releasePhone')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(t('releasePhoneTitle').replaceFirst('{name}', 'Eka')),
+      findsOneWidget,
+    );
+    await tester.tap(confirmRelease);
+    await tester.pumpAndSettle();
+    expect(find.text(t('releasePhoneNoteRequired')), findsOneWidget);
+    expect(repo.released, isEmpty);
+
+    await tester.enterText(find.byType(TextField), ' Pemilik asli ');
+    await tester.tap(confirmRelease);
+    await tester.pumpAndSettle();
+    expect(repo.released.single, ('e', 'Pemilik asli'));
+    expect(find.text(t('reviewPhoneMissing')), findsOneWidget);
+    expect(find.text(t('releasePhone')), findsNothing);
+    expect(find.text(t('releasePhoneDone')), findsOneWidget);
+  });
+
+  testWidgets('L15 without a phone has no Lepas nomor HP', (tester) async {
+    await pumpDetail(tester, _FakeReview(), phone: null);
+    expect(find.text(t('releasePhone')), findsNothing);
+  });
+
+  testWidgets('L15 Lepas nomor HP: Batal changes nothing; failure shows', (
+    tester,
+  ) async {
+    final repo = _FakeReview()
+      ..errors['releasePhone'] = const SignupException(SignupError.noPhone);
+    await pumpDetail(tester, repo);
+    await tester.tap(find.widgetWithText(TextButton, t('releasePhone')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('cancel')));
+    await tester.pumpAndSettle();
+    expect(find.text('+6281234567890'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, t('releasePhone')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'x');
+    await tester.tap(confirmRelease);
+    await tester.pumpAndSettle();
+    expect(find.text(t('errorNoPhone')), findsOneWidget);
+    expect(find.text(t('reviewPhoneMissing')), findsOneWidget);
   });
 
   testWidgets('L15 lists earlier rejections, newest first', (tester) async {

@@ -32,6 +32,10 @@ enum SignupError {
   notPending('errorNotPending'),
   // From reject_verification: rule 9; the form checks it first.
   reasonMissing('errorReasonMissing'),
+  // From release_phone: the form checks the note first.
+  noteMissing('errorNoteMissing'),
+  // From release_phone: released by another admin meanwhile.
+  noPhone('errorNoPhone'),
   // From the review functions: the account is not an admin.
   notAdmin('errorNotAdmin'),
   unknown('errorSignupUnknown');
@@ -63,6 +67,8 @@ SignupError signupErrorFrom(String? code, String message) {
     ('over_request_rate_limit', _) => SignupError.rateLimited,
     ('23514', 'not_pending') => SignupError.notPending,
     ('23514', 'reason_missing') => SignupError.reasonMissing,
+    ('23514', 'note_missing') => SignupError.noteMissing,
+    ('23514', 'no_phone') => SignupError.noPhone,
     ('42501', 'not_admin') => SignupError.notAdmin,
     _ => SignupError.unknown,
   };

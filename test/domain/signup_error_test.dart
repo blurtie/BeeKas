@@ -78,6 +78,8 @@ void main() {
       signupErrorFrom('23514', 'reason_missing'),
       SignupError.reasonMissing,
     );
+    expect(signupErrorFrom('23514', 'note_missing'), SignupError.noteMissing);
+    expect(signupErrorFrom('23514', 'no_phone'), SignupError.noPhone);
     expect(signupErrorFrom('42501', 'not_admin'), SignupError.notAdmin);
   });
 
