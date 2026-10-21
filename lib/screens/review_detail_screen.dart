@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/review_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/phone_release.dart';
 import '../domain/rejection.dart';
+import '../domain/signup_error.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
 
 /// L15 Admin: detail berkas (no design). Personal details, account and card
 /// type, phone (unverified, D-04), card and selfie side by side, earlier
-/// rejections (D-25), Setujui and Tolak with reasons (rule 9). Pops the copy key of the outcome, 'approved'
-/// or 'rejected'.
+/// rejections (D-25), Setujui and Tolak with reasons (rule 9), and Lepas
+/// nomor HP (D-04). Pops the copy key of the outcome, 'approved' or
+/// 'rejected'.
 class ReviewDetailScreen extends StatefulWidget {
   const ReviewDetailScreen({
     super.key,
@@ -31,6 +34,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
   // Photos stay in memory only (D-07).
   late final _card = _load(widget.account.cardPath);
   late final _selfie = _load(widget.account.selfiePath);
+  late String? _phone = widget.account.phone;
   bool _busy = false;
   String? _error;
 
@@ -80,6 +84,34 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
       ),
       'rejected',
     );
+  }
+
+  Future<void> _releasePhone() async {
+    final note = await showDialog<String>(
+      context: context,
+      builder: (context) => _ReleasePhoneDialog(name: widget.account.fullName),
+    );
+    if (note == null || !mounted) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.releasePhone(widget.account.id, note);
+      if (!mounted) return;
+      setState(() => _phone = null);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t('releasePhoneDone'))));
+    } on SignupException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.error?.copyKey ?? 'errorNetwork';
+        // Released by another admin meanwhile.
+        if (e.error == SignupError.noPhone) _phone = null;
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _decide(Future<void> Function() call, String outcome) async {
@@ -146,7 +178,15 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen> {
               t('accountType_${account.accountType.name}'),
             ),
             field(t('reviewCard'), t('card_${account.accountType.name}')),
-            field(t('phone'), account.phone ?? t('reviewPhoneMissing')),
+            field(t('phone'), _phone ?? t('reviewPhoneMissing')),
+            if (_phone != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _busy ? null : _releasePhone,
+                  child: Text(t('releasePhone')),
+                ),
+              ),
             if (account.rejections.isNotEmpty) ...[
               const SizedBox(height: 24),
               Text(
@@ -335,4 +375,67 @@ class _RejectDialogState extends State<_RejectDialog> {
       ],
     );
   }
+}
+
+/// Lepas nomor HP: confirms and asks for the note, which must not hold the
+/// number (D-26). Pops the trimmed note, or null on Batal.
+class _ReleasePhoneDialog extends StatefulWidget {
+  const _ReleasePhoneDialog({required this.name});
+
+  final String name;
+
+  @override
+  State<_ReleasePhoneDialog> createState() => _ReleasePhoneDialogState();
+}
+
+class _ReleasePhoneDialogState extends State<_ReleasePhoneDialog> {
+  final _note = TextEditingController();
+  bool _tried = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (releaseNoteError(_note.text) == null) {
+      Navigator.pop(context, _note.text.trim());
+    } else {
+      setState(() => _tried = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(t('releasePhoneTitle').replaceFirst('{name}', widget.name)),
+    scrollable: true,
+    content: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(t('releasePhoneBody')),
+        const SizedBox(height: 16),
+        BeeTextField(
+          label: t('releasePhoneNote'),
+          helperText: t('releasePhoneNoteHelper'),
+          controller: _note,
+          errorText: switch (_tried ? releaseNoteError(_note.text) : null) {
+            null => null,
+            final SignupError e when e == SignupError.noteMissing => t(
+              'releasePhoneNoteRequired',
+            ),
+            final e => t(e.copyKey),
+          },
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(t('cancel')),
+      ),
+      TextButton(onPressed: _submit, child: Text(t('releasePhone'))),
+    ],
+  );
 }

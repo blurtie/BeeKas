@@ -39,6 +39,10 @@ abstract interface class ReviewRepository {
   /// pending → rejected with the reasons (rule 9); the backend records the
   /// admin and the time. A blank [note] is stored as none.
   Future<void> reject(String id, Set<RejectionReason> reasons, String note);
+
+  /// Clears the account's phone so another account can use it (D-04); the
+  /// backend logs the admin, the time and [note], never the number (D-26).
+  Future<void> releasePhone(String id, String note);
 }
 
 class SupabaseReviewRepository implements ReviewRepository {
@@ -90,4 +94,12 @@ class SupabaseReviewRepository implements ReviewRepository {
           },
         ),
       );
+
+  @override
+  Future<void> releasePhone(String id, String note) => guardBackend(
+    () => _client.rpc<void>(
+      'release_phone',
+      params: {'p_id': id, 'p_note': note},
+    ),
+  );
 }
