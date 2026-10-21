@@ -6,6 +6,7 @@ import '../data/signup_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/chat.dart';
 import '../domain/signup_error.dart';
+import '../ui/components.dart';
 import '../ui/tokens.dart';
 
 String _two(int n) => n.toString().padLeft(2, '0');
@@ -112,7 +113,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(t('chatTitle')), centerTitle: true),
+      appBar: BeeHeader(title: Text(t('chatTitle'))),
       body: SafeArea(
         child: StreamBuilder(
           stream: _overview,
@@ -131,6 +132,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
             if (data == null) {
               return const Center(child: CircularProgressIndicator());
             }
+            final admin = row(
+              name: t('adminBeeKas'),
+              body: data.announcement?.body ?? t('announcementsEmpty'),
+              at: data.announcement?.createdAt,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => AnnouncementsScreen(
+                    repository: widget.repository,
+                    now: widget.now,
+                  ),
+                ),
+              ),
+            );
             final shown = [
               for (final c in data.conversations)
                 if (_filter.shows(iAmBuyer: c.iAmBuyer)) c,
@@ -162,11 +177,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (shown.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: _Message(text: t('chatEmpty')),
-                  ),
+                // Admin BeeKas belongs to Semua only; with no chats it
+                // comes first, above a small hint (daftar-9 puts it last).
+                if (_filter == ChatFilter.all && shown.isEmpty) admin,
                 for (final c in shown)
                   row(
                     name: c.otherName,
@@ -184,20 +197,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       ),
                     ),
                   ),
-                row(
-                  name: t('adminBeeKas'),
-                  body: data.announcement?.body ?? t('announcementsEmpty'),
-                  at: data.announcement?.createdAt,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => AnnouncementsScreen(
-                        repository: widget.repository,
-                        now: widget.now,
-                      ),
+                if (shown.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      t('chatEmpty'),
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodySmall,
                     ),
                   ),
-                ),
+                if (_filter == ChatFilter.all && shown.isNotEmpty) admin,
               ],
             );
           },
@@ -228,7 +237,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(t('adminBeeKas')), centerTitle: true),
+      appBar: BeeHeader(title: Text(t('adminBeeKas'))),
       body: SafeArea(
         child: FutureBuilder(
           future: _items,
@@ -253,10 +262,12 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 Expanded(
                   child: items.isEmpty
                       ? _Message(text: t('announcementsEmpty'))
+                      // Newest at the bottom, as in K15.
                       : ListView(
+                          reverse: true,
                           padding: const EdgeInsets.all(16),
                           children: [
-                            for (final a in items.reversed)
+                            for (final a in items)
                               _Bubble(
                                 body: a.body,
                                 time: chatTimeLabel(a.createdAt, widget.now()),
@@ -487,7 +498,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Widget build(BuildContext context) {
     final item = widget.item;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), centerTitle: true),
+      appBar: BeeHeader(title: Text(widget.title)),
       body: SafeArea(
         child: Column(
           children: [
@@ -630,7 +641,7 @@ class _PostAnnouncementScreenState extends State<PostAnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(t('announcementsAdminTitle'))),
+      appBar: BeeHeader(title: Text(t('announcementsAdminTitle'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -646,9 +657,14 @@ class _PostAnnouncementScreenState extends State<PostAnnouncementScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _sending ? null : _preview,
-              child: Text(t('announcementPreview')),
+            ListenableBuilder(
+              listenable: _text,
+              builder: (context, _) => FilledButton(
+                onPressed: _sending || _text.text.trim().isEmpty
+                    ? null
+                    : _preview,
+                child: Text(t('announcementPreview')),
+              ),
             ),
           ],
         ),

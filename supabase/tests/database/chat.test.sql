@@ -49,12 +49,12 @@ values
 select pg_temp.act_as(:a);
 select lives_ok($$ select public.send_message('Masih ada?', p_listing => '86868686-1111-4000-8000-000000000001') $$,
   'a buyer starts a chat from a live listing');
-select is((select row(buyer_id, seller_id, listing_id)::text from public.conversations),
+select is((select row(buyer_id, seller_id, listing_id)::text from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'),
   '(86868686-0000-4000-8000-000000000001,86868686-0000-4000-8000-000000000002,86868686-1111-4000-8000-000000000001)',
   'one conversation for the pair, with the listing card');
 select is(public.send_message('Bisa nego?', p_listing => '86868686-1111-4000-8000-000000000001'),
-  (select id from public.conversations), 'the same pair reuses its conversation');
-select is((select count(*)::int from public.messages), 2, 'the buyer reads both messages');
+  (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'), 'the same pair reuses its conversation');
+select is((select count(*)::int from public.messages m join public.conversations c on c.id = m.conversation_id where c.buyer_id::text like '86868686-%'), 2, 'the buyer reads both messages');
 select throws_ok($$ select public.send_message('x', p_listing => '86868686-1111-4000-8000-000000000002') $$,
   '23514', 'listing_unavailable', 'a taken-down listing cannot start a chat');
 select throws_ok($$ select public.send_message('x', p_listing => '86868686-1111-4000-8000-000000000003') $$,
@@ -74,8 +74,8 @@ reset role;
 select pg_temp.act_as(:s);
 select throws_ok($$ select public.send_message('Halo', p_listing => '86868686-1111-4000-8000-000000000001') $$,
   '23514', 'listing_unavailable', 'sellers cannot chat about their own listing');
-select is((select count(*)::int from public.messages), 2, 'the seller reads the conversation');
-select lives_ok($$ select public.send_message('Masih, bisa', (select id from public.conversations)) $$,
+select is((select count(*)::int from public.messages m join public.conversations c on c.id = m.conversation_id where c.buyer_id::text like '86868686-%'), 2, 'the seller reads the conversation');
+select lives_ok($$ select public.send_message('Masih, bisa', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001')) $$,
   'the seller replies in the conversation');
 select is(public.conversation_for_listing('86868686-1111-4000-8000-000000000001'), null,
   'the seller has no buyer conversation for their own listing');
@@ -83,28 +83,28 @@ reset role;
 
 select pg_temp.act_as(:a);
 select is(public.conversation_for_listing('86868686-1111-4000-8000-000000000001'),
-  (select id from public.conversations), 'the buyer finds the conversation from the listing');
-select is((select count(*)::int from public.my_conversations() where i_am_buyer and last_body = 'Masih, bisa'), 1,
+  (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'), 'the buyer finds the conversation from the listing');
+select is((select count(*)::int from public.my_conversations() where i_am_buyer and other_name = 'T86 2' and last_body = 'Masih, bisa'), 1,
   'the list shows the last message, and that I am the buyer');
-select throws_ok($$ select public.send_message('', (select id from public.conversations)) $$,
+select throws_ok($$ select public.send_message('', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001')) $$,
   '23514', null, 'empty messages are refused');
-select throws_ok($$ select public.send_message('   ', (select id from public.conversations)) $$,
+select throws_ok($$ select public.send_message('   ', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001')) $$,
   '23514', null, 'blank messages are refused');
-select throws_ok(format('select public.send_message(%L, (select id from public.conversations))', repeat('a', 1001)),
+select throws_ok(format('select public.send_message(%L, (select id from public.conversations where buyer_id = auth.uid()))', repeat('a', 1001)),
   '23514', null, 'messages over 1.000 characters are refused (K-21)');
-select lives_ok(format('select public.send_message(%L, (select id from public.conversations))', repeat('a', 1000)),
+select lives_ok(format('select public.send_message(%L, (select id from public.conversations where buyer_id = auth.uid()))', repeat('a', 1000)),
   '1.000 characters are allowed');
 reset role;
 
 -- The item card only takes this seller's live listings.
 select pg_temp.act_as(:a);
-select throws_ok($$ select public.send_message('x', (select id from public.conversations),
+select throws_ok($$ select public.send_message('x', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'),
   '86868686-1111-4000-8000-000000000002') $$,
   '23514', 'listing_unavailable', 'a taken-down listing cannot become the card');
-select throws_ok($$ select public.send_message('x', (select id from public.conversations),
+select throws_ok($$ select public.send_message('x', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'),
   '86868686-1111-4000-8000-000000000005') $$,
   '23514', 'listing_unavailable', 'another seller''s listing cannot become the card');
-select is((select listing_id from public.conversations), '86868686-1111-4000-8000-000000000001'::uuid,
+select is((select listing_id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'), '86868686-1111-4000-8000-000000000001'::uuid,
   'the card stays');
 reset role;
 
@@ -125,17 +125,17 @@ reset role;
 
 -- Only participants -------------------------------------------------------------------
 
-select set_config('t.conv', (select id from public.conversations)::text, true);
+select set_config('t.conv', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001')::text, true);
 
 select pg_temp.act_as(:c);
-select is((select count(*)::int from public.conversations) + (select count(*)::int from public.messages), 0,
+select is((select count(*)::int from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001') + (select count(*)::int from public.messages m join public.conversations c on c.id = m.conversation_id where c.buyer_id::text like '86868686-%'), 0,
   'others read neither the conversation nor its messages');
 select throws_ok(format('select public.send_message(%L, %L)', 'x', current_setting('t.conv')),
   '42501', 'not_participant', 'others cannot write into it');
 reset role;
 
 select pg_temp.act_as(:x);
-select is((select count(*)::int from public.messages), 0, 'admins do not read chats (K-24)');
+select is((select count(*)::int from public.messages m join public.conversations c on c.id = m.conversation_id where c.buyer_id::text like '86868686-%'), 0, 'admins do not read chats (K-24)');
 reset role;
 
 set local role anon;
@@ -151,7 +151,7 @@ reset role;
 -- A frozen buyer, after the conversation exists, cannot write in it (K-26).
 insert into public.conversations (buyer_id, seller_id) values (:f, :s);
 select pg_temp.act_as(:f);
-select throws_ok($$ select public.send_message('x', (select id from public.conversations)) $$,
+select throws_ok($$ select public.send_message('x', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000005')) $$,
   '42501', 'chat_not_allowed', 'frozen accounts cannot send');
 reset role;
 
@@ -174,7 +174,7 @@ select lives_ok($$ select public.post_announcement('Layanan libur 1 November.') 
 reset role;
 
 select pg_temp.act_as(:p);
-select is((select body from public.announcements), 'Layanan libur 1 November.',
+select is((select body from public.announcements where posted_by = '86868686-0000-4000-8000-000000000006'), 'Layanan libur 1 November.',
   'every signed-in member reads announcements');
 reset role;
 
@@ -189,9 +189,9 @@ select is((select count(*)::int from pg_publication_tables
 -- The card disappears once the listing is no longer live.
 update public.listings set is_active = false where id = :l;
 select pg_temp.act_as(:a);
-select is((select row(listing_id, listing_title)::text from public.my_conversations()), '(,)',
+select is((select row(listing_id, listing_title)::text from public.my_conversations() where other_name = 'T86 2'), '(,)',
   'no card for a listing that is no longer live');
-select is((select last_body from public.my_conversations()), repeat('a', 1000),
+select is((select last_body from public.my_conversations() where other_name = 'T86 2'), repeat('a', 1000),
   'the conversation itself stays');
 reset role;
 

@@ -1,3 +1,4 @@
+import 'package:beekas/config/copy.dart';
 import 'package:beekas/data/chat_repository.dart';
 import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/signup_error.dart';
@@ -59,6 +60,7 @@ void main() {
       await tester.pump();
       expect(find.text('Najwa'), findsOneWidget);
       expect(find.text('Evan'), findsNothing);
+      expect(find.text('Admin BeeKas'), findsNothing);
 
       await tester.tap(find.text('All'));
       repo.overviews.add((
@@ -77,12 +79,13 @@ void main() {
       await _pump(tester, ChatListScreen(repository: repo, now: () => _now));
       repo.overviews.add((conversations: [], announcement: null));
       await tester.pump();
+      // Admin BeeKas first, the hint below it.
+      final hint = find.text('No chats yet. Start one from an item page.');
+      expect(hint, findsOneWidget);
       expect(
-        find.text('No chats yet. Start one from an item page.'),
-        findsOneWidget,
+        tester.getTopLeft(find.text('Admin BeeKas')).dy,
+        lessThan(tester.getTopLeft(hint).dy),
       );
-      // Admin BeeKas is always there.
-      expect(find.text('Admin BeeKas'), findsOneWidget);
 
       repo.overviews.addError(const SignupException(SignupError.unknown));
       await tester.pump();
@@ -283,15 +286,33 @@ void main() {
     });
   });
 
+  testWidgets('back buttons read in the chosen language', (tester) async {
+    addTearDown(() => language.value = Lang.en);
+    language.value = Lang.id;
+    final repo = FakeChatRepository();
+    for (final screen in <Widget>[
+      ChatListScreen(repository: repo),
+      AnnouncementsScreen(repository: repo),
+      ChatRoomScreen(repository: repo, title: 'Najwa', conversationId: 'c1'),
+      PostAnnouncementScreen(repository: repo),
+    ]) {
+      await _pump(tester, screen);
+      expect(find.byTooltip('Kembali'), findsOneWidget, reason: '$screen');
+    }
+  });
+
   group('K21 Pengumuman', () {
     testWidgets('admin previews, then posts', (tester) async {
       final repo = FakeChatRepository();
       await _pump(tester, PostAnnouncementScreen(repository: repo));
-      await tester.tap(find.text('Preview'));
+      Finder preview() => find.widgetWithText(FilledButton, 'Preview');
+      expect(tester.widget<FilledButton>(preview()).onPressed, isNull);
+      await tester.enterText(find.byType(TextField), '   ');
       await tester.pump();
-      expect(find.text('Write the announcement.'), findsOneWidget);
+      expect(tester.widget<FilledButton>(preview()).onPressed, isNull);
 
       await tester.enterText(find.byType(TextField), ' Layanan libur. ');
+      await tester.pump();
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       expect(find.text('Layanan libur.'), findsOneWidget);
