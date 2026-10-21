@@ -27,6 +27,10 @@ void showComingSoon(BuildContext context, {VoidCallback? onSignOut}) {
 
 String _categoryLabel(ListingCategory c) => t(c.copyKey);
 
+/// A category's label in every language, for search (D-41).
+Iterable<String> _categoryLabels(ListingCategory c) =>
+    copy.values.map((m) => m[c.copyKey]!);
+
 /// Beranda (home.png) and Kategori (Daftar-12) behind one bottom bar; both
 /// page through the catalog on the server (#77). Guests and every status
 /// browse it (D-06).
@@ -133,6 +137,7 @@ class _ListingFeedState extends State<_ListingFeed> {
   void didUpdateWidget(_ListingFeed old) {
     super.didUpdateWidget(old);
     if (old.search.text != widget.search.text ||
+        !listEquals(old.search.matched, widget.search.matched) ||
         !listEquals(old.search.categories, widget.search.categories)) {
       _generation++;
       _items.clear();
@@ -151,6 +156,7 @@ class _ListingFeedState extends State<_ListingFeed> {
     try {
       final page = await widget.repository.listings(
         query: widget.search.text,
+        matched: widget.search.matched,
         categories: widget.search.categories,
         after: _items.lastOrNull,
       );
@@ -243,7 +249,7 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final search = catalogSearch(_query, _categoryLabel);
+    final search = catalogSearch(_query, _categoryLabels);
 
     return CustomScrollView(
       slivers: [
@@ -448,7 +454,7 @@ void _openResults(
         slivers: [
           _ListingFeed(
             repository: repository,
-            search: (text: null, categories: categories),
+            search: (text: null, matched: null, categories: categories),
           ),
         ],
       ),

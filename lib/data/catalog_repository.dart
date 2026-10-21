@@ -8,10 +8,12 @@ import 'signup_repository.dart';
 /// Failures are [SignupException]s.
 abstract interface class CatalogRepository {
   /// One page of active listings, newest first: [catalogPageSize] of them
-  /// after [after]. [query] matches titles and seller names on the server;
-  /// [categories] null means all.
+  /// after [after]. [query] matches titles and seller names on the server,
+  /// or-ed with the [matched] categories (D-41); [categories] (a shortcut
+  /// group) restricts the result, null meaning all.
   Future<List<Listing>> listings({
     String? query,
+    List<ListingCategory>? matched,
     List<ListingCategory>? categories,
     Listing? after,
   });
@@ -24,6 +26,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
   @override
   Future<List<Listing>> listings({
     String? query,
+    List<ListingCategory>? matched,
     List<ListingCategory>? categories,
     Listing? after,
   }) => guardBackend(() async {
@@ -32,6 +35,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
       params: {
         'p_query': query,
         'p_categories': categories?.map((c) => c.code).toList(),
+        'p_query_categories': matched?.map((c) => c.code).toList(),
         'p_limit': catalogPageSize,
         'p_after_created_at': after?.createdAt,
         'p_after_id': after?.id,

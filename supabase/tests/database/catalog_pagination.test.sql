@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(12);
 
 -- Seller A (approved) has five listings, three sharing one created_at; seller P is
 -- pending with a listing whose title matches every search below.
@@ -50,6 +50,14 @@ select is(array(select title from public.catalog_listings('t77', '{clothing}')),
   array['T77 Jacket'], 'category filter');
 select is(array(select title from public.catalog_listings('t77', '{clothing,shoes,bags,accessories}')),
   array['T77 Jacket', 'T77 Shoes', 'T77 Watch'], 'group filter combines with search');
+
+-- A label word adds its categories (or-ed with the text); the group still restricts.
+select is(array(select title from public.catalog_listings('zeta',
+    p_query_categories => '{shoes}')),
+  array['T77 Laptop Zeta', 'T77 Shoes'], 'title match in another category kept beside the category match');
+select is(array(select title from public.catalog_listings('zeta', '{clothing,shoes,bags,accessories}',
+    p_query_categories => '{shoes}')),
+  array['T77 Shoes'], 'shortcut group still restricts the or-ed matches');
 
 reset role;
 select * from finish();

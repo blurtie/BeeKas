@@ -104,7 +104,7 @@ void main() {
     expect(find.text(t('donation')), findsOneWidget);
   });
 
-  testWidgets('Beranda search: text to the server, label as category', (
+  testWidgets('Beranda search: text to the server, label word adds category', (
     tester,
   ) async {
     final repository = FakeCatalogRepository([_macbook, _jaket, _buku]);
@@ -117,9 +117,10 @@ void main() {
     expect(find.text('Jaket Uniqlo'), findsOneWidget);
     expect(find.text('Macbook Air M1'), findsNothing);
 
-    await tester.enterText(search, t('category_laptop_computer'));
+    await tester.enterText(search, 'komputer');
     await _typed(tester);
-    expect(repository.lastCategories, [ListingCategory.laptopComputer]);
+    expect(repository.lastMatched, [ListingCategory.laptopComputer]);
+    expect(repository.lastCategories, isNull);
     expect(find.text('Macbook Air M1'), findsOneWidget);
     expect(find.text('Jaket Uniqlo'), findsNothing);
 
@@ -127,8 +128,9 @@ void main() {
     await _typed(tester);
     expect(find.text(t('searchEmpty')), findsOneWidget);
 
-    await tester.enterText(search, t('category_shoes'));
+    await tester.enterText(search, 'shoes');
     await _typed(tester);
+    expect(repository.lastMatched, [ListingCategory.shoes]);
     expect(find.text(t('searchEmpty')), findsOneWidget);
   });
 

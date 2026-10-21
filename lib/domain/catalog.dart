@@ -88,25 +88,37 @@ typedef Listing = ({
 /// Listings per catalog page; a shorter page is the last one.
 const catalogPageSize = 20;
 
-/// What the catalog asks the server for: [text] matches titles and seller
-/// names there; [categories] null means every category.
-typedef CatalogSearch = ({String? text, List<ListingCategory>? categories});
+/// What the catalog asks the server for: listings whose title or seller
+/// name contains [text], or whose category is in [matched]; [categories]
+/// (a shortcut group) further restricts them, null meaning every category.
+typedef CatalogSearch = ({
+  String? text,
+  List<ListingCategory>? matched,
+  List<ListingCategory>? categories,
+});
 
-/// A query equal to a category label in the current language ([label]),
-/// ignoring case, filters by that category; labels live in the app, not the
-/// database (K-02). Anything else is passed on as text.
+final _labelWordSplit = RegExp(r'[\s&]+');
+
+/// A query equal to a word of a category label in any language ([labels]),
+/// ignoring case and "&", also matches that category (K-02, D-41); labels
+/// live in the app, not the database.
 CatalogSearch catalogSearch(
   String query,
-  String Function(ListingCategory) label,
+  Iterable<String> Function(ListingCategory) labels,
 ) {
-  final q = query.trim();
-  if (q.isEmpty) return (text: null, categories: null);
-  final match = ListingCategory.values
-      .where((c) => label(c).toLowerCase() == q.toLowerCase())
-      .toList();
-  return match.isEmpty
-      ? (text: q, categories: null)
-      : (text: null, categories: match);
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return (text: null, matched: null, categories: null);
+  final matched = [
+    for (final c in ListingCategory.values)
+      if (labels(c)
+          .any((l) => l.toLowerCase().split(_labelWordSplit).contains(q)))
+        c,
+  ];
+  return (
+    text: query.trim(),
+    matched: matched.isEmpty ? null : matched,
+    categories: null,
+  );
 }
 
 /// "Rp 6.500.000".

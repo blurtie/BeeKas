@@ -16,26 +16,28 @@ void main() {
     expect(discountPercent(6500000, 6500000), isNull);
   });
 
-  test('a category label, EN or ID, becomes a category filter; else text', () {
-    final en = {
-      ListingCategory.laptopComputer: 'Laptops & Computers',
-      ListingCategory.clothing: 'Clothing',
+  test('a label word, EN or ID, adds its category beside the text', () {
+    const labels = {
+      ListingCategory.booksStationery: [
+        'Books & Stationery',
+        'Buku & Alat Tulis',
+      ],
+      ListingCategory.shoes: ['Shoes', 'Sepatu'],
     };
-    final id = {
-      ListingCategory.laptopComputer: 'Laptop & Komputer',
-      ListingCategory.clothing: 'Pakaian',
-    };
-    String Function(ListingCategory) labels(Map<ListingCategory, String> m) =>
-        (c) => m[c] ?? '-';
+    Iterable<String> label(ListingCategory c) => labels[c] ?? const ['-'];
 
-    expect(_parts(catalogSearch(' laptops & COMPUTERS ', labels(en))), (
-      null,
-      'laptop_computer',
+    expect(_parts(catalogSearch(' BUKU ', label)), (
+      'BUKU',
+      'books_stationery',
     ));
-    expect(_parts(catalogSearch('pakaian', labels(id))), (null, 'clothing'));
-    expect(_parts(catalogSearch('Clothing', labels(id))), ('Clothing', null));
-    expect(_parts(catalogSearch(' macbook ', labels(en))), ('macbook', null));
-    expect(_parts(catalogSearch('  ', labels(en))), (null, null));
+    expect(_parts(catalogSearch('books', label)), (
+      'books',
+      'books_stationery',
+    ));
+    expect(_parts(catalogSearch('sepatu', label)), ('sepatu', 'shoes'));
+    expect(_parts(catalogSearch('book', label)), ('book', null));
+    expect(_parts(catalogSearch('&', label)), ('&', null));
+    expect(_parts(catalogSearch('  ', label)), (null, null));
   });
 
   test('All has every category; Accessories is electronics and fashion', () {
@@ -62,4 +64,4 @@ void main() {
 
 /// Lists compare by identity inside records; compare their contents.
 (String?, String?) _parts(CatalogSearch s) =>
-    (s.text, s.categories?.map((c) => c.code).join(','));
+    (s.text, s.matched?.map((c) => c.code).join(','));

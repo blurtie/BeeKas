@@ -35,8 +35,8 @@ Listing fakeListing(
   sellerVerified: true,
 );
 
-/// Plays the server: filters [result] by text (title or seller) and
-/// categories, in pages. [gate] holds the answer for the loading state, and
+/// Plays the server: filters [result] by text (title or seller) or matched
+/// categories, then by categories, in pages. [gate] holds the answer for the loading state, and
 /// [fail] makes the next call throw it.
 class FakeCatalogRepository implements CatalogRepository {
   FakeCatalogRepository([this.result = const []]);
@@ -45,15 +45,18 @@ class FakeCatalogRepository implements CatalogRepository {
   Object? fail;
   var calls = 0;
   List<ListingCategory>? lastCategories;
+  List<ListingCategory>? lastMatched;
 
   @override
   Future<List<Listing>> listings({
     String? query,
+    List<ListingCategory>? matched,
     List<ListingCategory>? categories,
     Listing? after,
   }) async {
     calls++;
     lastCategories = categories;
+    lastMatched = matched;
     await gate?.future;
     final error = fail;
     fail = null;
@@ -62,7 +65,8 @@ class FakeCatalogRepository implements CatalogRepository {
     final matches = [
       for (final l in result)
         if ((q == null ||
-                '${l.title}|${l.sellerName}'.toLowerCase().contains(q)) &&
+                '${l.title}|${l.sellerName}'.toLowerCase().contains(q) ||
+                (matched?.contains(l.category) ?? false)) &&
             (categories == null || categories.contains(l.category)))
           l,
     ];

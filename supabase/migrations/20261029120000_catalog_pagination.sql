@@ -1,7 +1,8 @@
 -- Catalog pages and search on the server (#77, D-28). Keyset (created_at desc, id):
 -- pass the last row's created_at and id to get the next page. The query matches the
--- title or the seller's name, any case; category labels are mapped to p_categories
--- in the app (K-02), and a Beranda shortcut sends its group's categories.
+-- title or the seller's name, any case, or a category in p_query_categories: the app
+-- maps a query equal to a label word (EN or ID) to those codes (K-02, D-41). A Beranda
+-- shortcut sends its group as p_categories, which always restricts.
 
 drop function public.catalog_listings();
 
@@ -10,7 +11,8 @@ create function public.catalog_listings(
   p_categories public.listing_category[] default null,
   p_limit integer default 20,
   p_after_created_at timestamptz default null,
-  p_after_id uuid default null
+  p_after_id uuid default null,
+  p_query_categories public.listing_category[] default null
 )
 returns table (
   id uuid,
@@ -50,7 +52,8 @@ as $$
     -- strpos, not ilike: % and _ in the query stay plain text.
     and (coalesce(btrim(p_query), '') = ''
       or strpos(lower(l.title), lower(btrim(p_query))) > 0
-      or strpos(lower(p.full_name), lower(btrim(p_query))) > 0)
+      or strpos(lower(p.full_name), lower(btrim(p_query))) > 0
+      or l.category = any (p_query_categories))
     and (p_categories is null or l.category = any (p_categories))
     and (p_after_created_at is null
       or l.created_at < p_after_created_at
@@ -59,8 +62,8 @@ as $$
   limit least(greatest(coalesce(p_limit, 20), 1), 100);
 $$;
 
-revoke execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid) from public;
-grant execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid) to anon, authenticated;
+revoke execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]) from public;
+grant execute on function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]) to anon, authenticated;
 
 -- Serves the keyset order; the (created_at desc) index from #74 cannot break ties.
 drop index public.listings_active_newest;
