@@ -197,7 +197,7 @@ class _QrisScreenState extends State<_QrisScreen> {
     try {
       final proof = await widget.pickProof();
       if (proof == null) return;
-      await widget.repository.submit(PaymentKind.package, proof);
+      await submitPayment(widget.repository, PaymentKind.package, proof);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       // D-43 says why; anything else is a failed upload, a refused payment

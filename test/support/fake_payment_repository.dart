@@ -16,6 +16,9 @@ class FakePaymentRepository implements PaymentRepository {
   final pendingList = <PendingPayment>[];
   final proofs = <String, Uint8List>{};
   final submitted = <Uint8List>[];
+
+  /// Proofs in the member's folder, by path.
+  final uploads = <String, Uint8List>{};
   final confirmed = <(String, int)>[];
   final rejected = <(String, String)>[];
   final errors = <String, Object>{};
@@ -58,10 +61,30 @@ class FakePaymentRepository implements PaymentRepository {
   }
 
   @override
-  Future<void> submit(PaymentKind kind, Uint8List proof) async {
-    _fail('submit');
-    submitted.add(proof);
+  Future<bool> hasPending() async {
+    _fail('hasPending');
+    return payments.any((p) => p.status == PaymentStatus.pending);
+  }
+
+  @override
+  Future<String> uploadProof(Uint8List proof) async {
+    _fail('uploadProof');
+    final path = 'me/${uploads.length}.jpg';
+    uploads[path] = proof;
+    return path;
+  }
+
+  @override
+  Future<void> recordPayment(PaymentKind kind, String path) async {
+    _fail('recordPayment');
+    submitted.add(uploads[path]!);
     add(PaymentStatus.pending);
+  }
+
+  @override
+  Future<void> deleteProof(String path) async {
+    _fail('deleteProof');
+    uploads.remove(path);
   }
 
   @override

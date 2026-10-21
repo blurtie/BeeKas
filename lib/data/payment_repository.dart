@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/payment.dart';
+import '../domain/signup_error.dart';
 import 'signup_repository.dart';
 
 /// One of the member's payments in K8.
@@ -40,8 +41,17 @@ abstract interface class PaymentRepository {
   /// The QRIS image from public storage (K-09).
   ImageProvider get qris;
 
-  /// Uploads the proof (a JPEG without metadata) and records the payment.
-  Future<void> submit(PaymentKind kind, Uint8List proof);
+  /// Whether the member already has a payment waiting (D-43).
+  Future<bool> hasPending();
+
+  /// Stores the proof (a JPEG without metadata); returns its path.
+  Future<String> uploadProof(Uint8List proof);
+
+  /// submit_payment: records the payment for an uploaded proof.
+  Future<void> recordPayment(PaymentKind kind, String path);
+
+  /// Removes a proof no payment records.
+  Future<void> deleteProof(String path);
 
   /// admin_pending_payments: longest waiting first.
   Future<List<PendingPayment>> pending();
@@ -53,6 +63,33 @@ abstract interface class PaymentRepository {
   Future<void> confirm(String id, int received);
 
   Future<void> reject(String id, String reason);
+}
+
+/// K8: checks D-43 before uploading, then records the payment. A proof whose
+/// payment was refused is deleted again; when the answer was lost it stays,
+/// since the payment may have been recorded.
+Future<void> submitPayment(
+  PaymentRepository repository,
+  PaymentKind kind,
+  Uint8List proof,
+) async {
+  if (await repository.hasPending()) {
+    throw const SignupException(SignupError.paymentPending);
+  }
+  final path = await repository.uploadProof(proof);
+  try {
+    await repository.recordPayment(kind, path);
+  } on SignupException catch (e) {
+    // unknown covers timeouts and 5xx: submit_payment may still commit.
+    if (e.error != null && e.error != SignupError.unknown) {
+      try {
+        await repository.deleteProof(path);
+      } on SignupException {
+        // Left for the 30-day cleanup (K-10).
+      }
+    }
+    rethrow;
+  }
 }
 
 class SupabasePaymentRepository implements PaymentRepository {
@@ -96,13 +133,19 @@ class SupabasePaymentRepository implements PaymentRepository {
     _client.storage.from('payment-qris').getPublicUrl('qris.png'),
   );
 
-  /// An upload whose payment is not recorded stays in the bucket until the
-  /// 30-day cleanup (K-10): members cannot delete what they cannot read.
   @override
-  Future<void> submit(
-    PaymentKind kind,
-    Uint8List proof,
-  ) => guardBackend(() async {
+  Future<bool> hasPending() => guardBackend(() async {
+    final row = await _client
+        .from('payments')
+        .select('id')
+        .eq('member_id', _uid)
+        .eq('status', 'pending')
+        .maybeSingle();
+    return row != null;
+  });
+
+  @override
+  Future<String> uploadProof(Uint8List proof) => guardBackend(() async {
     final name =
         '${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1 << 32)}';
     final path = '$_uid/$name.jpg';
@@ -111,11 +154,20 @@ class SupabasePaymentRepository implements PaymentRepository {
       proof,
       fileOptions: const FileOptions(contentType: 'image/jpeg'),
     );
-    await _client.rpc<void>(
+    return path;
+  });
+
+  @override
+  Future<void> recordPayment(PaymentKind kind, String path) => guardBackend(
+    () => _client.rpc<void>(
       'submit_payment',
       params: {'p_kind': kind.name, 'p_proof': path},
-    );
-  });
+    ),
+  );
+
+  @override
+  Future<void> deleteProof(String path) =>
+      guardBackend(() => _proofs.remove([path]));
 
   @override
   Future<List<PendingPayment>> pending() => guardBackend(() async {

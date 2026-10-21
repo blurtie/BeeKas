@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(40);
+select plan(46);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -44,8 +44,12 @@ select lives_ok($$ select pg_temp.upload('84848484-0000-4000-8000-000000000001/p
   'member uploads a proof into their own folder');
 select throws_ok($$ select pg_temp.upload('84848484-0000-4000-8000-000000000002/p1.jpg') $$,
   '42501', null, 'members cannot upload into another folder');
+select is((select count(*)::int from storage.objects where bucket_id = 'payment-proofs'), 1,
+  'members read their own proof while no payment records it');
+reset role;
+select pg_temp.act_as(:b);
 select is((select count(*)::int from storage.objects where bucket_id = 'payment-proofs'), 0,
-  'members cannot read proofs, not even their own');
+  'members cannot read another member''s proof');
 reset role;
 
 select pg_temp.act_as(:f);
@@ -108,6 +112,40 @@ select throws_ok($$ insert into public.payments (member_id, kind, amount, proof_
 select throws_ok($$ insert into public.payments (member_id, kind, amount, proof_path)
   values ('84848484-0000-4000-8000-000000000002', 'package', 15000, 'x') $$,
   '23505', null, 'the database allows one pending payment per member');
+
+-- Delete policy: the app removes a proof whose payment was not recorded -----------------
+
+-- The Storage API sets this before its own delete.
+set local storage.allow_delete_query = 'true';
+
+select pg_temp.act_as(:a);
+select pg_temp.upload('84848484-0000-4000-8000-000000000001/p9.jpg');
+select is((select array_agg(name) from storage.objects where bucket_id = 'payment-proofs'),
+  array['84848484-0000-4000-8000-000000000001/p9.jpg'],
+  'a recorded proof is no longer readable by its member');
+reset role;
+
+select pg_temp.act_as(:b);
+select is(public.is_payment_proof('84848484-0000-4000-8000-000000000001/nope.jpg'), true,
+  'is_payment_proof says nothing about another member''s folder');
+delete from storage.objects where bucket_id = 'payment-proofs'
+  and name = '84848484-0000-4000-8000-000000000001/p9.jpg';
+reset role;
+select is((select count(*)::int from storage.objects
+    where name = '84848484-0000-4000-8000-000000000001/p9.jpg'), 1,
+  'another member cannot delete the proof');
+
+select pg_temp.act_as(:a);
+delete from storage.objects where bucket_id = 'payment-proofs'
+  and name in ('84848484-0000-4000-8000-000000000001/p1.jpg',
+               '84848484-0000-4000-8000-000000000001/p9.jpg');
+reset role;
+select is((select count(*)::int from storage.objects
+    where name = '84848484-0000-4000-8000-000000000001/p1.jpg'), 1,
+  'a proof a payment records cannot be deleted');
+select is((select count(*)::int from storage.objects
+    where name = '84848484-0000-4000-8000-000000000001/p9.jpg'), 0,
+  'the member deletes their unrecorded proof');
 
 \set pa '(select id from public.payments where member_id = ''84848484-0000-4000-8000-000000000001'')'
 \set pb '(select id from public.payments where member_id = ''84848484-0000-4000-8000-000000000002'')'

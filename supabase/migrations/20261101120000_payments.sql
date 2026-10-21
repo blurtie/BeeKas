@@ -51,8 +51,8 @@ create policy "payments: members read their own, admins read all"
 alter table public.quota_ledger
   add column payment_id uuid unique references public.payments on delete set null;
 
--- Private proofs: members upload into their own folder and cannot read them back (pattern
--- of D-19); admins read. JPEG only: the app converts like listing photos (K-05).
+-- Private proofs: members upload into their own folder and cannot read recorded ones
+-- (pattern of D-19); admins read. JPEG only: the app converts like listing photos (K-05).
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('payment-proofs', 'payment-proofs', false, 5242880, array['image/jpeg']);
 
@@ -69,6 +69,36 @@ create policy "payment proofs: listed members upload own"
 create policy "payment proofs: admin reads"
   on storage.objects for select to authenticated
   using (bucket_id = 'payment-proofs' and (select public.is_admin()));
+
+-- Whether any payment (any status) points at this proof; answers only for the caller's
+-- own folder, so it reveals nothing about other members' payments.
+create index on public.payments (proof_path);
+
+create function public.is_payment_proof(p_path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p_path not like auth.uid()::text || '/%'
+    or exists (select 1 from public.payments where proof_path = p_path);
+$$;
+
+revoke execute on function public.is_payment_proof(text) from public, anon;
+grant execute on function public.is_payment_proof(text) to authenticated;
+
+-- The app removes a proof whose payment was not recorded. The Storage API reads a row
+-- before deleting it, so the owner also reads their own proofs, but only unrecorded ones (D-44).
+create policy "payment proofs: owners read own unrecorded"
+  on storage.objects for select to authenticated
+  using (bucket_id = 'payment-proofs' and owner_id = (select auth.uid())::text
+    and not public.is_payment_proof(name));
+
+create policy "payment proofs: owners delete own unrecorded"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'payment-proofs' and owner_id = (select auth.uid())::text
+    and not public.is_payment_proof(name));
 
 -- K-09: the QRIS image lives here so it can change without a new APK. Uploaded by the
 -- project owner (docs/cloud-checklist.md); locally an example image from config.toml.

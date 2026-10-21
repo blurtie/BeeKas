@@ -581,3 +581,14 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Seorang member hanya boleh punya satu pembayaran berstatus menunggu konfirmasi admin pada satu waktu. Selama masih ada yang menunggu, `submit_payment` menolak unggahan bukti baru dan aplikasi menjelaskan alasannya.
 - Setelah pembayaran itu dikonfirmasi atau ditolak, member bisa membeli atau mengunggah ulang lagi.
 - Aturan ini ditegakkan di backend: `submit_payment` memeriksanya, dan indeks unik pada pembayaran yang menunggu menjaga dua kiriman bersamaan.
+
+---
+
+## D-44 — Member membaca bukti pembayarannya yang belum tercatat
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (tiket #84, PR #101)
+
+**Keputusan:**
+- Di bucket privat `payment-proofs`, member hanya boleh membaca dan menghapus bukti di foldernya sendiri yang belum tercatat di pembayaran mana pun.
+- Izin ini semata agar aplikasi bisa menghapus bukti yang baru terunggah bila `submit_payment` gagal (Storage API perlu izin baca sebelum menghapus).
+- Bukti member lain dan bukti yang sudah tercatat di pembayaran tetap tidak bisa dibaca member; admin tetap membaca semua bukti.

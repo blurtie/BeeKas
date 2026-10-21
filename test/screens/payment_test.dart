@@ -144,7 +144,7 @@ void main() {
       tester,
     ) async {
       final repo = FakePaymentRepository()
-        ..errors['submit'] = const SignupException(null);
+        ..errors['recordPayment'] = const SignupException(null);
       await _pumpQuota(tester, repo);
       await tester.pumpAndSettle();
       await tester.tap(find.text(_buyLabel()));
@@ -159,7 +159,9 @@ void main() {
       tester,
     ) async {
       final repo = FakePaymentRepository()
-        ..errors['submit'] = const SignupException(SignupError.paymentPending);
+        ..errors['recordPayment'] = const SignupException(
+          SignupError.paymentPending,
+        );
       await _pumpQuota(tester, repo);
       await tester.pumpAndSettle();
       await tester.tap(find.text(_buyLabel()));
@@ -167,6 +169,23 @@ void main() {
       await tester.tap(find.text(t('qrisUpload')));
       await tester.pumpAndSettle();
       expect(find.text(t('errorPaymentPending')), findsOneWidget);
+      expect(repo.uploads, isEmpty, reason: 'the refused proof is deleted');
+    });
+
+    testWidgets('a payment found waiting before upload sends nothing (D-43)', (
+      tester,
+    ) async {
+      final repo = FakePaymentRepository();
+      await _pumpQuota(tester, repo);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_buyLabel()));
+      await tester.pumpAndSettle();
+      // Paid from another device meanwhile.
+      repo.add(PaymentStatus.pending);
+      await tester.tap(find.text(t('qrisUpload')));
+      await tester.pumpAndSettle();
+      expect(find.text(t('errorPaymentPending')), findsOneWidget);
+      expect(repo.uploads, isEmpty);
     });
 
     testWidgets('Unggah ulang after a rejection sends a new proof', (
