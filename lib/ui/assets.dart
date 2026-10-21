@@ -11,7 +11,31 @@ abstract final class BeeAssets {
   static const trusted = 'assets/images/ilustrasi/onboarding-transaksi.png';
   static const buySell = 'assets/images/ilustrasi/onboarding-jual-beli.png';
 
-  static const all = [
+  /// Daftar-12 tiles, by ListingCategory.code.
+  static const categories = {
+    'laptop_computer': '$_category/laptop-komputer.png',
+    'phone_gadget': '$_category/hp-gadget.png',
+    'accessories': '$_category/aksesoris.png',
+    'clothing': '$_category/pakaian.png',
+    'shoes': '$_category/sepatu.png',
+    'bags': '$_category/tas.png',
+    'books_stationery': '$_category/buku-alat-tulis.png',
+    'campus_supplies': '$_category/perlengkapan-kampus.png',
+    'other': '$_category/lainnya.png',
+  };
+  static const _category = 'assets/images/ikon/kategori';
+
+  /// Beranda shortcuts, by CategoryGroup.name.
+  static const groups = {
+    'all': '$_group/semua.png',
+    'electronics': '$_group/elektronik.png',
+    'fashion': '$_group/fashion.png',
+    'books': '$_group/buku.png',
+    'supplies': '$_group/perlengkapan.png',
+  };
+  static const _group = 'assets/images/ikon/kategori-beranda';
+
+  static final all = [
     beeWriting,
     selfieExample,
     logo,
@@ -21,5 +45,7 @@ abstract final class BeeAssets {
     findItems,
     trusted,
     buySell,
+    ...categories.values,
+    ...groups.values,
   ];
 }

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/copy.dart';
 import 'data/auth_repository.dart';
 import 'data/camera.dart';
+import 'data/catalog_repository.dart';
 import 'data/language.dart';
 import 'data/onboarding.dart';
 import 'data/review_repository.dart';
@@ -12,6 +13,7 @@ import 'data/signup_repository.dart';
 import 'domain/registration.dart';
 import 'domain/sign_in.dart';
 import 'screens/card_photo_screen.dart';
+import 'screens/catalog_screens.dart';
 import 'screens/consent_screen.dart';
 import 'screens/help.dart';
 import 'screens/legal_screen.dart';
@@ -190,8 +192,10 @@ Widget _screenFor(BuildContext context, Account account) =>
         onHelp: () => _help(context),
         onSignOut: () => _signOut(context),
       ),
-      // ponytail: Beranda is another PRD; a placeholder until then.
-      Destination.home => _homePlaceholder(context, t('homeSoon')),
+      Destination.home => CatalogShell(
+        repository: _catalogRepository,
+        onSignOut: () => _signOut(context),
+      ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
         onSignOut: () => _signOut(context),
@@ -319,14 +323,13 @@ Widget _pendingScreen(BuildContext context) => PendingScreen(
   onSignOut: () => _signOut(context),
 );
 
-// ponytail: catalog is another PRD; a placeholder until then.
+final _catalogRepository = SupabaseCatalogRepository(Supabase.instance.client);
+
+/// Lihat katalog for guests, pending and rejected accounts (D-06).
 void _catalog(BuildContext context) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => Scaffold(
-      appBar: AppBar(),
-      body: Center(child: Text(t('catalogSoon'))),
-    ),
+    builder: (context) => CatalogShell(repository: _catalogRepository),
   ),
 );
 
@@ -335,26 +338,5 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
   MaterialPageRoute(
     builder: (context) =>
         LegalScreen(titleKey: titleKey, bodyKey: '${titleKey}Body'),
-  ),
-);
-
-/// Temporary end screen for Beranda.
-Widget _homePlaceholder(BuildContext context, String body) => Scaffold(
-  body: SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(body, textAlign: TextAlign.center),
-          const SizedBox(height: 32),
-          OutlinedButton(
-            onPressed: () => _signOut(context),
-            child: Text(t('signOut')),
-          ),
-        ],
-      ),
-    ),
   ),
 );
