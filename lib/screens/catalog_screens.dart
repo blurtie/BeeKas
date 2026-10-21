@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
@@ -24,8 +27,13 @@ void showComingSoon(BuildContext context, {VoidCallback? onSignOut}) {
 
 String _categoryLabel(ListingCategory c) => t(c.copyKey);
 
-/// Beranda (home.png) and Kategori (Daftar-12) behind one bottom bar, over a
-/// catalog loaded once. Guests and every status browse it (D-06).
+/// A category's label in every language, for search (D-41).
+Iterable<String> _categoryLabels(ListingCategory c) =>
+    copy.values.map((m) => m[c.copyKey]!);
+
+/// Beranda (home.png) and Kategori (Daftar-12) behind one bottom bar; both
+/// page through the catalog on the server (#77). Guests and every status
+/// browse it (D-06).
 class CatalogShell extends StatefulWidget {
   const CatalogShell({super.key, required this.repository, this.onSignOut});
 
@@ -37,12 +45,7 @@ class CatalogShell extends StatefulWidget {
 }
 
 class _CatalogShellState extends State<CatalogShell> {
-  late Future<List<Listing>> _listings = widget.repository.listings();
   var _tab = 0;
-
-  void _reload() => setState(() {
-    _listings = widget.repository.listings();
-  });
 
   void _soon() => showComingSoon(context);
 
@@ -50,22 +53,12 @@ class _CatalogShellState extends State<CatalogShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: FutureBuilder(
-          future: _listings,
-          builder: (context, snapshot) {
-            final state = _CatalogState(
-              listings: snapshot.data,
-              failed: snapshot.hasError,
-              onRetry: _reload,
-            );
-            return _tab == 0
-                ? _HomeView(state: state, onSoon: _soon)
-                : _CategoryView(
-                    state: state,
-                    onBack: () => setState(() => _tab = 0),
-                  );
-          },
-        ),
+        child: _tab == 0
+            ? _HomeView(repository: widget.repository, onSoon: _soon)
+            : _CategoryView(
+                repository: widget.repository,
+                onBack: () => setState(() => _tab = 0),
+              ),
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: t('navSell'),
@@ -107,42 +100,127 @@ class _CatalogShellState extends State<CatalogShell> {
   }
 }
 
-/// The catalog as a tab sees it: [listings] is null while loading or after
-/// a failure.
-class _CatalogState {
-  const _CatalogState({
-    required this.listings,
-    required this.failed,
-    required this.onRetry,
+/// Listings matching [search], a page at a time: the next page loads when
+/// the end of the list scrolls into view, where loading, empty and error
+/// (with retry) show too.
+class _ListingFeed extends StatefulWidget {
+  const _ListingFeed({
+    required this.repository,
+    required this.search,
+    this.searching = false,
   });
-  final List<Listing>? listings;
-  final bool failed;
-  final VoidCallback onRetry;
+  final CatalogRepository repository;
+  final CatalogSearch search;
 
-  /// Loading, error or empty, as a sliver; null when there is data to show.
-  Widget? status(BuildContext context, {required bool searching}) {
-    final Widget child;
-    if (failed) {
-      child = Column(
+  /// Empty then reads "no match" rather than "no items yet".
+  final bool searching;
+
+  @override
+  State<_ListingFeed> createState() => _ListingFeedState();
+}
+
+class _ListingFeedState extends State<_ListingFeed> {
+  final _items = <Listing>[];
+  var _more = true;
+  var _loading = false;
+  var _failed = false;
+  // Bumped on a new search, so a late page of the old one is dropped.
+  var _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  @override
+  void didUpdateWidget(_ListingFeed old) {
+    super.didUpdateWidget(old);
+    if (old.search.text != widget.search.text ||
+        !listEquals(old.search.matched, widget.search.matched) ||
+        !listEquals(old.search.categories, widget.search.categories)) {
+      _generation++;
+      _items.clear();
+      _more = true;
+      _fetch();
+    }
+  }
+
+  void _fetch() {
+    _loading = true;
+    _failed = false;
+    _page(_generation);
+  }
+
+  Future<void> _page(int generation) async {
+    try {
+      final page = await widget.repository.listings(
+        query: widget.search.text,
+        matched: widget.search.matched,
+        categories: widget.search.categories,
+        after: _items.lastOrNull,
+      );
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _items.addAll(page);
+        _more = page.length == catalogPageSize;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _failed = true;
+        _loading = false;
+      });
+    }
+  }
+
+  /// The last card is built: it nears the viewport, so fetch the next page
+  /// after this frame. The grid builds cards lazily, unlike a footer.
+  void _nearEnd() {
+    if (!_more || _loading || _failed) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _more && !_loading && !_failed) setState(_fetch);
+    });
+  }
+
+  /// What shows at the end of the list; null when there is nothing more.
+  Widget? _end() {
+    if (_failed) {
+      return Column(
         children: [
           Text(t('catalogError'), textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          OutlinedButton(onPressed: onRetry, child: Text(t('retry'))),
+          OutlinedButton(
+            onPressed: () => setState(_fetch),
+            child: Text(t('retry')),
+          ),
         ],
       );
-    } else if (listings == null) {
-      child = const CircularProgressIndicator();
-    } else if (listings!.isEmpty) {
-      child = Text(
-        t(searching ? 'searchEmpty' : 'catalogEmpty'),
+    }
+    if (_loading) return const CircularProgressIndicator();
+    if (_more) return null;
+    if (_items.isEmpty) {
+      return Text(
+        t(widget.searching ? 'searchEmpty' : 'catalogEmpty'),
         textAlign: TextAlign.center,
       );
-    } else {
-      return null;
     }
-    return SliverPadding(
-      padding: const EdgeInsets.all(32),
-      sliver: SliverToBoxAdapter(child: Center(child: child)),
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final end = _end();
+    return SliverMainAxisGroup(
+      slivers: [
+        _ListingGrid(listings: _items, onLast: _nearEnd),
+        if (end != null)
+          SliverPadding(
+            padding: const EdgeInsets.all(32),
+            sliver: SliverToBoxAdapter(child: Center(child: end)),
+          ),
+      ],
     );
   }
 }
@@ -150,8 +228,8 @@ class _CatalogState {
 const _pad = 16.0;
 
 class _HomeView extends StatefulWidget {
-  const _HomeView({required this.state, required this.onSoon});
-  final _CatalogState state;
+  const _HomeView({required this.repository, required this.onSoon});
+  final CatalogRepository repository;
   final VoidCallback onSoon;
 
   @override
@@ -160,19 +238,18 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   var _query = '';
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final all = widget.state.listings;
-    final shown = all
-        ?.where((l) => matchesSearch(l, _query, _categoryLabel))
-        .toList();
-    final status = _CatalogState(
-      listings: shown,
-      failed: widget.state.failed,
-      onRetry: widget.state.onRetry,
-    ).status(context, searching: _query.trim().isNotEmpty);
+    final search = catalogSearch(_query, _categoryLabels);
 
     return CustomScrollView(
       slivers: [
@@ -225,7 +302,14 @@ class _HomeViewState extends State<_HomeView> {
               ),
               const SizedBox(height: 16),
               TextField(
-                onChanged: (value) => setState(() => _query = value),
+                onChanged: (value) {
+                  // One server call once typing pauses, not one per key.
+                  _debounce?.cancel();
+                  _debounce = Timer(
+                    const Duration(milliseconds: 300),
+                    () => setState(() => _query = value),
+                  );
+                },
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: t('searchHint'),
@@ -242,18 +326,12 @@ class _HomeViewState extends State<_HomeView> {
                     Expanded(
                       child: _Shortcut(
                         group: group,
-                        onTap: all == null
-                            ? null
-                            : () => _openResults(
-                                context,
-                                t(group.copyKey),
-                                all
-                                    .where(
-                                      (l) =>
-                                          group.categories.contains(l.category),
-                                    )
-                                    .toList(),
-                              ),
+                        onTap: () => _openResults(
+                          context,
+                          t(group.copyKey),
+                          widget.repository,
+                          group == CategoryGroup.all ? null : group.categories,
+                        ),
                       ),
                     ),
                 ],
@@ -276,7 +354,11 @@ class _HomeViewState extends State<_HomeView> {
             ],
           ),
         ),
-        status ?? _ListingGrid(listings: shown!),
+        _ListingFeed(
+          repository: widget.repository,
+          search: search,
+          searching: _query.trim().isNotEmpty,
+        ),
         const SliverToBoxAdapter(child: SizedBox(height: 48)),
       ],
     );
@@ -358,29 +440,34 @@ class _Shortcut extends StatelessWidget {
   }
 }
 
-void _openResults(BuildContext context, String title, List<Listing> listings) =>
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => Scaffold(
-          appBar: BeeHeader(title: Text(title)),
-          body: CustomScrollView(
-            slivers: [
-              _CatalogState(
-                    listings: listings,
-                    failed: false,
-                    onRetry: () {},
-                  ).status(context, searching: false) ??
-                  _ListingGrid(listings: listings),
-            ],
+void _openResults(
+  BuildContext context,
+  String title,
+  CatalogRepository repository,
+  List<ListingCategory>? categories,
+) => Navigator.push(
+  context,
+  MaterialPageRoute<void>(
+    builder: (context) => Scaffold(
+      appBar: BeeHeader(title: Text(title)),
+      body: CustomScrollView(
+        slivers: [
+          _ListingFeed(
+            repository: repository,
+            search: (text: null, matched: null, categories: categories),
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
 
 class _ListingGrid extends StatelessWidget {
-  const _ListingGrid({required this.listings});
+  const _ListingGrid({required this.listings, this.onLast});
   final List<Listing> listings;
+
+  /// Called when the last card is built.
+  final VoidCallback? onLast;
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +481,10 @@ class _ListingGrid extends StatelessWidget {
           crossAxisSpacing: 12,
         ),
         itemCount: listings.length,
-        itemBuilder: (context, i) => _ListingCard(listing: listings[i]),
+        itemBuilder: (context, i) {
+          if (i == listings.length - 1) onLast?.call();
+          return _ListingCard(listing: listings[i]);
+        },
       ),
     );
   }
@@ -519,8 +609,8 @@ class _Photo extends StatelessWidget {
 }
 
 class _CategoryView extends StatefulWidget {
-  const _CategoryView({required this.state, required this.onBack});
-  final _CatalogState state;
+  const _CategoryView({required this.repository, required this.onBack});
+  final CatalogRepository repository;
   final VoidCallback onBack;
 
   @override
@@ -546,7 +636,6 @@ class _CategoryViewState extends State<_CategoryView> {
       for (final c in _group.categories)
         if (_categoryLabel(c).toLowerCase().contains(q)) c,
     ];
-    final listings = widget.state.listings;
 
     return CustomScrollView(
       slivers: [
@@ -587,54 +676,52 @@ class _CategoryViewState extends State<_CategoryView> {
             const SizedBox(height: 16),
           ],
         ),
-        if (widget.state.failed || listings == null)
-          widget.state.status(context, searching: false)!
-        else
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: _pad),
-            sliver: SliverGrid.count(
-              crossAxisCount: 3,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.75,
-              children: [
-                for (final c in categories)
-                  Card.outlined(
-                    margin: EdgeInsets.zero,
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () => _openResults(
-                        context,
-                        _categoryLabel(c),
-                        listings.where((l) => l.category == c).toList(),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Image.asset(
-                                BeeAssets.categories[c.code]!,
-                                excludeFromSemantics: true,
-                              ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: _pad),
+          sliver: SliverGrid.count(
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.75,
+            children: [
+              for (final c in categories)
+                Card.outlined(
+                  margin: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => _openResults(
+                      context,
+                      _categoryLabel(c),
+                      widget.repository,
+                      [c],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Image.asset(
+                              BeeAssets.categories[c.code]!,
+                              excludeFromSemantics: true,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _categoryLabel(c),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: BeeColors.textBody),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _categoryLabel(c),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(color: BeeColors.textBody),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
+        ),
         const SliverToBoxAdapter(child: SizedBox(height: 48)),
       ],
     );

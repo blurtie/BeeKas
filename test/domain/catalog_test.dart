@@ -1,8 +1,6 @@
 import 'package:beekas/domain/catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../support/fake_catalog_repository.dart';
-
 void main() {
   test('formatRupiah groups thousands with dots', () {
     expect(formatRupiah(0), 'Rp 0');
@@ -18,17 +16,28 @@ void main() {
     expect(discountPercent(6500000, 6500000), isNull);
   });
 
-  test('search matches title, category label, or seller, ignoring case', () {
-    final listing = fakeListing(
-      'Macbook Air M1',
-      category: ListingCategory.laptopComputer,
-      sellerName: 'Nadia Contoh',
-    );
-    String label(ListingCategory c) => 'Laptop & Komputer';
-    for (final q in ['macbook', 'KOMPUTER', 'nadia', '  ', '']) {
-      expect(matchesSearch(listing, q, label), isTrue, reason: q);
-    }
-    expect(matchesSearch(listing, 'jaket', label), isFalse);
+  test('a label word, EN or ID, adds its category beside the text', () {
+    const labels = {
+      ListingCategory.booksStationery: [
+        'Books & Stationery',
+        'Buku & Alat Tulis',
+      ],
+      ListingCategory.shoes: ['Shoes', 'Sepatu'],
+    };
+    Iterable<String> label(ListingCategory c) => labels[c] ?? const ['-'];
+
+    expect(_parts(catalogSearch(' BUKU ', label)), (
+      'BUKU',
+      'books_stationery',
+    ));
+    expect(_parts(catalogSearch('books', label)), (
+      'books',
+      'books_stationery',
+    ));
+    expect(_parts(catalogSearch('sepatu', label)), ('sepatu', 'shoes'));
+    expect(_parts(catalogSearch('book', label)), ('book', null));
+    expect(_parts(catalogSearch('&', label)), ('&', null));
+    expect(_parts(catalogSearch('  ', label)), (null, null));
   });
 
   test('All has every category; Accessories is electronics and fashion', () {
@@ -52,3 +61,7 @@ void main() {
     }
   });
 }
+
+/// Lists compare by identity inside records; compare their contents.
+(String?, String?) _parts(CatalogSearch s) =>
+    (s.text, s.matched?.map((c) => c.code).join(','));

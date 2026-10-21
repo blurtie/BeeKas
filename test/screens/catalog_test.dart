@@ -32,6 +32,31 @@ final _buku = fakeListing(
   isDonation: true,
 );
 
+/// Item 01..Item n, newest first, in Others.
+List<Listing> _items(int n) => [
+  for (var i = 1; i <= n; i++) fakeListing('Item ${'$i'.padLeft(2, '0')}'),
+];
+
+/// Past the search debounce, then the server's answer.
+Future<void> _typed(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 300));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    300,
+    scrollable: find
+        .descendant(
+          of: find.byType(CustomScrollView).last,
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+}
+
 Future<void> _pump(
   WidgetTester tester,
   FakeCatalogRepository repository, {
@@ -79,25 +104,33 @@ void main() {
     expect(find.text(t('donation')), findsOneWidget);
   });
 
-  testWidgets('Beranda search: title, category, seller; empty message', (
+  testWidgets('Beranda search: text to the server, label word adds category', (
     tester,
   ) async {
-    await _pump(tester, FakeCatalogRepository([_macbook, _jaket, _buku]));
+    final repository = FakeCatalogRepository([_macbook, _jaket, _buku]);
+    await _pump(tester, repository);
     await tester.pumpAndSettle();
     final search = find.byType(TextField);
 
     await tester.enterText(search, 'raka');
-    await tester.pump();
+    await _typed(tester);
     expect(find.text('Jaket Uniqlo'), findsOneWidget);
     expect(find.text('Macbook Air M1'), findsNothing);
 
-    await tester.enterText(search, t('category_laptop_computer'));
-    await tester.pump();
+    await tester.enterText(search, 'komputer');
+    await _typed(tester);
+    expect(repository.lastMatched, [ListingCategory.laptopComputer]);
+    expect(repository.lastCategories, isNull);
     expect(find.text('Macbook Air M1'), findsOneWidget);
     expect(find.text('Jaket Uniqlo'), findsNothing);
 
     await tester.enterText(search, 'zzz');
-    await tester.pump();
+    await _typed(tester);
+    expect(find.text(t('searchEmpty')), findsOneWidget);
+
+    await tester.enterText(search, 'shoes');
+    await _typed(tester);
+    expect(repository.lastMatched, [ListingCategory.shoes]);
     expect(find.text(t('searchEmpty')), findsOneWidget);
   });
 
@@ -113,6 +146,52 @@ void main() {
     await tester.tap(find.text(t('retry')));
     await tester.pumpAndSettle();
     expect(repository.calls, 2);
+    expect(find.text(t('catalogEmpty')), findsOneWidget);
+  });
+
+  testWidgets('Beranda loads the next page on scroll; error and retry at end', (
+    tester,
+  ) async {
+    final repository = FakeCatalogRepository(_items(45));
+    await _pump(tester, repository);
+    await tester.pumpAndSettle();
+    expect(repository.calls, 1);
+
+    await _scrollTo(tester, find.text('Item 25'));
+    expect(repository.calls, 2);
+
+    repository.fail = const SignupException(null);
+    await _scrollTo(tester, find.text(t('catalogError')));
+    await tester.tap(find.text(t('retry')));
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, find.text('Item 45'));
+    expect(repository.calls, 4);
+    expect(find.text('Item 01'), findsNothing, reason: 'scrolled away');
+  });
+
+  testWidgets('Kategori results load on scroll, with loading and empty end', (
+    tester,
+  ) async {
+    final repository = FakeCatalogRepository(_items(25));
+    await _pump(tester, repository);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('navCategories')).last);
+    await tester.pumpAndSettle();
+
+    repository.gate = Completer();
+    await tester.tap(find.text(t('category_other')));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    repository.gate!.complete();
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, find.text('Item 25'));
+    expect(repository.calls, 3, reason: 'Beranda, then two pages');
+
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('category_shoes')));
+    await tester.pumpAndSettle();
     expect(find.text(t('catalogEmpty')), findsOneWidget);
   });
 
@@ -148,7 +227,8 @@ void main() {
   testWidgets('Kategori: 9 tiles, chips and search filter, tile opens items', (
     tester,
   ) async {
-    await _pump(tester, FakeCatalogRepository([_macbook, _jaket]));
+    final repository = FakeCatalogRepository([_macbook, _jaket]);
+    await _pump(tester, repository);
     await tester.pumpAndSettle();
     await tester.tap(find.text(t('navCategories')).last);
     await tester.pumpAndSettle();
@@ -169,6 +249,7 @@ void main() {
     expect(find.text(t('category_shoes')), findsNothing);
     await tester.tap(find.text(t('category_clothing')));
     await tester.pumpAndSettle();
+    expect(repository.lastCategories, [ListingCategory.clothing]);
     expect(find.text('Jaket Uniqlo'), findsOneWidget);
     expect(find.text('Macbook Air M1'), findsNothing);
   });

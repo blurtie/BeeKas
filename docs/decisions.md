@@ -554,6 +554,15 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 
 ---
 
+## D-41 — Pencarian kata label kategori dua bahasa
+
+**Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (PR #97, tiket #77: K-02)
+
+**Keputusan:**
+- Kata kunci yang sama dengan salah satu kata label kategori dalam bahasa Inggris atau Indonesia (tidak peka huruf besar-kecil, "&" diabaikan) mencocokkan kategori itu. Contoh: "buku" dan "books" → Buku & Alat Tulis; "sepatu" → Sepatu; "book" tidak mencocokkan kategori (K-02).
+- Kecocokan kategori digabung dengan OR dengan pencarian nama barang dan nama penjual. Kata kunci tanpa kecocokan label hanya menjadi pencarian teks.
+- Label tetap di `copy.dart` (D-11); aplikasi mengirim kode kategori yang cocok ke `catalog_listings` (`p_query_categories`). Grup pintasan Beranda (`p_categories`) tetap membatasi hasil (AND).
+
 ## D-42 — Saldo awal kuota listing
 
 **Status:** Dikonfirmasi Faiqi, 21 Oktober 2026 (tiket #81, PR #98: K-08)

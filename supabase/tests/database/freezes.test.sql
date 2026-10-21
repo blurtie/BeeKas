@@ -70,7 +70,7 @@ select is(array(select seller_id from public.listings where title like 'T76 %' o
   'guest reads listings of approved, unfrozen sellers only; a proposal hides nothing');
 select is((select count(*)::int from public.listing_photos where path like 't76/%'), 2,
   'guest reads photos of those listings only');
-select is(array(select title from public.catalog_listings() where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
+select is(array(select title from public.catalog_listings('T76') where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
   'catalog shows guests approved, unfrozen sellers only');
 select throws_ok($$ select * from public.freezes $$, '42501', null, 'guest cannot read freezes');
 select throws_ok($$ select public.is_frozen('76767676-0000-4000-8000-000000000004') $$, '42501', null,
@@ -82,7 +82,7 @@ select is(array(select seller_id from public.listings where title like 'T76 %' o
   'member reads listings of approved, unfrozen sellers only');
 select is((select count(*)::int from public.listing_photos where path like 't76/%'), 2,
   'member reads photos of those listings only');
-select is(array(select title from public.catalog_listings() where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
+select is(array(select title from public.catalog_listings('T76') where title like 'T76 %' order by title), array['T76 1', 'T76 5'],
   'catalog shows members approved, unfrozen sellers only');
 select throws_ok($$ select * from public.freezes $$, '42501', null, 'member cannot read freezes');
 select throws_ok($$ select public.is_frozen('76767676-0000-4000-8000-000000000004') $$, '42501', null,
@@ -94,7 +94,7 @@ reset role;
 
 -- The frozen seller cannot see their own listing in the catalog either.
 select pg_temp.act_as(:f);
-select is((select count(*)::int from public.catalog_listings() where title = 'T76 4'), 0,
+select is((select count(*)::int from public.catalog_listings('T76') where title = 'T76 4'), 0,
   'frozen seller''s listing is hidden from themselves too');
 reset role;
 
@@ -102,7 +102,7 @@ reset role;
 update public.freezes set approved_by = :y, approved_at = now() where member_id = :q;
 update public.freezes set lifted_at = now() where member_id = :f;
 set local role anon;
-select is(array(select title from public.catalog_listings() where title like 'T76 %' order by title),
+select is(array(select title from public.catalog_listings('T76') where title like 'T76 %' order by title),
   array['T76 1', 'T76 4'], 'approval hides Q; lifting shows F again');
 select is((select count(*)::int from public.listings where title like 'T76 %'), 2,
   'listings table agrees after approval and lifting');

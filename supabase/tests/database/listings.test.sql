@@ -60,11 +60,11 @@ select is((select count(*)::int from public.listings where id in (:active, :hidd
   'guest reads active listings only');
 select is((select count(*)::int from public.listing_photos where listing_id in (:active, :hidden)), 2,
   'guest reads photos of active listings only');
-select is((select photos from public.catalog_listings() where id = :active), array['t74/1.jpg', 't74/2.jpg'],
+select is((select photos from public.catalog_listings('T74') where id = :active), array['t74/1.jpg', 't74/2.jpg'],
   'catalog lists photos in order');
-select is((select count(*)::int from public.catalog_listings() where id = :hidden), 0,
+select is((select count(*)::int from public.catalog_listings('T74') where id = :hidden), 0,
   'catalog hides inactive listings');
-select is((select (seller_name, seller_campus::text, seller_verified)::text from public.catalog_listings() where id = :active),
+select is((select (seller_name, seller_campus::text, seller_verified)::text from public.catalog_listings('T74') where id = :active),
   '("Seller T74",bandung,t)', 'catalog shows seller name, campus and verified');
 select throws_ok($$ insert into public.listings (seller_id, title, description, category, condition, price, campus)
   values ('74747474-0000-4000-8000-000000000001', 'x', 'x', 'other', 'like_new', 1000, 'bandung') $$,
@@ -90,7 +90,7 @@ reset role;
 -- D-26: the seller's email and phone appear nowhere in the catalog, as a guest sees it.
 set local role anon;
 select ok(
-  (select bool_and(row_to_json(c)::text !~ 't74-s@binus|6281274000001|mail|phone') from public.catalog_listings() c),
+  (select bool_and(row_to_json(c)::text !~ 't74-s@binus|6281274000001|mail|phone') from public.catalog_listings('T74') c),
   'catalog never carries email or phone');
 reset role;
 

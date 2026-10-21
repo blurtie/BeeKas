@@ -1,4 +1,5 @@
-/// Catalog rules (#74): categories, the Beranda shortcuts, search and prices.
+/// Catalog rules (#74, #77): categories, the Beranda shortcuts, search and
+/// prices.
 /// Pure Dart; the screens look labels up with each enum's copyKey.
 library;
 
@@ -62,7 +63,8 @@ enum CategoryGroup {
 
 /// An active listing as the catalog shows it: the seller's public data only
 /// (D-26). [photos] are URLs, in order; [previousPrice] is the struck-through
-/// price after a drop.
+/// price after a drop. [createdAt] with [id] is the paging cursor; it stays
+/// the server's string, since a web DateTime drops the microseconds.
 typedef Listing = ({
   String id,
   String title,
@@ -80,22 +82,43 @@ typedef Listing = ({
   String sellerName,
   Campus sellerCampus,
   bool sellerVerified,
+  String createdAt,
 });
 
-/// Case-insensitive match on the title, the category label, or the seller's
-/// name; [categoryLabel] gives the label in the current language.
-bool matchesSearch(
-  Listing listing,
+/// Listings per catalog page; a shorter page is the last one.
+const catalogPageSize = 20;
+
+/// What the catalog asks the server for: listings whose title or seller
+/// name contains [text], or whose category is in [matched]; [categories]
+/// (a shortcut group) further restricts them, null meaning every category.
+typedef CatalogSearch = ({
+  String? text,
+  List<ListingCategory>? matched,
+  List<ListingCategory>? categories,
+});
+
+final _labelWordSplit = RegExp(r'[\s&]+');
+
+/// A query equal to a word of a category label in any language ([labels]),
+/// ignoring case and "&", also matches that category (K-02, D-41); labels
+/// live in the app, not the database.
+CatalogSearch catalogSearch(
   String query,
-  String Function(ListingCategory) categoryLabel,
+  Iterable<String> Function(ListingCategory) labels,
 ) {
   final q = query.trim().toLowerCase();
-  if (q.isEmpty) return true;
-  return [
-    listing.title,
-    categoryLabel(listing.category),
-    listing.sellerName,
-  ].any((field) => field.toLowerCase().contains(q));
+  if (q.isEmpty) return (text: null, matched: null, categories: null);
+  final matched = [
+    for (final c in ListingCategory.values)
+      if (labels(c)
+          .any((l) => l.toLowerCase().split(_labelWordSplit).contains(q)))
+        c,
+  ];
+  return (
+    text: query.trim(),
+    matched: matched.isEmpty ? null : matched,
+    categories: null,
+  );
 }
 
 /// "Rp 6.500.000".
