@@ -258,6 +258,65 @@ void main() {
     );
   });
 
+  testWidgets('a denied camera explains why the listing needs it', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      FakeListingRepository(),
+      pickPhoto: ({required camera}) async =>
+          throw const PhotoException(PhotoError.cameraDenied),
+    );
+    await _addPhoto(tester);
+    expect(find.text(t('sellCameraDenied')), findsOneWidget);
+    expect(find.text(t('errorCameraDenied')), findsNothing);
+  });
+
+  testWidgets('K6 opens at the top after scrolling down K5', (tester) async {
+    await _open(tester, FakeListingRepository());
+    tester.view.physicalSize = const Size(1080, 1600);
+    await tester.pumpAndSettle();
+    double offset() => tester
+        .state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(ListView),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        )
+        .position
+        .pixels;
+    await _choose(tester, t('sellCategoryHint'), t('category_laptop_computer'));
+    await _addPhoto(tester);
+    await _type(tester, t('sellName'), 'Macbook Pro M2');
+    await _type(tester, t('description'), 'Mulus, baterai 90%');
+    await tester.ensureVisible(find.text(t('sellNext')));
+    await tester.pumpAndSettle();
+    expect(offset(), greaterThan(0));
+    await _tap(tester, t('sellNext'));
+    expect(find.text(t('sellDetails')), findsOneWidget);
+    expect(offset(), 0);
+  });
+
+  testWidgets('Pasang again after a lost answer reuses the listing id', (
+    tester,
+  ) async {
+    final repo = FakeListingRepository(quota: 2)..loseAnswer = true;
+    await _open(tester, repo);
+    await _fillK5(tester);
+    await _choose(tester, t('sellConditionHint'), t('condition_like_new'));
+    await _type(tester, t('sellPrice'), '75000');
+    await _tap(tester, t('sellPost'));
+    expect(find.text(t('sellFailed')), findsOneWidget);
+
+    repo.loseAnswer = false;
+    await _tap(tester, t('sellPost'));
+    expect(repo.created, hasLength(1));
+    expect(repo.calls.map((l) => l.id).toSet(), hasLength(1));
+    expect(repo.quota, 1);
+  });
+
   testWidgets('the quota failing to load offers a retry', (tester) async {
     final repo = FakeListingRepository()
       ..failSeller = const SignupException(null);

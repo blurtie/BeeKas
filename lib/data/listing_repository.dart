@@ -9,8 +9,14 @@ import 'signup_repository.dart';
 
 typedef SellerInfo = ({int quota, Campus campus});
 
-/// What Pasang sends: the K5-K6 fields, the location (K6) and the warranty.
-typedef NewListing = ({ListingDraft draft, Campus campus, String? warranty});
+/// What Pasang sends: the draft's id (newListingId, same on every retry), the
+/// K5-K6 fields, the location (K6) and the warranty.
+typedef NewListing = ({
+  String id,
+  ListingDraft draft,
+  Campus campus,
+  String? warranty,
+});
 
 /// Pasang barang (#82). Failures are [SignupException]s.
 abstract interface class ListingRepository {
@@ -22,7 +28,8 @@ abstract interface class ListingRepository {
 
   Future<void> deletePhotos(List<String> paths);
 
-  /// create_listing: takes 1 quota and the listing is live at once.
+  /// create_listing: takes 1 quota and the listing is live at once. Sending
+  /// an id that already has the seller's listing changes nothing.
   Future<void> createListing(NewListing listing, List<String> photos);
 }
 
@@ -108,6 +115,7 @@ class SupabaseListingRepository implements ListingRepository {
         return _client.rpc<void>(
           'create_listing',
           params: {
+            'p_id': listing.id,
             'p_title': d.title.trim(),
             'p_description': d.description.trim(),
             'p_category': d.category!.code,

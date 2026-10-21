@@ -11,6 +11,7 @@ import '../support/fake_listing_repository.dart';
 
 void main() {
   final NewListing listing = (
+    id: '00000000-0000-4000-8000-000000000001',
     draft: (
       isDonation: false,
       category: ListingCategory.other,
