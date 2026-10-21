@@ -155,6 +155,20 @@ void main() {
       expect(repo.payments, isEmpty);
     });
 
+    testWidgets('a payment still waiting blocks another one (D-43)', (
+      tester,
+    ) async {
+      final repo = FakePaymentRepository()
+        ..errors['submit'] = const SignupException(SignupError.paymentPending);
+      await _pumpQuota(tester, repo);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_buyLabel()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(t('qrisUpload')));
+      await tester.pumpAndSettle();
+      expect(find.text(t('errorPaymentPending')), findsOneWidget);
+    });
+
     testWidgets('Unggah ulang after a rejection sends a new proof', (
       tester,
     ) async {

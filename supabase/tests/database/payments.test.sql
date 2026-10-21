@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(40);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -94,6 +94,8 @@ select pg_temp.act_as(:b);
 select pg_temp.upload('84848484-0000-4000-8000-000000000002/p1.jpg');
 select lives_ok($$ select public.submit_payment('package', '84848484-0000-4000-8000-000000000002/p1.jpg') $$,
   'B submits too');
+select throws_ok($$ select public.submit_payment('package', '84848484-0000-4000-8000-000000000002/p2.jpg') $$,
+  '23514', 'payment_pending', 'one pending payment per member (D-43)');
 select is((select count(*)::int from public.payments where member_id::text like '84848484-%'), 1,
   'members read only their own payments');
 reset role;
@@ -102,8 +104,35 @@ select throws_ok($$ insert into public.payments (member_id, kind, amount, proof_
   values ('84848484-0000-4000-8000-000000000001', 'package', 1000, 'x') $$,
   '23514', null, 'the amount follows the kind');
 
+-- D-43 backstop: even a direct insert cannot add a second pending payment.
+select throws_ok($$ insert into public.payments (member_id, kind, amount, proof_path)
+  values ('84848484-0000-4000-8000-000000000002', 'package', 15000, 'x') $$,
+  '23505', null, 'the database allows one pending payment per member');
+
 \set pa '(select id from public.payments where member_id = ''84848484-0000-4000-8000-000000000001'')'
 \set pb '(select id from public.payments where member_id = ''84848484-0000-4000-8000-000000000002'')'
+
+-- admin_pending_payments: K18 list, oldest first ------------------------------------
+
+-- B waited longer than A.
+update public.payments set created_at = now() - interval '1 hour'
+  where member_id = '84848484-0000-4000-8000-000000000002';
+
+select pg_temp.act_as(:a);
+select throws_ok('select * from public.admin_pending_payments()',
+  '42501', 'not_admin', 'members cannot list pending payments');
+reset role;
+
+select pg_temp.act_as(:x);
+select is((select array_agg(member_name order by ord) from (
+    select member_name, row_number() over () as ord from public.admin_pending_payments()) l
+  where member_name like 'T84 %'), array['T84 2', 'T84 1'],
+  'the longest waiting comes first');
+select is((select row(member_email, kind, amount, proof_path)::text from public.admin_pending_payments()
+  where member_name = 'T84 1'),
+  '(t84-1@binus.ac.id,package,15000,84848484-0000-4000-8000-000000000001/p1.jpg)',
+  'with the member, the kind, the amount and the proof');
+reset role;
 
 -- confirm_payment / reject_payment: admins only ----------------------------------------
 
@@ -145,6 +174,11 @@ select is((select row(status, reason, decided_by = :y)::text from public.payment
   '(rejected,"Bukti buram",t)', 'the reason and the admin are recorded');
 select is((select balance from public.quota_balances where member_id = :b), 1,
   'rejecting adds nothing');
+
+select pg_temp.act_as(:b);
+select lives_ok($$ select public.submit_payment('package', '84848484-0000-4000-8000-000000000002/p3.jpg') $$,
+  'after a rejection the member can upload again');
+reset role;
 
 -- Proof retention (K-10) ---------------------------------------------------------------
 

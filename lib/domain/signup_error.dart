@@ -48,6 +48,8 @@ enum SignupError {
   notAllowed('errorNotAllowedToList'),
   // From confirm_payment: the form checks it first.
   invalidAmount('errorInvalidAmount'),
+  // From submit_payment, or its unique index when two submits race (D-43).
+  paymentPending('errorPaymentPending'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -78,6 +80,9 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'not_pending') => SignupError.notPending,
     ('23514', 'reason_missing') => SignupError.reasonMissing,
     ('23514', 'invalid_amount') => SignupError.invalidAmount,
+    ('23514', 'payment_pending') => SignupError.paymentPending,
+    ('23505', _) when message.contains('payments_one_pending') =>
+      SignupError.paymentPending,
     ('23514', 'note_missing') => SignupError.noteMissing,
     ('23514', 'no_phone') => SignupError.noPhone,
     ('23514', 'note_has_phone') => SignupError.noteHasPhone,

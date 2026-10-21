@@ -562,6 +562,7 @@ Changes to these terms are announced in the app. These terms are governed by the
     'sellNeedsApproval_rejected':
         'Your verification was rejected. Resend your photos to sell items.',
     'quotaTitle': 'Listing Quota',
+    'profileQuota': 'Quota',
     'quotaLeft': 'Listing quota left: {n}',
     'quotaBuy': 'Buy a Package · {price} = 3 listings',
     'quotaHistory': 'Purchase history',
@@ -602,6 +603,7 @@ Changes to these terms are announced in the app. These terms are governed by the
     'paymentRejected': 'Payment from {name} rejected.',
     'paymentNotPending': 'Another admin already decided this payment.',
     'errorInvalidAmount': 'The amount received must be above 0.',
+    'errorPaymentPending': 'Your last payment is still waiting for admin confirmation. You can buy again once it is confirmed or rejected.',
     'listingError_category': 'Choose a category.',
     'listingError_photos': 'Add 1–5 photos.',
     'listingError_title': 'Enter a name of up to 100 characters.',
@@ -1155,6 +1157,7 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'sellNeedsApproval_rejected':
         'Verifikasi akunmu ditolak. Kirim ulang foto untuk menjual barang.',
     'quotaTitle': 'Kuota Listing',
+    'profileQuota': 'Kuota',
     'quotaLeft': 'Sisa kuota listing: {n}',
     'quotaBuy': 'Beli Paket · {price} = 3 listing',
     'quotaHistory': 'Riwayat pembelian',
@@ -1194,6 +1197,7 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'paymentRejected': 'Pembayaran dari {name} ditolak.',
     'paymentNotPending': 'Pembayaran ini sudah diputuskan admin lain.',
     'errorInvalidAmount': 'Nominal diterima harus lebih dari 0.',
+    'errorPaymentPending': 'Pembayaran terakhirmu masih menunggu konfirmasi admin. Kamu bisa membeli lagi setelah dikonfirmasi atau ditolak.',
     'listingError_category': 'Pilih kategori.',
     'listingError_photos': 'Tambahkan 1–5 foto.',
     'listingError_title': 'Isi nama maksimal 100 karakter.',

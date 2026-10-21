@@ -43,7 +43,7 @@ abstract interface class PaymentRepository {
   /// Uploads the proof (a JPEG without metadata) and records the payment.
   Future<void> submit(PaymentKind kind, Uint8List proof);
 
-  /// Longest waiting first.
+  /// admin_pending_payments: longest waiting first.
   Future<List<PendingPayment>> pending();
 
   /// The proof's bytes, kept in memory only.
@@ -119,21 +119,13 @@ class SupabasePaymentRepository implements PaymentRepository {
 
   @override
   Future<List<PendingPayment>> pending() => guardBackend(() async {
-    final rows = await _client
-        .from('payments')
-        .select(
-          'id, kind, amount, created_at, proof_path, '
-          'member:profiles!member_id(full_name, email)',
-        )
-        .eq('status', 'pending')
-        .order('created_at', ascending: true)
-        .order('id', ascending: true);
+    final rows = await _client.rpc<List<dynamic>>('admin_pending_payments');
     return [
-      for (final row in rows)
+      for (final row in rows.cast<Map<String, dynamic>>())
         (
           id: row['id'] as String,
-          memberName: row['member']['full_name'] as String,
-          memberEmail: row['member']['email'] as String,
+          memberName: row['member_name'] as String,
+          memberEmail: row['member_email'] as String,
           kind: PaymentKind.fromCode(row['kind'] as String),
           amount: row['amount'] as int,
           createdAt: DateTime.parse(row['created_at'] as String),

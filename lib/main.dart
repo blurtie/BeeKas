@@ -202,6 +202,7 @@ Widget _screenFor(BuildContext context, Account account) =>
         status: account.status,
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
+        onQuota: () => _quota(context),
       ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
@@ -352,6 +353,18 @@ final _listingRepository = SupabaseListingRepository(Supabase.instance.client);
 
 final _paymentRepository = SupabasePaymentRepository(Supabase.instance.client);
 
+/// K8 Kuota Listing (#84), from Pasang and from Profil.
+Future<void> _quota(BuildContext context) => Navigator.push<void>(
+  context,
+  MaterialPageRoute(
+    builder: (_) => QuotaScreen(
+      repository: _paymentRepository,
+      // A screenshot from the gallery, converted like listing photos.
+      pickProof: () => pickListingPhoto(ImageSource.gallery),
+    ),
+  ),
+);
+
 /// Pasang barang (#82), K5-K6.
 Future<bool?> _sell(BuildContext context) => Navigator.push<bool>(
   context,
@@ -360,16 +373,7 @@ Future<bool?> _sell(BuildContext context) => Navigator.push<bool>(
       repository: _listingRepository,
       pickPhoto: ({required camera}) =>
           pickListingPhoto(camera ? ImageSource.camera : ImageSource.gallery),
-      onBuyQuota: () => Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => QuotaScreen(
-            repository: _paymentRepository,
-            // A screenshot from the gallery, converted like listing photos.
-            pickProof: () => pickListingPhoto(ImageSource.gallery),
-          ),
-        ),
-      ),
+      onBuyQuota: () => _quota(context),
     ),
   ),
 );

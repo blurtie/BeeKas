@@ -199,9 +199,16 @@ class _QrisScreenState extends State<_QrisScreen> {
       if (proof == null) return;
       await widget.repository.submit(PaymentKind.package, proof);
       if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      // A failed upload, a refused payment or an unreadable picture.
-      if (mounted) setState(() => _error = t('qrisFailed'));
+    } catch (e) {
+      // D-43 says why; anything else is a failed upload, a refused payment
+      // or an unreadable picture.
+      final pending =
+          e is SignupException && e.error == SignupError.paymentPending;
+      if (mounted) {
+        setState(
+          () => _error = t(pending ? 'errorPaymentPending' : 'qrisFailed'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }

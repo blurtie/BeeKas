@@ -36,6 +36,8 @@ create table public.payments (
 
 create index payments_member on public.payments (member_id, created_at desc);
 create index payments_pending on public.payments (created_at) where status = 'pending';
+-- D-43: one pending payment per member; submit_payment says so first.
+create unique index payments_one_pending on public.payments (member_id) where status = 'pending';
 
 alter table public.payments enable row level security;
 revoke all on public.payments from anon, authenticated;
@@ -91,6 +93,10 @@ begin
   end if;
   if p_proof is null or p_proof not like auth.uid()::text || '/%' or p_proof like '%..%' then
     raise exception 'not_own_proof' using errcode = 'insufficient_privilege';
+  end if;
+  -- D-43. The unique index catches two submits racing past this check.
+  if exists (select 1 from public.payments where member_id = auth.uid() and status = 'pending') then
+    raise exception 'payment_pending' using errcode = 'check_violation';
   end if;
   insert into public.payments (member_id, kind, amount, proof_path)
   values (auth.uid(), p_kind, 15000, p_proof)
@@ -164,6 +170,33 @@ revoke execute on function public.submit_payment(public.payment_kind, text),
 grant execute on function public.submit_payment(public.payment_kind, text),
   public.confirm_payment(uuid, integer), public.reject_payment(uuid, text)
   to authenticated;
+
+-- K18 list: waiting payments, longest waiting first, with the member.
+create function public.admin_pending_payments()
+returns table (
+  id uuid, member_name text, member_email text, kind public.payment_kind, amount integer,
+  created_at timestamptz, proof_path text
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = 'insufficient_privilege';
+  end if;
+  return query
+    select p.id, m.full_name, m.email, p.kind, p.amount, p.created_at, p.proof_path
+    from public.payments p
+    join public.profiles m on m.id = p.member_id
+    where p.status = 'pending'
+    order by p.created_at, p.id;
+end;
+$$;
+
+revoke execute on function public.admin_pending_payments() from public, anon;
+grant execute on function public.admin_pending_payments() to authenticated;
 
 -- K-10: proofs due for deletion by delete-expired-photos (Storage API, not SQL DELETE):
 -- those of decided payments, and any proof older than 29 days (undecided, or uploaded
