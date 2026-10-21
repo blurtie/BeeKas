@@ -125,6 +125,13 @@ file_size_limit = "50MiB"
 # allowed_mime_types = ["image/png", "image/jpeg"]
 # objects_path = "./images"
 
+# Local only: uploads the sample product photos used by seed.sql (#74).
+[storage.buckets.listing-photos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg"]
+objects_path = "./seed-photos"
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true
