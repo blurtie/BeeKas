@@ -346,8 +346,13 @@ final _catalogRepository = SupabaseCatalogRepository(Supabase.instance.client);
 void _catalog(BuildContext context, [AccountStatus? status]) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) =>
-        CatalogShell(repository: _catalogRepository, status: status),
+    builder: (_) => CatalogShell(
+      repository: _catalogRepository,
+      status: status,
+      // Masuk (guests) and L11/L12 (pending, rejected) are the first route
+      // below the catalog they opened it from.
+      onAccount: () => Navigator.popUntil(context, (r) => r.isFirst),
+    ),
   ),
 );
 

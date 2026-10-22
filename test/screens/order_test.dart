@@ -72,6 +72,28 @@ void main() {
     }
   });
 
+  for (final (status, label) in [
+    (null, 'orderGoSignIn'),
+    (AccountStatus.pending, 'orderGoStatus'),
+  ]) {
+    testWidgets('${status?.name ?? 'guest'} can go to ${t(label)}', (
+      tester,
+    ) async {
+      var opened = 0;
+      await _pump(
+        tester,
+        ListingDetailScreen(
+          listing: _macbook,
+          status: status,
+          onAccount: () => opened++,
+        ),
+      );
+      await _tapText(tester, t('buyNow'));
+      await tester.tap(find.widgetWithText(SnackBarAction, t(label)));
+      expect(opened, 1);
+    });
+  }
+
   testWidgets('approved without an order backend: Segera hadir', (
     tester,
   ) async {

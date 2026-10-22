@@ -50,9 +50,13 @@ class CatalogShell extends StatefulWidget {
     this.onQuota,
     this.orders,
     this.now = DateTime.now,
+    this.onAccount,
   });
 
   final CatalogRepository repository;
+
+  /// See [ListingDetailScreen.onAccount].
+  final VoidCallback? onAccount;
 
   /// Booking, Beli Sekarang and Pesanan Saya (#85), for signed-in members.
   final OrderRepository? orders;
@@ -84,6 +88,7 @@ class _CatalogShellState extends State<CatalogShell> {
     status: widget.status,
     orders: widget.orders,
     now: widget.now,
+    onAccount: widget.onAccount,
   );
 
   void _snack(String message) => ScaffoldMessenger.of(context)
@@ -872,8 +877,13 @@ class ListingDetailScreen extends StatefulWidget {
     this.status,
     this.orders,
     this.now = DateTime.now,
+    this.onAccount,
   });
   final Listing listing;
+
+  /// Back to Masuk (guests) or the account-status screen (pending), from
+  /// the snackbar that explains why they cannot order.
+  final VoidCallback? onAccount;
 
   /// Null for guests.
   final AccountStatus? status;
@@ -914,6 +924,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               content: Text(
                 t('orderNeedsApproval_${widget.status?.name ?? 'guest'}'),
               ),
+              action: switch ((widget.status, widget.onAccount)) {
+                (null, final go?) => SnackBarAction(
+                  label: t('orderGoSignIn'),
+                  onPressed: go,
+                ),
+                (AccountStatus.pending, final go?) => SnackBarAction(
+                  label: t('orderGoStatus'),
+                  onPressed: go,
+                ),
+                _ => null,
+              },
             ),
           );
         return;
