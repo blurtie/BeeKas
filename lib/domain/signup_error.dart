@@ -50,7 +50,9 @@ enum SignupError {
   invalidAmount('errorInvalidAmount'),
   // From submit_payment, or its unique index when two submits race (D-43).
   paymentPending('errorPaymentPending'),
-  // From the order functions (#85).
+  // From send_message: not approved, or frozen (the app cannot see freezes).
+  chatNotAllowed('errorChatNotAllowed'),
+  // From the order functions (#85) and send_message (#86).
   listingUnavailable('errorListingUnavailable'),
   ownListing('errorOwnListing'),
   soldOut('errorSoldOut'),
@@ -101,6 +103,7 @@ SignupError signupErrorFrom(String? code, String message) {
     ('42501', 'not_admin') => SignupError.notAdmin,
     ('23514', 'no_quota') => SignupError.noQuota,
     ('42501', 'not_allowed') => SignupError.notAllowed,
+    ('42501', 'chat_not_allowed') => SignupError.chatNotAllowed,
     ('23514', 'listing_unavailable') => SignupError.listingUnavailable,
     ('23514', 'own_listing') => SignupError.ownListing,
     ('23514', 'sold_out') => SignupError.soldOut,

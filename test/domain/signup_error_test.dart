@@ -93,6 +93,17 @@ void main() {
     expect(signupErrorFrom('42501', 'not_allowed'), SignupError.notAllowed);
   });
 
+  test('maps send_message refusals', () {
+    expect(
+      signupErrorFrom('42501', 'chat_not_allowed'),
+      SignupError.chatNotAllowed,
+    );
+    expect(
+      signupErrorFrom('23514', 'listing_unavailable'),
+      SignupError.listingUnavailable,
+    );
+  });
+
   test('maps a second pending payment (D-43), checked or raced', () {
     expect(
       signupErrorFrom('23514', 'payment_pending'),

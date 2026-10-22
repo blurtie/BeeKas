@@ -15,6 +15,7 @@ class ReviewListScreen extends StatefulWidget {
     required this.repository,
     required this.onSignOut,
     this.onPayments,
+    this.onAnnouncements,
     this.now = DateTime.now,
   });
 
@@ -23,6 +24,9 @@ class ReviewListScreen extends StatefulWidget {
 
   /// K18 Pembayaran (#84). This is the admin home, so only admins see it.
   final VoidCallback? onPayments;
+
+  /// K21 Pengumuman Admin BeeKas (#86).
+  final VoidCallback? onAnnouncements;
   final DateTime Function() now;
 
   @override
@@ -76,6 +80,11 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
             TextButton(
               onPressed: widget.onPayments,
               child: Text(t('paymentsAdminTitle')),
+            ),
+          if (widget.onAnnouncements != null)
+            TextButton(
+              onPressed: widget.onAnnouncements,
+              child: Text(t('announcementsAdminTitle')),
             ),
           IconButton(
             tooltip: t('signOut'),

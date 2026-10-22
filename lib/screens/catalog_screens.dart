@@ -31,6 +31,15 @@ void showComingSoon(BuildContext context, {VoidCallback? onSignOut}) {
     );
 }
 
+/// The one chat gate (D-31): [open] for accounts that may chat, else why
+/// not. Freezes are invisible to the app; send_message refuses those (K-26).
+void _tryChat(BuildContext context, AccountStatus? status, VoidCallback? open) {
+  if (canChat(status, frozen: false) && open != null) return open();
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(t('chatNeedsApproval'))));
+}
+
 String _categoryLabel(ListingCategory c) => t(c.copyKey);
 
 /// A category's label in every language, for search (D-41).
@@ -52,6 +61,8 @@ class CatalogShell extends StatefulWidget {
     this.now = DateTime.now,
     this.onAccount,
     this.onMyListings,
+    this.onChats,
+    this.onChat,
   });
 
   final CatalogRepository repository;
@@ -76,6 +87,12 @@ class CatalogShell extends StatefulWidget {
   /// Opens K7 Barang Saya (#83) from Profil, for signed-in members.
   final VoidCallback? onMyListings;
 
+  /// K14 Daftar Chat and K15 for a listing (#86). The tab and Chat Penjual
+  /// use them only for accounts that may chat (D-31); frozen accounts are
+  /// refused by send_message (K-26).
+  final VoidCallback? onChats;
+  final void Function(Listing)? onChat;
+
   @override
   State<CatalogShell> createState() => _CatalogShellState();
 }
@@ -93,6 +110,7 @@ class _CatalogShellState extends State<CatalogShell> {
     orders: widget.orders,
     now: widget.now,
     onAccount: widget.onAccount,
+    onChat: widget.onChat,
   );
 
   void _snack(String message) => ScaffoldMessenger.of(context)
@@ -204,7 +222,7 @@ class _CatalogShellState extends State<CatalogShell> {
             ? setState(() => _tab = i)
             : i == 3
             ? _profile()
-            : showComingSoon(context),
+            : _tryChat(context, widget.status, widget.onChats),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
@@ -890,6 +908,7 @@ class ListingDetailScreen extends StatefulWidget {
     required this.listing,
     this.status,
     this.orders,
+    this.onChat,
     this.now = DateTime.now,
     this.onAccount,
   });
@@ -902,6 +921,9 @@ class ListingDetailScreen extends StatefulWidget {
   /// Null for guests.
   final AccountStatus? status;
   final OrderRepository? orders;
+
+  /// Opens K15 (#86); [status] decides whether it may.
+  final void Function(Listing)? onChat;
   final DateTime Function() now;
 
   @override
@@ -1151,13 +1173,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: soon,
-                      child: Text(t('chatSeller')),
+                  // Not on the member's own listing.
+                  if (!l.isMine) ...[
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _tryChat(
+                          context,
+                          widget.status,
+                          switch (widget.onChat) {
+                            final onChat? => () => onChat(l),
+                            null => null,
+                          },
+                        ),
+                        child: Text(t('chatSeller')),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => order(

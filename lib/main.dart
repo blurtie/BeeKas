@@ -6,6 +6,7 @@ import 'config/copy.dart';
 import 'data/auth_repository.dart';
 import 'data/camera.dart';
 import 'data/catalog_repository.dart';
+import 'data/chat_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
@@ -19,6 +20,7 @@ import 'domain/sign_in.dart';
 import 'screens/my_listings_screen.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/catalog_screens.dart';
+import 'screens/chat_screens.dart';
 import 'screens/consent_screen.dart';
 import 'screens/help.dart';
 import 'screens/legal_screen.dart';
@@ -212,6 +214,29 @@ Widget _screenFor(BuildContext context, Account account) =>
             builder: (_) => MyListingsScreen(repository: _listingRepository),
           ),
         ),
+        onChats: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => ChatListScreen(repository: _chatRepository),
+          ),
+        ),
+        // Chat Penjual (5.8). Status Booking and Detail Pesanan follow in their own PR.
+        onChat: (listing) => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => ChatRoomScreen(
+              repository: _chatRepository,
+              title: listing.sellerName,
+              listingId: listing.id,
+              item: (
+                title: listing.title,
+                price: listing.price,
+                isDonation: listing.isDonation,
+                photo: listing.photos.firstOrNull,
+              ),
+            ),
+          ),
+        ),
       ),
       Destination.review => ReviewListScreen(
         repository: SupabaseReviewRepository(Supabase.instance.client),
@@ -220,6 +245,12 @@ Widget _screenFor(BuildContext context, Account account) =>
           context,
           MaterialPageRoute(
             builder: (_) => PaymentListScreen(repository: _paymentRepository),
+          ),
+        ),
+        onAnnouncements: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => PostAnnouncementScreen(repository: _chatRepository),
           ),
         ),
       ),
@@ -401,3 +432,5 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
         LegalScreen(titleKey: titleKey, bodyKey: '${titleKey}Body'),
   ),
 );
+
+final _chatRepository = SupabaseChatRepository(Supabase.instance.client);

@@ -15,6 +15,7 @@ Listing fakeListing(
   String? warranty,
   List<String> specs = const [],
   List<String> photos = const [],
+  bool isMine = false,
 }) => (
   createdAt: '2026-01-01T00:00:00+00:00',
   id: title,
@@ -33,6 +34,7 @@ Listing fakeListing(
   sellerName: sellerName,
   sellerCampus: Campus.alamSutera,
   sellerVerified: true,
+  isMine: isMine,
 );
 
 /// Plays the server: filters [result] by text (title or seller) or matched
