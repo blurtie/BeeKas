@@ -19,7 +19,8 @@ $$;
 
 revoke execute on function public.has_running_order(uuid, uuid) from public, anon, authenticated;
 
--- As in 20261104120000, refusing while any order on the listing runs.
+-- As in 20261104120000, refusing while any order on the listing runs. The listing row
+-- is locked first, so place_order (which locks it too) cannot slip in between.
 create or replace function public.withdraw_listing(p_id uuid)
 returns void
 language plpgsql
@@ -27,20 +28,25 @@ security definer
 set search_path = ''
 as $$
 begin
-  if exists (select 1 from public.orders o join public.listings l on l.id = o.listing_id
-      where o.listing_id = p_id and l.seller_id = auth.uid()
-        and o.status in ('waiting', 'processing')) then
-    raise exception 'listing_has_orders' using errcode = 'check_violation';
-  end if;
-  update public.listings set withdrawn_at = now()
-    where id = p_id and seller_id = auth.uid() and removed_at is null and withdrawn_at is null;
+  perform 1 from public.listings
+    where id = p_id and seller_id = auth.uid() and removed_at is null and withdrawn_at is null
+    for update;
   if not found then
     raise exception 'not_allowed' using errcode = 'insufficient_privilege';
   end if;
+  if exists (select 1 from public.orders
+      where listing_id = p_id and status in ('waiting', 'processing')) then
+    raise exception 'listing_has_orders' using errcode = 'check_violation';
+  end if;
+  update public.listings set withdrawn_at = now() where id = p_id;
 end;
 $$;
 
--- As in 20261106120000; p_listing may also be one the caller has a running order on.
+-- As in 20261106120000, except:
+-- - a new chat may also start from a listing the caller has a running order on;
+-- - inside an existing conversation p_listing only has to be its seller's: the card
+--   moves when the listing is live or the conversation's buyer has a running order on
+--   it, otherwise the message still goes through and the card stays.
 create or replace function public.send_message(
   p_body text, p_conversation uuid default null, p_listing uuid default null
 )
@@ -52,38 +58,45 @@ as $$
 declare
   v_seller uuid;
   v_id uuid := p_conversation;
+  v_conv public.conversations;
+  v_card uuid;
 begin
   if auth.uid() is null or not public.is_listed_seller(auth.uid()) then
     raise exception 'chat_not_allowed' using errcode = 'insufficient_privilege';
   end if;
   if p_listing is not null then
-    select seller_id into v_seller from public.listings
-      where id = p_listing
-        and (public.is_live_listing(id) or public.has_running_order(id, auth.uid()));
-    if v_seller is null then
-      raise exception 'listing_unavailable' using errcode = 'check_violation';
-    end if;
+    select seller_id into v_seller from public.listings where id = p_listing;
   end if;
   if v_id is null then
-    if v_seller is null or v_seller = auth.uid() then
+    if v_seller is null or v_seller = auth.uid()
+        or not (public.is_live_listing(p_listing) or public.has_running_order(p_listing, auth.uid())) then
       raise exception 'listing_unavailable' using errcode = 'check_violation';
     end if;
     insert into public.conversations (buyer_id, seller_id)
       values (auth.uid(), v_seller)
       on conflict (buyer_id, seller_id) do update set buyer_id = excluded.buyer_id
       returning id into v_id;
-  elsif not exists (select 1 from public.conversations
-      where id = v_id and auth.uid() in (buyer_id, seller_id)) then
-    raise exception 'not_participant' using errcode = 'insufficient_privilege';
-  elsif p_listing is not null and not exists (select 1 from public.conversations
-      where id = v_id and seller_id = v_seller) then
-    raise exception 'listing_unavailable' using errcode = 'check_violation';
+    v_card := p_listing;
+  else
+    select * into v_conv from public.conversations
+      where id = v_id and auth.uid() in (buyer_id, seller_id);
+    if not found then
+      raise exception 'not_participant' using errcode = 'insufficient_privilege';
+    end if;
+    if p_listing is not null then
+      if v_seller is distinct from v_conv.seller_id then
+        raise exception 'listing_unavailable' using errcode = 'check_violation';
+      end if;
+      if public.is_live_listing(p_listing) or public.has_running_order(p_listing, v_conv.buyer_id) then
+        v_card := p_listing;
+      end if;
+    end if;
   end if;
   insert into public.messages (conversation_id, sender_id, body, listing_id)
-    values (v_id, auth.uid(), p_body, p_listing);
+    values (v_id, auth.uid(), p_body, v_card);
   update public.conversations
     set last_message_at = clock_timestamp(),
-        listing_id = coalesce(p_listing, listing_id)
+        listing_id = coalesce(v_card, listing_id)
     where id = v_id;
   return v_id;
 end;

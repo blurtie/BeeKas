@@ -479,6 +479,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       final room = tester.widget<ChatRoomScreen>(find.byType(ChatRoomScreen));
       expect(room.conversationId, 'c9');
+
+      chats.room('c9').add([]);
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'Bisa besok');
+      await tester.tap(find.byTooltip(t('chatSend')));
+      await tester.pump();
+      expect(chats.sent.single.conversationId, 'c9');
+      expect(chats.sent.single.body, 'Bisa besok');
     });
 
     testWidgets('K13 seller without a conversation: not allowed to start', (
@@ -488,7 +496,7 @@ void main() {
       await openDetail(tester, repo, FakeChatRepository());
       await _tapText(tester, t('chatBuyer'));
       expect(find.byType(ChatRoomScreen), findsNothing);
-      expect(find.text(t('errorChatNotAllowed')), findsOneWidget);
+      expect(find.text(t('chatBuyerNotStarted')), findsOneWidget);
     });
   });
 }

@@ -85,6 +85,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       } else if (e is SignupException &&
           e.error == SignupError.listingHasOrders) {
         _snack('errorListingHasOrders');
+        await _load();
       } else {
         _snack('myListingsActionFailed');
       }

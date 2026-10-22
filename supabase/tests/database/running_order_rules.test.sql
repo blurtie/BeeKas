@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(18);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -50,6 +50,8 @@ reset role;
 select pg_temp.act_as(:s);
 select is(public.conversation_for_order((select id from public.orders where listing_id = :l)),
   (select id from public.conversations where buyer_id = :b), 'the seller finds the chat from the order');
+select lives_ok(format('select public.send_message(''Bisa'', (select id from public.conversations where buyer_id = %L), %L)', :b, :l),
+  'the seller replies with the sold-out listing while the order runs');
 select throws_ok(format('select public.withdraw_listing(%L)', :l),
   '23514', 'listing_has_orders', 'refused while Menunggu');
 select lives_ok(format('select public.accept_order(id, now() + interval ''1 day'') from public.orders where listing_id = %L', :l), 'S accepts');
@@ -58,6 +60,18 @@ select throws_ok(format('select public.withdraw_listing(%L)', :l),
 reset role;
 select pg_temp.act_as(:b);
 select lives_ok(format('select public.complete_order(id) from public.orders where listing_id = %L', :l), 'B completes');
+reset role;
+select pg_temp.act_as(:s);
+reset role;
+select pg_temp.act_as(:b);
+select lives_ok(format('select public.send_message(''Makasih'', (select id from public.conversations where buyer_id = %L), %L)', :b, :l),
+  'the buyer follows up after the order completed');
+select throws_ok(format('select public.send_message(''x'', p_listing => %L)', :l),
+  '23514', 'listing_unavailable', 'a new chat still needs a live listing or a running order');
+reset role;
+select pg_temp.act_as(:c);
+select throws_ok(format('select public.send_message(''Halo'', p_listing => %L)', :l),
+  '23514', 'listing_unavailable', 'an outsider still cannot start a chat');
 reset role;
 select pg_temp.act_as(:s);
 select lives_ok(format('select public.withdraw_listing(%L)', :l), 'allowed once completed');

@@ -1151,6 +1151,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  // Chat Pembeli is looking up the conversation; a second tap waits for it.
+  var _findingChat = false;
+
   /// The buyer may start a chat (send_message allows a running order); the
   /// seller cannot, so only an existing conversation opens.
   Future<void> _chat() async {
@@ -1158,14 +1161,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final chats = widget.chats;
     String? id;
     if (!o.isBuyer && chats != null) {
+      if (_findingChat) return;
+      _findingChat = true;
       try {
         id = await chats.conversationForOrder(o.id);
       } on SignupException catch (e) {
         if (mounted) _snack(context, _errorText(e));
         return;
+      } finally {
+        _findingChat = false;
       }
       if (!mounted) return;
-      if (id == null) return _snack(context, t('errorChatNotAllowed'));
+      if (id == null) return _snack(context, t('chatBuyerNotStarted'));
     }
     _openChat(
       context,
