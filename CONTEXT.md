@@ -1,6 +1,6 @@
 # BeeKas
 
-BeeKas is a marketplace for the BINUS community to sell and donate used goods. This glossary covers onboarding, registration, and sign-in.
+BeeKas is a marketplace for the BINUS community to sell and donate used goods. This glossary covers onboarding, registration, sign-in, listings, and orders.
 
 ## Language
 
@@ -63,6 +63,54 @@ The card photo, selfie, and verification review together.
 
 **Sign-in identifier**:
 The BINUS email or phone number a member types to sign in.
+
+**Order (Pesanan)**:
+An approved member's claim on one unit of a listing, by **Booking 24 Jam** or **Beli Sekarang**, paid by COD on campus. Status: Menunggu (waiting for the seller), Diproses, Selesai, or Dibatalkan.
+_Avoid_: transaction, purchase (a booking is not a purchase)
+
+**Booking 24 Jam**:
+An order that holds one unit for 24 hours without a promise to buy. The seller may extend the hold once by 24 hours at the buyer's request.
+_Avoid_: reservation, keep
+
+**Beli Sekarang**:
+An order that promises to buy one unit at the listing price when ordered.
+_Avoid_: checkout (that is the screen), instant buy
+
+**Running order (Pesanan berjalan)**:
+An order that is Menunggu or Diproses. A buyer has at most one per listing and at most 2 on donations.
+_Avoid_: active order, open order
+
+**Hold**:
+How long a Menunggu order waits for the seller (`hold_until`): 24 hours from ordering. When it runs out the order is cancelled automatically and the unit returns to stock.
+_Avoid_: timer, deadline
+
+**Lokasi COD**:
+Where buyer and seller meet: a **Campus** plus optional free text. Set by the buyer when ordering; either party may change it until Selesai.
+_Avoid_: shipping address, delivery address
+
+**Waktu COD**:
+The date and time of the meeting. Set by the seller on Terima; either party may change it while Diproses. The order completes automatically 3 days after it.
+_Avoid_: delivery time
+
+**Cancel reason (Alasan batal)**:
+A fixed code (changed mind, not as described, can't meet, sold elsewhere, other) plus a note, required for Other. An automatic cancel has no reason.
+_Avoid_: rejection reason (that is for verification)
+
+**Live (Tayang)**:
+A listing shown in the catalog: not removed by an admin, not withdrawn, not expired, stock left above zero, and its seller approved and not frozen.
+_Avoid_: active (the old `is_active` column is gone)
+
+**Withdrawn (Diturunkan sendiri)**:
+A listing its seller took down. The quota is not returned; it can be relisted for free (D-45).
+_Avoid_: deleted
+
+**Removed (Diturunkan admin)**:
+A listing an admin took down, with a reason shown to the seller. It cannot be relisted.
+_Avoid_: banned, deleted
+
+**Relist (Tayang ulang)**:
+Giving an expired or withdrawn listing another 60 days from now, without using quota.
+_Avoid_: renew, repost
 
 ## Relationships
 

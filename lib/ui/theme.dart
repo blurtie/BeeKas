@@ -54,6 +54,12 @@ ThemeData beeTheme() {
         color: BeeColors.textLabel,
       ),
     ),
+    // brandPrimary text on white is 1.85:1; link passes 4.5:1 (D-22.6).
+    tabBarTheme: const TabBarThemeData(
+      labelColor: BeeColors.link,
+      unselectedLabelColor: BeeColors.textBody,
+      indicatorColor: BeeColors.link,
+    ),
     appBarTheme: const AppBarTheme(
       backgroundColor: BeeColors.surface,
       foregroundColor: BeeColors.textLabel,

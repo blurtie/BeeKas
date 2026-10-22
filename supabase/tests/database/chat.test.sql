@@ -36,13 +36,13 @@ update public.profiles set role = 'admin' where id in (:x, :y);
 insert into public.freezes (member_id, reason, proposed_by, approved_by, approved_at)
 values (:f, 'penipuan', :x, :y, now());
 
-insert into public.listings (id, seller_id, title, description, category, condition, price, campus, is_active, expires_at)
+insert into public.listings (id, seller_id, title, description, category, condition, price, campus, withdrawn_at, expires_at)
 values
-  (:l, :s, 'Kalkulator', 'Masih bagus', 'laptop_computer', 'like_new', 50000, 'bandung', true, now() + interval '30 days'),
-  (:g, :s, 'Buku', 'Lengkap', 'books_stationery', 'like_new', 20000, 'bandung', false, now() + interval '30 days'),
-  (:e, :s, 'Meja', 'Kokoh', 'other', 'like_new', 90000, 'bandung', true, now() - interval '1 day'),
-  (:fl, :f, 'Kursi', 'Kokoh', 'other', 'like_new', 90000, 'bandung', true, now() + interval '30 days'),
-  (:lc, :c, 'Lampu', 'Terang', 'other', 'like_new', 30000, 'bandung', true, now() + interval '30 days');
+  (:l, :s, 'Kalkulator', 'Masih bagus', 'laptop_computer', 'like_new', 50000, 'bandung', null, now() + interval '30 days'),
+  (:g, :s, 'Buku', 'Lengkap', 'books_stationery', 'like_new', 20000, 'bandung', now(), now() + interval '30 days'),
+  (:e, :s, 'Meja', 'Kokoh', 'other', 'like_new', 90000, 'bandung', null, now() - interval '1 day'),
+  (:fl, :f, 'Kursi', 'Kokoh', 'other', 'like_new', 90000, 'bandung', null, now() + interval '30 days'),
+  (:lc, :c, 'Lampu', 'Terang', 'other', 'like_new', 30000, 'bandung', null, now() + interval '30 days');
 
 -- Starting a chat ---------------------------------------------------------------------
 
@@ -187,7 +187,7 @@ select is((select count(*)::int from pg_publication_tables
   'announcements are published to Realtime');
 
 -- The card disappears once the listing is no longer live.
-update public.listings set is_active = false where id = :l;
+update public.listings set withdrawn_at = now() where id = :l;
 select pg_temp.act_as(:a);
 select is((select row(listing_id, listing_title)::text from public.my_conversations() where other_name = 'T86 2'), '(,)',
   'no card for a listing that is no longer live');

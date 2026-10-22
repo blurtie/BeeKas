@@ -10,12 +10,14 @@ import 'data/chat_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
+import 'data/order_repository.dart';
 import 'data/payment_repository.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
 import 'domain/access.dart';
 import 'domain/registration.dart';
 import 'domain/sign_in.dart';
+import 'screens/my_listings_screen.dart';
 import 'screens/card_photo_screen.dart';
 import 'screens/catalog_screens.dart';
 import 'screens/chat_screens.dart';
@@ -205,13 +207,20 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
+        orders: _orderRepository,
+        onMyListings: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => MyListingsScreen(repository: _listingRepository),
+          ),
+        ),
         onChats: () => Navigator.push(
           context,
           MaterialPageRoute<void>(
             builder: (_) => ChatListScreen(repository: _chatRepository),
           ),
         ),
-        // Chat Penjual (5.8). Status Booking adds its own entry with #85.
+        // Chat Penjual (5.8). Status Booking and Detail Pesanan follow in their own PR.
         onChat: (listing) => Navigator.push(
           context,
           MaterialPageRoute<void>(
@@ -375,14 +384,21 @@ final _catalogRepository = SupabaseCatalogRepository(Supabase.instance.client);
 void _catalog(BuildContext context, [AccountStatus? status]) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) =>
-        CatalogShell(repository: _catalogRepository, status: status),
+    builder: (_) => CatalogShell(
+      repository: _catalogRepository,
+      status: status,
+      // Masuk (guests) and L11/L12 (pending, rejected) are the first route
+      // below the catalog they opened it from.
+      onAccount: () => Navigator.popUntil(context, (r) => r.isFirst),
+    ),
   ),
 );
 
 final _listingRepository = SupabaseListingRepository(Supabase.instance.client);
 
 final _paymentRepository = SupabasePaymentRepository(Supabase.instance.client);
+
+final _orderRepository = SupabaseOrderRepository(Supabase.instance.client);
 
 /// K8 Kuota Listing (#84), from Pasang and from Profil.
 Future<void> _quota(BuildContext context) => Navigator.push<void>(

@@ -66,6 +66,7 @@ Future<void> _pump(
   AccountStatus? status,
   void Function(Listing)? onChat,
   VoidCallback? onChats,
+  VoidCallback? onMyListings,
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -80,6 +81,7 @@ Future<void> _pump(
         status: status,
         onChat: onChat,
         onChats: onChats,
+        onMyListings: onMyListings,
       ),
     ),
   );
@@ -246,6 +248,23 @@ void main() {
     expect(opened, isTrue);
   });
 
+  testWidgets('Profil opens Barang Saya (K7) for members', (tester) async {
+    var opened = false;
+    await _pump(
+      tester,
+      FakeCatalogRepository([_jaket]),
+      onSignOut: () {},
+      onQuota: () {},
+      onMyListings: () => opened = true,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('navProfile')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(t('profileMyListings')));
+    await tester.pumpAndSettle();
+    expect(opened, isTrue);
+  });
+
   testWidgets('guests get no Kuota in Profil', (tester) async {
     await _pump(tester, FakeCatalogRepository([_jaket]));
     await tester.pumpAndSettle();
@@ -316,11 +335,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('3/3'), findsOneWidget);
 
-    for (final key in ['booking24h', 'buyNow']) {
-      await tester.tap(find.text(t(key)));
-      await tester.pump();
-      expect(find.text(t('comingSoon')), findsOneWidget, reason: key);
-    }
     // Guests cannot chat (D-31).
     await tester.tap(find.text(t('chatSeller')));
     await tester.pump();

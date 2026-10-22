@@ -25,7 +25,7 @@ insert into public.listings (id, seller_id, title, description, category, condit
 values
   (:active, :s, 'T74 Active', 'desc', 'other', 'like_new', 50000, 'bandung', now() + interval '1 day'),
   (:hidden, :s, 'T74 Hidden', 'desc', 'other', 'like_new', 50000, 'bandung', now());
-update public.listings set is_active = false where id = :hidden;
+update public.listings set withdrawn_at = now() where id = :hidden;
 insert into public.listing_photos (listing_id, position, path) values
   (:active, 2, 't74/2.jpg'), (:active, 1, 't74/1.jpg'), (:hidden, 1, 't74/h.jpg');
 

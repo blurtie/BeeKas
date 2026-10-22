@@ -592,3 +592,17 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Di bucket privat `payment-proofs`, member hanya boleh membaca dan menghapus bukti di foldernya sendiri yang belum tercatat di pembayaran mana pun.
 - Izin ini semata agar aplikasi bisa menghapus bukti yang baru terunggah bila `submit_payment` gagal (Storage API perlu izin baca sebelum menghapus).
 - Bukti member lain dan bukti yang sudah tercatat di pembayaran tetap tidak bisa dibaca member; admin tetap membaca semua bukti.
+
+---
+
+## D-45 — Tayang ulang listing yang diturunkan sendiri
+
+**Status:** Dikonfirmasi Faiqi, 22 Oktober 2026 (tiket #83, PR #105)
+
+**Keputusan:**
+- Listing yang diturunkan sendiri oleh penjual bisa ditayangkan ulang gratis, sama seperti listing kedaluwarsa (K-07): masa tayang 60 hari lagi dari saat itu, tanpa memotong kuota.
+- Listing yang diturunkan admin tidak bisa ditayangkan ulang.
+- Listing yang habis stoknya tetap bisa ditayangkan ulang, tetapi baru tampil di katalog setelah stoknya ditambah lewat Edit.
+- Akun yang dibekukan tetap bisa menurunkan listingnya, tetapi tidak bisa mengedit atau menayangkan ulang.
+
+Aturan ini ditegakkan di backend (`relist_listing`).

@@ -58,7 +58,7 @@ create policy "announcements: members read"
 -- K14 reloads on new messages and announcements.
 alter publication supabase_realtime add table public.messages, public.announcements;
 
--- A listing that is on air: active, not expired, from a listed seller.
+-- A listing that is on air (is_live, #83), looked up by id.
 create function public.is_live_listing(p_listing uuid)
 returns boolean
 language sql
@@ -68,9 +68,7 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.listings l
-    where l.id = p_listing and l.is_active
-      and (l.expires_at is null or l.expires_at > now())
-      and public.is_listed_seller(l.seller_id)
+    where l.id = p_listing and public.is_live(l)
   );
 $$;
 
@@ -191,7 +189,7 @@ grant execute on function public.send_message(text, uuid, uuid),
   to authenticated;
 
 -- Detail Barang hides Chat Penjual on the member's own listing: catalog_listings
--- says which rows are the caller's (seller ids stay private). Otherwise as in #77.
+-- says which rows are the caller's (seller ids stay private). Otherwise as in 20261104 (#83).
 drop function public.catalog_listings(text, public.listing_category[], integer, timestamptz, uuid, public.listing_category[]);
 
 create function public.catalog_listings(
@@ -237,7 +235,9 @@ as $$
     p.full_name, p.campus, true, (l.seller_id = auth.uid()) is true
   from public.listings l
   join public.profiles p on p.id = l.seller_id
-  where l.is_active and public.is_listed_seller(l.seller_id)
+  -- The removed_at/withdrawn_at tests repeat is_live inline so the planner can use
+  -- listings_live_page, whose predicate is exactly these two.
+  where l.removed_at is null and l.withdrawn_at is null and public.is_live(l)
     -- strpos, not ilike: % and _ in the query stay plain text.
     and (coalesce(btrim(p_query), '') = ''
       or strpos(lower(l.title), lower(btrim(p_query))) > 0
