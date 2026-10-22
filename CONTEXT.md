@@ -1,6 +1,6 @@
 # BeeKas
 
-BeeKas is a marketplace for the BINUS community to sell and donate used goods. This glossary covers onboarding, registration, and sign-in.
+BeeKas is a marketplace for the BINUS community to sell and donate used goods. This glossary covers onboarding, registration, sign-in, and listings.
 
 ## Language
 
@@ -63,6 +63,22 @@ The card photo, selfie, and verification review together.
 
 **Sign-in identifier**:
 The BINUS email or phone number a member types to sign in.
+
+**Live (Tayang)**:
+A listing shown in the catalog: not removed by an admin, not withdrawn, not expired, stock left above zero, and its seller approved and not frozen.
+_Avoid_: active (the old `is_active` column is gone)
+
+**Withdrawn (Diturunkan sendiri)**:
+A listing its seller took down. The quota is not returned; it can be relisted for free (D-45).
+_Avoid_: deleted
+
+**Removed (Diturunkan admin)**:
+A listing an admin took down, with a reason shown to the seller. It cannot be relisted.
+_Avoid_: banned, deleted
+
+**Relist (Tayang ulang)**:
+Giving an expired or withdrawn listing another 60 days from now, without using quota.
+_Avoid_: renew, repost
 
 ## Relationships
 

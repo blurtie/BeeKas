@@ -43,6 +43,7 @@ class CatalogShell extends StatefulWidget {
     this.status,
     this.onSell,
     this.onQuota,
+    this.onMyListings,
   });
 
   final CatalogRepository repository;
@@ -56,6 +57,9 @@ class CatalogShell extends StatefulWidget {
 
   /// Opens K8 Kuota Listing (#84) from Profil, for signed-in members.
   final VoidCallback? onQuota;
+
+  /// Opens K7 Barang Saya (#83) from Profil, for signed-in members.
+  final VoidCallback? onMyListings;
 
   @override
   State<CatalogShell> createState() => _CatalogShellState();
@@ -91,6 +95,7 @@ class _CatalogShellState extends State<CatalogShell> {
   void _profile() {
     final onQuota = widget.onQuota;
     final onSignOut = widget.onSignOut;
+    final onMyListings = widget.onMyListings;
     if (onQuota == null) return showComingSoon(context, onSignOut: onSignOut);
     showModalBottomSheet<void>(
       context: context,
@@ -98,6 +103,15 @@ class _CatalogShellState extends State<CatalogShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onMyListings != null)
+              ListTile(
+                leading: const Icon(Icons.grid_view_outlined),
+                title: Text(t('profileMyListings')),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  onMyListings();
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(t('profileQuota')),
@@ -593,7 +607,7 @@ class _ListingCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _Photo(listing.photos.firstOrNull),
+                  ListingPhoto(listing.photos.firstOrNull),
                   if (listing.isDonation)
                     Positioned(
                       left: 8,
@@ -658,8 +672,8 @@ class _ListingCard extends StatelessWidget {
 }
 
 /// A listing photo, or a placeholder when there is none or it fails.
-class _Photo extends StatelessWidget {
-  const _Photo(this.url);
+class ListingPhoto extends StatelessWidget {
+  const ListingPhoto(this.url, {super.key});
   final String? url;
 
   @override
@@ -848,13 +862,18 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             child: AspectRatio(
               aspectRatio: 4 / 3,
               child: l.photos.isEmpty
-                  ? Semantics(label: t('noPhoto'), child: const _Photo(null))
+                  ? Semantics(
+                      label: t('noPhoto'),
+                      child: const ListingPhoto(null),
+                    )
                   : Stack(
                       children: [
                         PageView(
                           controller: _pages,
                           onPageChanged: (i) => setState(() => _page = i),
-                          children: [for (final url in l.photos) _Photo(url)],
+                          children: [
+                            for (final url in l.photos) ListingPhoto(url),
+                          ],
                         ),
                         Positioned(
                           right: 12,
@@ -893,7 +912,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             .replaceAll('{n}', '${l.photos.length}'),
                         child: InkWell(
                           onTap: () => _pages.jumpToPage(i),
-                          child: SizedBox(width: 64, child: _Photo(url)),
+                          child: SizedBox(width: 64, child: ListingPhoto(url)),
                         ),
                       ),
                     ),

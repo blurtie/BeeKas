@@ -224,3 +224,137 @@ String newListingId([Random? random]) {
   return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
       '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
 }
+
+/// K7 Barang Saya (#83): a listing as its owner sees it, live or not.
+typedef MyListing = ({
+  String id,
+  String title,
+  ListingCategory category,
+  bool isDonation,
+  String description,
+  ListingCondition condition,
+  int price,
+  int? previousPrice,
+  int stock,
+  int stockLeft,
+  Campus campus,
+  String? warranty,
+  List<String> specs,
+  List<String> photos,
+  DateTime createdAt,
+  DateTime expiresAt,
+  DateTime? removedAt,
+  String? removalReason,
+  DateTime? withdrawnAt,
+});
+
+/// Rule 3 (PRD-katalog 6.3), in the order K7 lists them.
+enum ListingStatus {
+  live,
+  soldOut,
+  expired,
+  removed,
+  withdrawn,
+  // The seller is frozen or no longer approved (K-26); the server hides the
+  // listing and refuses edit and relist.
+  hidden;
+
+  String get copyKey => 'listingStatus_$name';
+}
+
+/// Removed by an admin outranks withdrawn, which outranks a hidden seller
+/// ([sellerListed] false: frozen or not approved), then expired, then sold
+/// out: expired stays relistable even with no stock left.
+ListingStatus listingStatus(
+  MyListing l,
+  DateTime now, {
+  bool sellerListed = true,
+}) {
+  if (l.removedAt != null) return ListingStatus.removed;
+  if (l.withdrawnAt != null) return ListingStatus.withdrawn;
+  if (!sellerListed) return ListingStatus.hidden;
+  if (!l.expiresAt.isAfter(now)) return ListingStatus.expired;
+  if (l.stockLeft <= 0) return ListingStatus.soldOut;
+  return ListingStatus.live;
+}
+
+/// Days of the 60 left, to the nearest day (at least 1 while live); 0 once
+/// expired. Not rounded up: the device clock can lag the server's by
+/// seconds, which turned a fresh 60 days into 61.
+int daysLeft(MyListing l, DateTime now) {
+  final left = l.expiresAt.difference(now);
+  if (left <= Duration.zero) return 0;
+  final days = (left.inMicroseconds / Duration.microsecondsPerDay).round();
+  return days < 1 ? 1 : days;
+}
+
+bool canEditListing(ListingStatus s) =>
+    s == ListingStatus.live ||
+    s == ListingStatus.soldOut ||
+    s == ListingStatus.expired;
+
+/// A hidden seller may still withdraw.
+bool canWithdrawListing(ListingStatus s) =>
+    canEditListing(s) || s == ListingStatus.hidden;
+
+/// K7 order: by status, newest first within one; computed once per load.
+List<(MyListing, ListingStatus)> sortMyListings(
+  List<MyListing> listings,
+  DateTime now, {
+  bool sellerListed = true,
+}) =>
+    [
+      for (final l in listings)
+        (l, listingStatus(l, now, sellerListed: sellerListed)),
+    ]..sort((a, b) {
+      final byStatus = a.$2.index.compareTo(b.$2.index);
+      return byStatus != 0
+          ? byStatus
+          : b.$1.createdAt.compareTo(a.$1.createdAt);
+    });
+
+/// K-07, D-45: free, another 60 days; also after the seller withdrew it,
+/// never after an admin removed it.
+bool canRelistListing(ListingStatus s) =>
+    s == ListingStatus.expired || s == ListingStatus.withdrawn;
+
+/// Rule 2 (K-06, D-28): fixed once live, along with sale or donation.
+const lockedAfterListing = {
+  ListingField.title,
+  ListingField.category,
+  ListingField.photos,
+};
+
+/// What Edit may change; [specs] is the raw text, one spec per line.
+typedef ListingEdit = ({
+  String description,
+  ListingCondition condition,
+  int? price,
+  int? stock,
+  Campus campus,
+  String warranty,
+  String specs,
+});
+
+/// Rule 1 on the edited fields, and stock no lower than the units already
+/// taken (update_listing enforces the same). An unchanged description is
+/// never an error: it was valid when listed.
+Set<ListingField> validateEdit(MyListing l, ListingEdit e) {
+  final errors = validateListing((
+    isDonation: l.isDonation,
+    category: l.category,
+    photoCount: 1,
+    title: l.title,
+    description: e.description,
+    condition: e.condition,
+    price: e.price,
+    stock: e.stock,
+    specs: e.specs,
+  )).difference(lockedAfterListing);
+  if (e.description == l.description) errors.remove(ListingField.description);
+  final stock = e.stock;
+  if (stock != null && stock < l.stock - l.stockLeft) {
+    errors.add(ListingField.stock);
+  }
+  return errors;
+}
