@@ -98,9 +98,10 @@ reset role;
 
 -- The item card only takes this seller's live listings.
 select pg_temp.act_as(:a);
-select throws_ok($$ select public.send_message('x', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'),
-  '86868686-1111-4000-8000-000000000002') $$,
-  '23514', 'listing_unavailable', 'a taken-down listing cannot become the card');
+-- 20261107120000: a taken-down listing of the same seller no longer refuses the message.
+select lives_ok(format('select public.send_message(%L, (select id from public.conversations where buyer_id = auth.uid()), %L)',
+  repeat('a', 1000), '86868686-1111-4000-8000-000000000002'),
+  'a taken-down listing does not become the card, the message still goes');
 select throws_ok($$ select public.send_message('x', (select id from public.conversations where buyer_id = '86868686-0000-4000-8000-000000000001'),
   '86868686-1111-4000-8000-000000000005') $$,
   '23514', 'listing_unavailable', 'another seller''s listing cannot become the card');

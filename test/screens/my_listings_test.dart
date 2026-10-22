@@ -227,6 +227,23 @@ void main() {
     );
   });
 
+  testWidgets('withdraw with a running order says why', (tester) async {
+    final repo = FakeListingRepository(mine: [_listing('1', 'Macbook')])
+      ..failAction = const SignupException(SignupError.listingHasOrders);
+    await _pump(tester, repo);
+    await tester.pumpAndSettle();
+    await tester.tap(_inCard('Macbook', find.text(t('myListingsWithdraw'))));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text(t('myListingsWithdrawConfirm')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(t('errorListingHasOrders')), findsOneWidget);
+  });
+
   testWidgets('relist puts an expired listing back for 60 days', (
     tester,
   ) async {

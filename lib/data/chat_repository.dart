@@ -37,6 +37,10 @@ abstract interface class ChatRepository {
   /// The caller's conversation as buyer with this listing's seller, if any.
   Future<String?> conversationFor(String listingId);
 
+  /// The conversation between this order's buyer and seller, if any; for
+  /// either party.
+  Future<String?> conversationForOrder(String orderId);
+
   /// Oldest first.
   Stream<List<ChatMessage>> messages(String conversationId);
 
@@ -142,6 +146,14 @@ class SupabaseChatRepository implements ChatRepository {
     () => _client.rpc<String?>(
       'conversation_for_listing',
       params: {'p_listing': listingId},
+    ),
+  );
+
+  @override
+  Future<String?> conversationForOrder(String orderId) => guardBackend(
+    () => _client.rpc<String?>(
+      'conversation_for_order',
+      params: {'p_order': orderId},
     ),
   );
 

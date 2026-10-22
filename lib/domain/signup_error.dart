@@ -60,6 +60,8 @@ enum SignupError {
   donationLimit('errorDonationLimit'),
   // Changed by the other party or the timers meanwhile.
   orderTransition('errorOrderTransition'),
+  // From withdraw_listing: an order on the listing is Menunggu or Diproses.
+  listingHasOrders('errorListingHasOrders'),
   notParty('errorNotParty'),
   codTimeMissing('errorCodTimeMissing'),
   codTimePast('errorCodTimePast'),
@@ -112,6 +114,7 @@ SignupError signupErrorFrom(String? code, String message) {
       SignupError.alreadyOrdered,
     ('23514', 'donation_limit') => SignupError.donationLimit,
     ('23514', 'order_transition') => SignupError.orderTransition,
+    ('23514', 'listing_has_orders') => SignupError.listingHasOrders,
     ('42501', 'not_party') => SignupError.notParty,
     ('23514', 'cod_time_missing') => SignupError.codTimeMissing,
     ('23514', 'cod_time_past') => SignupError.codTimePast,
