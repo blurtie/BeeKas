@@ -6,12 +6,14 @@ import 'package:beekas/domain/access.dart';
 import 'package:beekas/domain/order.dart';
 import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/catalog_screens.dart';
+import 'package:beekas/screens/chat_screens.dart';
 import 'package:beekas/screens/order_screens.dart';
 import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/fake_catalog_repository.dart';
+import '../support/fake_chat_repository.dart';
 import '../support/fake_order_repository.dart';
 
 final _macbook = fakeListing('Macbook Air M1', price: 6500000);
@@ -410,6 +412,83 @@ void main() {
       await open(tester, repo);
       await _tapText(tester, t('orderAction_complete'));
       expect(find.text(t('errorOrderTransition')), findsOneWidget);
+    });
+  });
+
+  group('Chat from K10 and K13', () {
+    testWidgets('K10 Chat Penjual opens the chat for the listing', (
+      tester,
+    ) async {
+      final chats = FakeChatRepository();
+      await _pump(
+        tester,
+        ListingDetailScreen(
+          listing: _macbook,
+          status: AccountStatus.approved,
+          orders: FakeOrderRepository(),
+          chats: chats,
+          now: _now,
+        ),
+      );
+      await _tapText(tester, t('booking24h'));
+      await _tapText(tester, t('bookingConfirm'));
+      await _tapText(tester, t('chatSeller'));
+      await tester.pumpAndSettle();
+      final room = tester.widget<ChatRoomScreen>(find.byType(ChatRoomScreen));
+      expect(room.listingId, _macbook.id);
+      expect(room.conversationId, isNull);
+    });
+
+    Future<void> openDetail(
+      WidgetTester tester,
+      FakeOrderRepository repo,
+      FakeChatRepository chats,
+    ) async {
+      await _pump(
+        tester,
+        OrdersScreen(repository: repo, now: _now, chats: chats),
+      );
+      await tester.pumpAndSettle();
+      if (!repo.orders.first.isBuyer) {
+        await tester.tap(find.text(t('ordersSales')));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text(repo.orders.first.title));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('K13 buyer: Chat Penjual opens the chat for the listing', (
+      tester,
+    ) async {
+      final repo = FakeOrderRepository()..add();
+      await openDetail(tester, repo, FakeChatRepository());
+      await _tapText(tester, t('chatSeller'));
+      await tester.pumpAndSettle();
+      final room = tester.widget<ChatRoomScreen>(find.byType(ChatRoomScreen));
+      expect(room.listingId, 'l1');
+      expect(room.title, 'Clarencia A.');
+    });
+
+    testWidgets('K13 seller: Chat Pembeli opens the existing conversation', (
+      tester,
+    ) async {
+      final repo = FakeOrderRepository()..add(isBuyer: false);
+      final chats = FakeChatRepository()..byOrder['o0'] = 'c9';
+      await openDetail(tester, repo, chats);
+      await _tapText(tester, t('chatBuyer'));
+      await tester.pump(const Duration(milliseconds: 500));
+      final room = tester.widget<ChatRoomScreen>(find.byType(ChatRoomScreen));
+      expect(room.conversationId, 'c9');
+    });
+
+    testWidgets('K13 seller without a conversation: not allowed to start', (
+      tester,
+    ) async {
+      final repo = FakeOrderRepository()..add(isBuyer: false);
+      await openDetail(tester, repo, FakeChatRepository());
+      await _tapText(tester, t('chatBuyer'));
+      expect(find.byType(ChatRoomScreen), findsNothing);
+      expect(find.text(t('errorChatNotAllowed')), findsOneWidget);
     });
   });
 }

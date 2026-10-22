@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
+import '../data/chat_repository.dart';
 import '../data/order_repository.dart';
 import '../data/signup_repository.dart';
 import '../domain/catalog.dart';
@@ -11,6 +12,7 @@ import '../domain/registration.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
+import 'chat_screens.dart';
 
 const _pad = 16.0;
 
@@ -18,6 +20,30 @@ void _snack(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+
+/// K15 for a listing or an existing conversation; Segera hadir without chat.
+void _openChat(
+  BuildContext context,
+  ChatRepository? chats, {
+  required String title,
+  required String listingId,
+  required ChatItem item,
+  String? conversationId,
+}) {
+  if (chats == null) return _snack(context, t('comingSoon'));
+  Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ChatRoomScreen(
+        repository: chats,
+        title: title,
+        conversationId: conversationId,
+        listingId: listingId,
+        item: item,
+      ),
+    ),
+  );
+}
 
 String _errorText(SignupException e) =>
     t(e.error?.copyKey ?? 'errorSignupUnknown');
@@ -243,6 +269,7 @@ mixin _Placing<T extends StatefulWidget> on State<T> {
 class BookingScreen extends StatefulWidget {
   const BookingScreen({
     super.key,
+    this.chats,
     required this.listing,
     required this.repository,
     this.now = DateTime.now,
@@ -250,6 +277,9 @@ class BookingScreen extends StatefulWidget {
   final Listing listing;
   final OrderRepository repository;
   final DateTime Function() now;
+
+  /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
+  final ChatRepository? chats;
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -272,8 +302,12 @@ class _BookingScreenState extends State<BookingScreen>
     await Navigator.pushReplacement(
       context,
       MaterialPageRoute<void>(
-        builder: (_) =>
-            BookingStatusScreen(listing: l, holdUntil: until, now: widget.now),
+        builder: (_) => BookingStatusScreen(
+          listing: l,
+          holdUntil: until,
+          now: widget.now,
+          chats: widget.chats,
+        ),
       ),
     );
   });
@@ -394,6 +428,7 @@ class _BookingScreenState extends State<BookingScreen>
 class BookingStatusScreen extends StatefulWidget {
   const BookingStatusScreen({
     super.key,
+    this.chats,
     required this.listing,
     required this.holdUntil,
     this.now = DateTime.now,
@@ -401,6 +436,9 @@ class BookingStatusScreen extends StatefulWidget {
   final Listing listing;
   final DateTime holdUntil;
   final DateTime Function() now;
+
+  /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
+  final ChatRepository? chats;
 
   @override
   State<BookingStatusScreen> createState() => _BookingStatusScreenState();
@@ -549,8 +587,18 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
             ),
             const SizedBox(height: 24),
             FilledButton(
-              // Chat comes with T8 (#13).
-              onPressed: () => _snack(context, t('comingSoon')),
+              onPressed: () => _openChat(
+                context,
+                widget.chats,
+                title: l.sellerName,
+                listingId: l.id,
+                item: (
+                  title: l.title,
+                  price: l.price,
+                  isDonation: l.isDonation,
+                  photo: l.photos.firstOrNull,
+                ),
+              ),
               child: Text(t('chatSeller')),
             ),
             const SizedBox(height: 12),
@@ -570,6 +618,7 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({
     super.key,
+    this.chats,
     required this.listing,
     required this.repository,
     this.now = DateTime.now,
@@ -577,6 +626,9 @@ class CheckoutScreen extends StatefulWidget {
   final Listing listing;
   final OrderRepository repository;
   final DateTime Function() now;
+
+  /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
+  final ChatRepository? chats;
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -598,8 +650,11 @@ class _CheckoutScreenState extends State<CheckoutScreen>
     await Navigator.pushReplacement(
       context,
       MaterialPageRoute<void>(
-        builder: (_) =>
-            OrdersScreen(repository: widget.repository, now: widget.now),
+        builder: (_) => OrdersScreen(
+          repository: widget.repository,
+          now: widget.now,
+          chats: widget.chats,
+        ),
       ),
     );
   });
@@ -720,11 +775,15 @@ class _CheckoutScreenState extends State<CheckoutScreen>
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({
     super.key,
+    this.chats,
     required this.repository,
     this.now = DateTime.now,
   });
   final OrderRepository repository;
   final DateTime Function() now;
+
+  /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
+  final ChatRepository? chats;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -750,6 +809,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           order: order,
           repository: widget.repository,
           now: widget.now,
+          chats: widget.chats,
           // K13 already read the orders again after its action.
           onRefreshed: (orders) {
             if (!mounted) return;
@@ -973,6 +1033,7 @@ class _OrderCard extends StatelessWidget {
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({
     super.key,
+    this.chats,
     required this.order,
     required this.repository,
     this.now = DateTime.now,
@@ -981,6 +1042,9 @@ class OrderDetailScreen extends StatefulWidget {
   final Order order;
   final OrderRepository repository;
   final DateTime Function() now;
+
+  /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
+  final ChatRepository? chats;
 
   /// The orders as read after an action, for the K12 list.
   final ValueChanged<List<Order>>? onRefreshed;
@@ -1085,6 +1149,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
         }
     }
+  }
+
+  /// The buyer may start a chat (send_message allows a running order); the
+  /// seller cannot, so only an existing conversation opens.
+  Future<void> _chat() async {
+    final o = _order;
+    final chats = widget.chats;
+    String? id;
+    if (!o.isBuyer && chats != null) {
+      try {
+        id = await chats.conversationForOrder(o.id);
+      } on SignupException catch (e) {
+        if (mounted) _snack(context, _errorText(e));
+        return;
+      }
+      if (!mounted) return;
+      if (id == null) return _snack(context, t('errorChatNotAllowed'));
+    }
+    _openChat(
+      context,
+      chats,
+      title: o.otherName,
+      listingId: o.listingId,
+      conversationId: id,
+      item: (
+        title: o.title,
+        price: o.price,
+        isDonation: o.isDonation,
+        photo: o.photo,
+      ),
+    );
   }
 
   String _label(OrderAction action) =>
@@ -1211,7 +1306,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
           BeeOutlinedPillButton(
             label: t(o.isBuyer ? 'chatSeller' : 'chatBuyer'),
-            onPressed: () => _snack(context, t('comingSoon')),
+            onPressed: _chat,
           ),
         ],
       ),

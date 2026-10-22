@@ -220,7 +220,8 @@ Widget _screenFor(BuildContext context, Account account) =>
             builder: (_) => ChatListScreen(repository: _chatRepository),
           ),
         ),
-        // Chat Penjual (5.8). Status Booking and Detail Pesanan follow in their own PR.
+        chats: _chatRepository,
+        // Chat Penjual (5.8).
         onChat: (listing) => Navigator.push(
           context,
           MaterialPageRoute<void>(

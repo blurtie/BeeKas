@@ -129,6 +129,10 @@ void main() {
   });
 
   test('maps the order functions (#85)', () {
+    expect(
+      signupErrorFrom('23514', 'listing_has_orders'),
+      SignupError.listingHasOrders,
+    );
     expect(signupErrorFrom('23514', 'sold_out'), SignupError.soldOut);
     expect(signupErrorFrom('23514', 'own_listing'), SignupError.ownListing);
     expect(

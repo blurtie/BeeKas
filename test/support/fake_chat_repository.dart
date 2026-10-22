@@ -30,6 +30,15 @@ class FakeChatRepository implements ChatRepository {
     return existing[listingId];
   }
 
+  /// Order id to conversation id.
+  final byOrder = <String, String>{};
+
+  @override
+  Future<String?> conversationForOrder(String orderId) async {
+    _fail('conversationForOrder');
+    return byOrder[orderId];
+  }
+
   @override
   Stream<List<ChatMessage>> messages(String conversationId) =>
       room(conversationId).stream;

@@ -514,6 +514,7 @@ Changes to these terms are announced in the app. These terms are governed by the
     'errorChatNotAllowed':
         'Only verified accounts that are not frozen can chat.',
     'errorListingUnavailable': 'This item is no longer available.',
+    'errorListingHasOrders': 'This item has a running order. Finish or cancel it before taking the item down.',
     'announcementsAdminTitle': 'Announcements',
     'announcementHint': 'Service information for all members',
     'announcementRequired': 'Write the announcement.',
@@ -1273,6 +1274,7 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'errorChatNotAllowed':
         'Hanya akun terverifikasi yang tidak dibekukan yang bisa chat.',
     'errorListingUnavailable': 'Barang ini sudah tidak tersedia.',
+    'errorListingHasOrders': 'Barang ini masih punya pesanan berjalan. Selesaikan atau batalkan dulu sebelum menurunkannya.',
     'announcementsAdminTitle': 'Pengumuman',
     'announcementHint': 'Informasi layanan untuk semua member',
     'announcementRequired': 'Tulis pengumumannya.',

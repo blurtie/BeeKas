@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
 import '../data/catalog_repository.dart';
+import '../data/chat_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/access.dart';
 import '../domain/catalog.dart';
@@ -63,9 +64,13 @@ class CatalogShell extends StatefulWidget {
     this.onMyListings,
     this.onChats,
     this.onChat,
+    this.chats,
   });
 
   final CatalogRepository repository;
+
+  /// Chat from Status Booking and Detail Pesanan (K10, K13).
+  final ChatRepository? chats;
 
   /// See [ListingDetailScreen.onAccount].
   final VoidCallback? onAccount;
@@ -111,6 +116,7 @@ class _CatalogShellState extends State<CatalogShell> {
     now: widget.now,
     onAccount: widget.onAccount,
     onChat: widget.onChat,
+    chats: widget.chats,
   );
 
   void _snack(String message) => ScaffoldMessenger.of(context)
@@ -153,8 +159,11 @@ class _CatalogShellState extends State<CatalogShell> {
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          OrdersScreen(repository: orders, now: widget.now),
+                      builder: (_) => OrdersScreen(
+                        repository: orders,
+                        now: widget.now,
+                        chats: widget.chats,
+                      ),
                     ),
                   );
                 },
@@ -909,10 +918,14 @@ class ListingDetailScreen extends StatefulWidget {
     this.status,
     this.orders,
     this.onChat,
+    this.chats,
     this.now = DateTime.now,
     this.onAccount,
   });
   final Listing listing;
+
+  /// See [CatalogShell.chats].
+  final ChatRepository? chats;
 
   /// Back to Masuk (guests) or the account-status screen (pending), from
   /// the snackbar that explains why they cannot order.
@@ -1197,6 +1210,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           listing: l,
                           repository: orders,
                           now: widget.now,
+                          chats: widget.chats,
                         ),
                       ),
                       icon: const Icon(Icons.calendar_today_outlined),
@@ -1215,6 +1229,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           listing: l,
                           repository: orders,
                           now: widget.now,
+                          chats: widget.chats,
                         ),
                       ),
                       child: Text(t('buyNow')),
