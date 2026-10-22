@@ -117,6 +117,40 @@ void main() {
     expect(retryAfterSeconds('Too many requests'), isNull);
   });
 
+  test('maps the order functions (#85)', () {
+    expect(signupErrorFrom('23514', 'sold_out'), SignupError.soldOut);
+    expect(signupErrorFrom('23514', 'own_listing'), SignupError.ownListing);
+    expect(
+      signupErrorFrom('23514', 'listing_unavailable'),
+      SignupError.listingUnavailable,
+    );
+    expect(
+      signupErrorFrom('23514', 'donation_limit'),
+      SignupError.donationLimit,
+    );
+    expect(
+      signupErrorFrom('23514', 'already_ordered'),
+      SignupError.alreadyOrdered,
+    );
+    expect(
+      signupErrorFrom(
+        '23505',
+        'duplicate key value violates unique constraint "orders_one_running"',
+      ),
+      SignupError.alreadyOrdered,
+    );
+    expect(
+      signupErrorFrom('23514', 'order_transition'),
+      SignupError.orderTransition,
+    );
+    expect(signupErrorFrom('42501', 'not_party'), SignupError.notParty);
+    expect(
+      signupErrorFrom('23514', 'cod_time_missing'),
+      SignupError.codTimeMissing,
+    );
+    expect(signupErrorFrom('23514', 'cod_time_past'), SignupError.codTimePast);
+  });
+
   test('anything else is unknown', () {
     expect(signupErrorFrom(null, 'Network down'), SignupError.unknown);
     expect(signupErrorFrom('23514', 'something_new'), SignupError.unknown);

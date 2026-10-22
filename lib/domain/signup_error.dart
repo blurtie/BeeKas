@@ -50,6 +50,17 @@ enum SignupError {
   invalidAmount('errorInvalidAmount'),
   // From submit_payment, or its unique index when two submits race (D-43).
   paymentPending('errorPaymentPending'),
+  // From the order functions (#85).
+  listingUnavailable('errorListingUnavailable'),
+  ownListing('errorOwnListing'),
+  soldOut('errorSoldOut'),
+  alreadyOrdered('errorAlreadyOrdered'),
+  donationLimit('errorDonationLimit'),
+  // Changed by the other party or the timers meanwhile.
+  orderTransition('errorOrderTransition'),
+  notParty('errorNotParty'),
+  codTimeMissing('errorCodTimeMissing'),
+  codTimePast('errorCodTimePast'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -90,6 +101,17 @@ SignupError signupErrorFrom(String? code, String message) {
     ('42501', 'not_admin') => SignupError.notAdmin,
     ('23514', 'no_quota') => SignupError.noQuota,
     ('42501', 'not_allowed') => SignupError.notAllowed,
+    ('23514', 'listing_unavailable') => SignupError.listingUnavailable,
+    ('23514', 'own_listing') => SignupError.ownListing,
+    ('23514', 'sold_out') => SignupError.soldOut,
+    ('23514', 'already_ordered') => SignupError.alreadyOrdered,
+    ('23505', _) when message.contains('orders_one_running') =>
+      SignupError.alreadyOrdered,
+    ('23514', 'donation_limit') => SignupError.donationLimit,
+    ('23514', 'order_transition') => SignupError.orderTransition,
+    ('42501', 'not_party') => SignupError.notParty,
+    ('23514', 'cod_time_missing') => SignupError.codTimeMissing,
+    ('23514', 'cod_time_past') => SignupError.codTimePast,
     _ => SignupError.unknown,
   };
 }

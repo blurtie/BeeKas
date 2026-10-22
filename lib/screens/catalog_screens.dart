@@ -5,11 +5,16 @@ import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
 import '../data/catalog_repository.dart';
+import '../data/order_repository.dart';
 import '../domain/access.dart';
 import '../domain/catalog.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
+import 'order_screens.dart';
+
+/// Opens Detail Barang for a listing.
+typedef _Detail = Widget Function(Listing listing);
 
 /// Chat, Booking, Beli, favorites and selling come with later PRDs (#74).
 /// [onSignOut], for signed-in members, rides along until Profil exists.
@@ -43,10 +48,20 @@ class CatalogShell extends StatefulWidget {
     this.status,
     this.onSell,
     this.onQuota,
+    this.orders,
+    this.now = DateTime.now,
+    this.onAccount,
     this.onMyListings,
   });
 
   final CatalogRepository repository;
+
+  /// See [ListingDetailScreen.onAccount].
+  final VoidCallback? onAccount;
+
+  /// Booking, Beli Sekarang and Pesanan Saya (#85), for signed-in members.
+  final OrderRepository? orders;
+  final DateTime Function() now;
   final VoidCallback? onSignOut;
 
   /// Null for guests.
@@ -71,6 +86,14 @@ class _CatalogShellState extends State<CatalogShell> {
   var _refresh = 0;
 
   void _soon() => showComingSoon(context);
+
+  Widget _detail(Listing listing) => ListingDetailScreen(
+    listing: listing,
+    status: widget.status,
+    orders: widget.orders,
+    now: widget.now,
+    onAccount: widget.onAccount,
+  );
 
   void _snack(String message) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -103,6 +126,21 @@ class _CatalogShellState extends State<CatalogShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.orders case final orders?)
+              ListTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: Text(t('ordersTitle')),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          OrdersScreen(repository: orders, now: widget.now),
+                    ),
+                  );
+                },
+              ),
             if (onMyListings != null)
               ListTile(
                 leading: const Icon(Icons.grid_view_outlined),
@@ -144,10 +182,12 @@ class _CatalogShellState extends State<CatalogShell> {
                 key: ValueKey(_refresh),
                 repository: widget.repository,
                 onSoon: _soon,
+                detail: _detail,
               )
             : _CategoryView(
                 key: ValueKey(_refresh),
                 repository: widget.repository,
+                detail: _detail,
                 onBack: () => setState(() => _tab = 0),
               ),
       ),
@@ -197,9 +237,11 @@ class _ListingFeed extends StatefulWidget {
   const _ListingFeed({
     required this.repository,
     required this.search,
+    required this.detail,
     this.searching = false,
   });
   final CatalogRepository repository;
+  final _Detail detail;
   final CatalogSearch search;
 
   /// Empty then reads "no match" rather than "no items yet".
@@ -304,7 +346,7 @@ class _ListingFeedState extends State<_ListingFeed> {
     final end = _end();
     return SliverMainAxisGroup(
       slivers: [
-        _ListingGrid(listings: _items, onLast: _nearEnd),
+        _ListingGrid(listings: _items, onLast: _nearEnd, detail: widget.detail),
         if (end != null)
           SliverPadding(
             padding: const EdgeInsets.all(32),
@@ -318,8 +360,14 @@ class _ListingFeedState extends State<_ListingFeed> {
 const _pad = 16.0;
 
 class _HomeView extends StatefulWidget {
-  const _HomeView({super.key, required this.repository, required this.onSoon});
+  const _HomeView({
+    super.key,
+    required this.repository,
+    required this.onSoon,
+    required this.detail,
+  });
   final CatalogRepository repository;
+  final _Detail detail;
   final VoidCallback onSoon;
 
   @override
@@ -421,6 +469,7 @@ class _HomeViewState extends State<_HomeView> {
                           t(group.copyKey),
                           widget.repository,
                           group == CategoryGroup.all ? null : group.categories,
+                          widget.detail,
                         ),
                       ),
                     ),
@@ -447,6 +496,7 @@ class _HomeViewState extends State<_HomeView> {
         _ListingFeed(
           repository: widget.repository,
           search: search,
+          detail: widget.detail,
           searching: _query.trim().isNotEmpty,
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 48)),
@@ -535,6 +585,7 @@ void _openResults(
   String title,
   CatalogRepository repository,
   List<ListingCategory>? categories,
+  _Detail detail,
 ) => Navigator.push(
   context,
   MaterialPageRoute<void>(
@@ -545,6 +596,7 @@ void _openResults(
           _ListingFeed(
             repository: repository,
             search: (text: null, matched: null, categories: categories),
+            detail: detail,
           ),
         ],
       ),
@@ -553,8 +605,13 @@ void _openResults(
 );
 
 class _ListingGrid extends StatelessWidget {
-  const _ListingGrid({required this.listings, this.onLast});
+  const _ListingGrid({
+    required this.listings,
+    required this.detail,
+    this.onLast,
+  });
   final List<Listing> listings;
+  final _Detail detail;
 
   /// Called when the last card is built.
   final VoidCallback? onLast;
@@ -573,7 +630,7 @@ class _ListingGrid extends StatelessWidget {
         itemCount: listings.length,
         itemBuilder: (context, i) {
           if (i == listings.length - 1) onLast?.call();
-          return _ListingCard(listing: listings[i]);
+          return _ListingCard(listing: listings[i], detail: detail);
         },
       ),
     );
@@ -584,8 +641,9 @@ String _priceLabel(Listing l) =>
     l.isDonation ? t('free') : formatRupiah(l.price);
 
 class _ListingCard extends StatelessWidget {
-  const _ListingCard({required this.listing});
+  const _ListingCard({required this.listing, required this.detail});
   final Listing listing;
+  final _Detail detail;
 
   @override
   Widget build(BuildContext context) {
@@ -596,9 +654,7 @@ class _ListingCard extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute<void>(
-            builder: (context) => ListingDetailScreen(listing: listing),
-          ),
+          MaterialPageRoute<void>(builder: (context) => detail(listing)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -702,9 +758,11 @@ class _CategoryView extends StatefulWidget {
   const _CategoryView({
     super.key,
     required this.repository,
+    required this.detail,
     required this.onBack,
   });
   final CatalogRepository repository;
+  final _Detail detail;
   final VoidCallback onBack;
 
   @override
@@ -788,6 +846,7 @@ class _CategoryViewState extends State<_CategoryView> {
                       _categoryLabel(c),
                       widget.repository,
                       [c],
+                      widget.detail,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8),
@@ -822,10 +881,28 @@ class _CategoryViewState extends State<_CategoryView> {
   }
 }
 
-/// Detail barang (Daftar-14).
+/// Detail barang (Daftar-14). Booking 24 Jam and Beli Sekarang need an
+/// approved account (D-06); the rest learn why. Freezes are invisible to the
+/// app; place_order refuses those (K-26).
 class ListingDetailScreen extends StatefulWidget {
-  const ListingDetailScreen({super.key, required this.listing});
+  const ListingDetailScreen({
+    super.key,
+    required this.listing,
+    this.status,
+    this.orders,
+    this.now = DateTime.now,
+    this.onAccount,
+  });
   final Listing listing;
+
+  /// Back to Masuk (guests) or the account-status screen (pending), from
+  /// the snackbar that explains why they cannot order.
+  final VoidCallback? onAccount;
+
+  /// Null for guests.
+  final AccountStatus? status;
+  final OrderRepository? orders;
+  final DateTime Function() now;
 
   @override
   State<ListingDetailScreen> createState() => _ListingDetailScreenState();
@@ -851,6 +928,38 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       fontWeight: FontWeight.w700,
     );
     void soon() => showComingSoon(context);
+    void order(Widget Function(OrderRepository) screen) {
+      final orders = widget.orders;
+      if (!canOrder(widget.status, frozen: false)) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                t('orderNeedsApproval_${widget.status?.name ?? 'guest'}'),
+              ),
+              action: switch ((widget.status, widget.onAccount)) {
+                (null, final go?) => SnackBarAction(
+                  label: t('orderGoSignIn'),
+                  onPressed: go,
+                ),
+                (AccountStatus.pending, final go?) => SnackBarAction(
+                  label: t('orderGoStatus'),
+                  onPressed: go,
+                ),
+                _ => null,
+              },
+            ),
+          );
+        return;
+      }
+      // Approved but no order backend wired (only in tests and previews).
+      if (orders == null) return soon();
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute(builder: (_) => screen(orders)),
+      );
+    }
 
     return Scaffold(
       appBar: const BeeHeader(),
@@ -1051,7 +1160,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: soon,
+                      onPressed: () => order(
+                        (orders) => BookingScreen(
+                          listing: l,
+                          repository: orders,
+                          now: widget.now,
+                        ),
+                      ),
                       icon: const Icon(Icons.calendar_today_outlined),
                       label: Text(t('booking24h')),
                     ),
@@ -1063,7 +1178,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 children: [
                   Expanded(
                     child: FilledButton(
-                      onPressed: soon,
+                      onPressed: () => order(
+                        (orders) => CheckoutScreen(
+                          listing: l,
+                          repository: orders,
+                          now: widget.now,
+                        ),
+                      ),
                       child: Text(t('buyNow')),
                     ),
                   ),

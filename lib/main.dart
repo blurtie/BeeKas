@@ -9,6 +9,7 @@ import 'data/catalog_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
+import 'data/order_repository.dart';
 import 'data/payment_repository.dart';
 import 'data/review_repository.dart';
 import 'data/signup_repository.dart';
@@ -204,6 +205,7 @@ Widget _screenFor(BuildContext context, Account account) =>
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),
+        orders: _orderRepository,
         onMyListings: () => Navigator.push(
           context,
           MaterialPageRoute<void>(
@@ -351,14 +353,21 @@ final _catalogRepository = SupabaseCatalogRepository(Supabase.instance.client);
 void _catalog(BuildContext context, [AccountStatus? status]) => Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) =>
-        CatalogShell(repository: _catalogRepository, status: status),
+    builder: (_) => CatalogShell(
+      repository: _catalogRepository,
+      status: status,
+      // Masuk (guests) and L11/L12 (pending, rejected) are the first route
+      // below the catalog they opened it from.
+      onAccount: () => Navigator.popUntil(context, (r) => r.isFirst),
+    ),
   ),
 );
 
 final _listingRepository = SupabaseListingRepository(Supabase.instance.client);
 
 final _paymentRepository = SupabasePaymentRepository(Supabase.instance.client);
+
+final _orderRepository = SupabaseOrderRepository(Supabase.instance.client);
 
 /// K8 Kuota Listing (#84), from Pasang and from Profil.
 Future<void> _quota(BuildContext context) => Navigator.push<void>(
