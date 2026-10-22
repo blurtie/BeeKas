@@ -161,7 +161,8 @@ begin
 end;
 $$;
 
--- K-07: an expired listing runs another 60 days, free of quota.
+-- K-07, D-45: an expired or self-withdrawn listing runs another 60 days, free of
+-- quota, sold out or not (stock is fixed by Edit). Never one an admin removed.
 create function public.relist_listing(p_id uuid)
 returns void
 language plpgsql
@@ -172,9 +173,9 @@ begin
   if auth.uid() is null or not public.is_listed_seller(auth.uid()) then
     raise exception 'not_allowed' using errcode = 'insufficient_privilege';
   end if;
-  update public.listings set expires_at = now() + interval '60 days'
+  update public.listings set expires_at = now() + interval '60 days', withdrawn_at = null
     where id = p_id and seller_id = auth.uid() and removed_at is null
-      and withdrawn_at is null and expires_at <= now();
+      and (withdrawn_at is not null or expires_at <= now());
   if not found then
     raise exception 'not_allowed' using errcode = 'insufficient_privilege';
   end if;

@@ -120,6 +120,8 @@ void main() {
     expect(_inCard('Macbook', find.text(t('myListingsRelist'))), findsNothing);
     expect(_inCard('Jam', find.text(t('edit'))), findsNothing);
     expect(_inCard('Hoodie', find.text(t('myListingsWithdraw'))), findsNothing);
+    expect(_inCard('Hoodie', find.text(t('myListingsRelist'))), findsOneWidget);
+    expect(_inCard('Jam', find.text(t('myListingsRelist'))), findsNothing);
   });
 
   testWidgets(

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(41);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -185,8 +185,27 @@ reset role;
 select pg_temp.act_as(:s);
 select throws_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a1') $$,
   '42501', 'not_allowed', 'a live listing cannot be relisted');
-select throws_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a4') $$,
-  '42501', 'not_allowed', 'a withdrawn listing cannot be relisted');
+select throws_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a3') $$,
+  '42501', 'not_allowed', 'a listing removed by an admin cannot be relisted');
+select lives_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a4') $$,
+  'the owner relists a withdrawn listing (D-45)');
+reset role;
+select ok((select withdrawn_at is null and expires_at between now() + interval '60 days'
+    - interval '1 minute' and now() + interval '60 days' from public.listings where id = :withdrawn),
+  'a relisted withdrawn listing is back for 60 days');
+set local role anon;
+select is((select count(*)::int from public.catalog_listings('T83 4')), 1,
+  'with stock left it shows in the catalog again');
+reset role;
+select pg_temp.act_as(:m);
+select throws_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a5') $$,
+  '42501', 'not_allowed', 'a non-owner cannot relist a withdrawn listing');
+reset role;
+select pg_temp.act_as(:f);
+select throws_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a6') $$,
+  '42501', 'not_allowed', 'a frozen seller cannot relist');
+reset role;
+select pg_temp.act_as(:s);
 select lives_ok($$ select public.relist_listing('83838383-0000-4000-8000-0000000000a2') $$,
   'the owner relists an expired listing');
 reset role;

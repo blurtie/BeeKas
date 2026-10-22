@@ -167,7 +167,11 @@ void main() {
         open || s == ListingStatus.hidden,
         reason: '$s withdraw',
       );
-      expect(canRelistListing(s), s == ListingStatus.expired, reason: '$s');
+      expect(
+        canRelistListing(s),
+        s == ListingStatus.expired || s == ListingStatus.withdrawn,
+        reason: '$s relist',
+      );
     }
   });
 

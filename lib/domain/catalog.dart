@@ -313,8 +313,10 @@ List<(MyListing, ListingStatus)> sortMyListings(
           : b.$1.createdAt.compareTo(a.$1.createdAt);
     });
 
-/// K-07: free, another 60 days.
-bool canRelistListing(ListingStatus s) => s == ListingStatus.expired;
+/// K-07, D-45: free, another 60 days; also after the seller withdrew it,
+/// never after an admin removed it.
+bool canRelistListing(ListingStatus s) =>
+    s == ListingStatus.expired || s == ListingStatus.withdrawn;
 
 /// Rule 2 (K-06, D-28): fixed once live, along with sale or donation.
 const lockedAfterListing = {
