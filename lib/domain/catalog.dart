@@ -278,11 +278,14 @@ ListingStatus listingStatus(
   return ListingStatus.live;
 }
 
-/// Days of the 60 left, rounded up; 0 once expired.
+/// Days of the 60 left, to the nearest day (at least 1 while live); 0 once
+/// expired. Not rounded up: the device clock can lag the server's by
+/// seconds, which turned a fresh 60 days into 61.
 int daysLeft(MyListing l, DateTime now) {
   final left = l.expiresAt.difference(now);
   if (left <= Duration.zero) return 0;
-  return (left.inMicroseconds / Duration.microsecondsPerDay).ceil();
+  final days = (left.inMicroseconds / Duration.microsecondsPerDay).round();
+  return days < 1 ? 1 : days;
 }
 
 bool canEditListing(ListingStatus s) =>

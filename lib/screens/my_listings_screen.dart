@@ -9,6 +9,7 @@ import '../domain/registration.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
+import 'catalog_screens.dart' show ListingPhoto;
 
 /// K7 Barang Saya (#83), no design yet: PRD-katalog 5.2. Every own listing
 /// with its status, days left and stock left; Edit, Turunkan and Tayang
@@ -73,8 +74,8 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     try {
       await action();
       if (!mounted) return;
-      _snack(done);
       await _load();
+      if (mounted) _snack(done);
     } catch (e) {
       if (!mounted) return;
       // not_allowed: the listing or the account changed since loading.
@@ -102,7 +103,9 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
             onPressed: () => Navigator.pop(dialog, false),
             child: Text(t('cancel')),
           ),
-          TextButton(
+          FilledButton(
+            // The theme's full-width minimum would stack it under Batal.
+            style: FilledButton.styleFrom(minimumSize: const Size(64, 48)),
             onPressed: () => Navigator.pop(dialog, true),
             child: Text(t('myListingsWithdrawConfirm')),
           ),
@@ -205,66 +208,125 @@ class _MyListingCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final running =
         status == ListingStatus.live || status == ListingStatus.soldOut;
+    final hasActions =
+        canEditListing(status) ||
+        canWithdrawListing(status) ||
+        canRelistListing(status);
     return Card.outlined(
       margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        padding: EdgeInsets.fromLTRB(16, 12, 16, hasActions ? 4 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Chip(
-              label: Text(t(status.copyKey)),
-              visualDensity: VisualDensity.compact,
-            ),
-            Text(
-              l.title,
-              style: textTheme.titleSmall?.copyWith(
-                color: BeeColors.textHeading,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              l.isDonation ? t('free') : formatRupiah(l.price),
-              style: textTheme.titleSmall?.copyWith(color: BeeColors.link),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              t('myListingsStockLeft')
-                  .replaceAll('{left}', '${l.stockLeft}')
-                  .replaceAll('{stock}', '${l.stock}'),
-              style: textTheme.bodySmall,
-            ),
-            if (running)
-              Text(
-                t('myListingsDaysLeft').replaceAll('{n}', '$daysLeft'),
-                style: textTheme.bodySmall,
-              ),
-            if (l.removalReason case final reason?)
-              Text(
-                t('myListingsRemovedReason').replaceAll('{reason}', reason),
-                style: textTheme.bodySmall,
-              ),
-            OverflowBar(
-              alignment: MainAxisAlignment.end,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (canEditListing(status))
-                  TextButton(
-                    onPressed: busy ? null : onEdit,
-                    child: Text(t('edit')),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(BeeRadius.field),
+                  child: SizedBox.square(
+                    dimension: 72,
+                    child: ListingPhoto(l.photos.firstOrNull),
                   ),
-                if (canWithdrawListing(status))
-                  TextButton(
-                    onPressed: busy ? null : onWithdraw,
-                    child: Text(t('myListingsWithdraw')),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _StatusLabel(status),
+                      const SizedBox(height: 4),
+                      Text(
+                        l.title,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: BeeColors.textHeading,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        l.isDonation ? t('free') : formatRupiah(l.price),
+                        style: textTheme.titleSmall?.copyWith(
+                          color: BeeColors.link,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t('myListingsStockLeft')
+                            .replaceAll('{left}', '${l.stockLeft}')
+                            .replaceAll('{stock}', '${l.stock}'),
+                        style: textTheme.bodySmall,
+                      ),
+                      if (running)
+                        Text(
+                          t('myListingsDaysLeft')
+                              .replaceAll('{n}', '$daysLeft'),
+                          style: textTheme.bodySmall,
+                        ),
+                      if (l.removalReason case final reason?)
+                        Text(
+                          t('myListingsRemovedReason')
+                              .replaceAll('{reason}', reason),
+                          style: textTheme.bodySmall,
+                        ),
+                    ],
                   ),
-                if (canRelistListing(status))
-                  TextButton(
-                    onPressed: busy ? null : onRelist,
-                    child: Text(t('myListingsRelist')),
-                  ),
+                ),
               ],
             ),
+            if (hasActions)
+              OverflowBar(
+                alignment: MainAxisAlignment.end,
+                children: [
+                  if (canEditListing(status))
+                    TextButton(
+                      onPressed: busy ? null : onEdit,
+                      child: Text(t('edit')),
+                    ),
+                  if (canWithdrawListing(status))
+                    TextButton(
+                      onPressed: busy ? null : onWithdraw,
+                      child: Text(t('myListingsWithdraw')),
+                    ),
+                  if (canRelistListing(status))
+                    TextButton(
+                      onPressed: busy ? null : onRelist,
+                      child: Text(t('myListingsRelist')),
+                    ),
+                ],
+              ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Status as a coloured label, one colour per group; text no larger than
+/// the title. Each pair is ≥ 4.5:1.
+class _StatusLabel extends StatelessWidget {
+  const _StatusLabel(this.status);
+  final ListingStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (background, foreground) = switch (status) {
+      ListingStatus.live => (BeeColors.infoSurface, BeeColors.textHeading),
+      ListingStatus.soldOut ||
+      ListingStatus.expired => (BeeColors.warningSurface, BeeColors.link),
+      _ => (BeeColors.border, BeeColors.error),
+    };
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(BeeRadius.field),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Text(
+          t(status.copyKey),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: foreground, fontWeight: FontWeight.w600),
         ),
       ),
     );

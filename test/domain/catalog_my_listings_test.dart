@@ -84,7 +84,16 @@ void main() {
     });
   });
 
-  test('daysLeft rounds up and stops at 0', () {
+  test('a fresh 60 days reads 60, whichever clock is a little ahead', () {
+    for (final skew in [-5, 5]) {
+      final l = _listing(
+        expiresAt: _now.add(Duration(days: 60, seconds: skew)),
+      );
+      expect(daysLeft(l, _now), 60, reason: 'skew $skew s');
+    }
+  });
+
+  test('daysLeft is at least 1 while live and stops at 0', () {
     expect(daysLeft(_listing(), _now), 10);
     expect(
       daysLeft(_listing(expiresAt: _now.add(const Duration(hours: 1))), _now),

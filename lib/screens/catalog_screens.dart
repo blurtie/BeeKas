@@ -607,7 +607,7 @@ class _ListingCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _Photo(listing.photos.firstOrNull),
+                  ListingPhoto(listing.photos.firstOrNull),
                   if (listing.isDonation)
                     Positioned(
                       left: 8,
@@ -672,8 +672,8 @@ class _ListingCard extends StatelessWidget {
 }
 
 /// A listing photo, or a placeholder when there is none or it fails.
-class _Photo extends StatelessWidget {
-  const _Photo(this.url);
+class ListingPhoto extends StatelessWidget {
+  const ListingPhoto(this.url, {super.key});
   final String? url;
 
   @override
@@ -862,13 +862,18 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             child: AspectRatio(
               aspectRatio: 4 / 3,
               child: l.photos.isEmpty
-                  ? Semantics(label: t('noPhoto'), child: const _Photo(null))
+                  ? Semantics(
+                      label: t('noPhoto'),
+                      child: const ListingPhoto(null),
+                    )
                   : Stack(
                       children: [
                         PageView(
                           controller: _pages,
                           onPageChanged: (i) => setState(() => _page = i),
-                          children: [for (final url in l.photos) _Photo(url)],
+                          children: [
+                            for (final url in l.photos) ListingPhoto(url),
+                          ],
                         ),
                         Positioned(
                           right: 12,
@@ -907,7 +912,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             .replaceAll('{n}', '${l.photos.length}'),
                         child: InkWell(
                           onTap: () => _pages.jumpToPage(i),
-                          child: SizedBox(width: 64, child: _Photo(url)),
+                          child: SizedBox(width: 64, child: ListingPhoto(url)),
                         ),
                       ),
                     ),
