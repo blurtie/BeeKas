@@ -103,7 +103,7 @@ Edge Function `delete-expired-photos` dipanggil `pg_cron` setiap hari pukul 03:0
 
 ## 9. Pesanan: batal dan selesai otomatis (#85, D-30, D-36)
 
-Migration `20261102120000_orders.sql` menjadwalkan job `pg_cron` bernama `order-timers` setiap 10 menit. Job ini hanya memanggil fungsi SQL `public.run_order_timers()`: pesanan Menunggu yang lewat `hold_until` dibatalkan dan stoknya kembali +1; pesanan Diproses selesai 3 hari setelah waktu COD. Tidak ada Edge Function, secret, atau entri Vault.
+Migration `20261105120000_orders.sql` menjadwalkan job `pg_cron` bernama `order-timers` setiap 10 menit. Job ini hanya memanggil fungsi SQL `public.run_order_timers()`: pesanan Menunggu yang lewat `hold_until` dibatalkan dan stoknya kembali +1; pesanan Diproses selesai 3 hari setelah waktu COD. Tidak ada Edge Function, secret, atau entri Vault.
 
 1. Pastikan ekstensi `pg_cron` aktif (sudah dibuat oleh migration #33; di dashboard: **Database → Extensions**). Lalu `supabase db push`.
 2. Setelah push, pastikan job terdaftar tepat satu kali:

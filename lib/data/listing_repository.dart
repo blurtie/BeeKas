@@ -9,6 +9,8 @@ import 'signup_repository.dart';
 
 typedef SellerInfo = ({int quota, Campus campus});
 
+typedef MyListings = ({List<MyListing> listings, bool sellerListed});
+
 /// What Pasang sends: the draft's id (newListingId, same on every retry), the
 /// K5-K6 fields, the location (K6) and the warranty.
 typedef NewListing = ({
@@ -31,6 +33,19 @@ abstract interface class ListingRepository {
   /// create_listing: takes 1 quota and the listing is live at once. Sending
   /// an id that already has the seller's listing changes nothing.
   Future<void> createListing(NewListing listing, List<String> photos);
+
+  /// K7 Barang Saya (#83): every own listing, and whether the seller is
+  /// listed (approved, not frozen); the app cannot read freezes itself.
+  Future<MyListings> myListings();
+
+  /// update_listing; name, category, sale/donation and photos stay (K-06).
+  Future<void> updateListing(String id, ListingEdit edit);
+
+  /// withdraw_listing: off the catalog for good, no quota back (D-29).
+  Future<void> withdrawListing(String id);
+
+  /// relist_listing: an expired listing runs 60 more days, free (K-07).
+  Future<void> relistListing(String id);
 }
 
 /// Uploads [photos], then creates the listing. When an upload fails or the
@@ -132,4 +147,83 @@ class SupabaseListingRepository implements ListingRepository {
           },
         );
       });
+
+  @override
+  Future<MyListings> myListings() => guardBackend(() async {
+    final listed = await _client.rpc<bool>(
+      'is_listed_seller',
+      params: {'p_seller': _uid},
+    );
+    final rows = await _client
+        .from('listings')
+        .select('*, listing_photos(path, position)')
+        .eq('seller_id', _uid)
+        .order('created_at', ascending: false);
+    final listings = [
+      for (final row in rows)
+        (
+          id: row['id'] as String,
+          title: row['title'] as String,
+          createdAt: DateTime.parse(row['created_at'] as String),
+          category: ListingCategory.fromCode(row['category'] as String),
+          isDonation: row['is_donation'] as bool,
+          description: row['description'] as String,
+          condition: ListingCondition.fromCode(row['condition'] as String),
+          price: row['price'] as int,
+          previousPrice: row['previous_price'] as int?,
+          stock: row['stock'] as int,
+          stockLeft: row['stock_left'] as int,
+          campus: Campus.values.firstWhere((c) => c.code == row['campus']),
+          warranty: row['warranty'] as String?,
+          specs: [...?(row['specs'] as List<dynamic>?)?.cast<String>()],
+          photos: [
+            for (final photo
+                in (row['listing_photos'] as List<dynamic>)
+                    .cast<Map<String, dynamic>>()
+                  ..sort(
+                    (a, b) =>
+                        (a['position'] as int).compareTo(b['position'] as int),
+                  ))
+              _bucket.getPublicUrl(photo['path'] as String),
+          ],
+          expiresAt: DateTime.parse(row['expires_at'] as String),
+          removedAt: _time(row['removed_at']),
+          removalReason: row['removal_reason'] as String?,
+          withdrawnAt: _time(row['withdrawn_at']),
+        ),
+    ];
+    return (listings: listings, sellerListed: listed);
+  });
+
+  static DateTime? _time(Object? value) =>
+      value == null ? null : DateTime.parse(value as String);
+
+  @override
+  Future<void> updateListing(String id, ListingEdit edit) => guardBackend(() {
+    final specs = specLines(edit.specs);
+    final warranty = edit.warranty.trim();
+    return _client.rpc<void>(
+      'update_listing',
+      params: {
+        'p_id': id,
+        'p_description': edit.description.trim(),
+        'p_condition': edit.condition.code,
+        'p_price': edit.price,
+        'p_stock': edit.stock,
+        'p_campus': edit.campus.code,
+        'p_warranty': warranty.isEmpty ? null : warranty,
+        'p_specs': specs.isEmpty ? null : specs,
+      },
+    );
+  });
+
+  @override
+  Future<void> withdrawListing(String id) => guardBackend(
+    () => _client.rpc<void>('withdraw_listing', params: {'p_id': id}),
+  );
+
+  @override
+  Future<void> relistListing(String id) => guardBackend(
+    () => _client.rpc<void>('relist_listing', params: {'p_id': id}),
+  );
 }

@@ -29,16 +29,16 @@ update public.profiles set role = 'admin' where id in (:x, :y);
 insert into public.freezes (member_id, reason, proposed_by, approved_by, approved_at)
 values (:f, 'penipuan', :x, :y, now());
 
--- Listings of S: L1 stock 1, L2 stock 2, D1-D3 donations, I inactive, E expired.
+-- Listings of S: L1 stock 1, L2 stock 2, D1-D3 donations, I withdrawn, E expired.
 create function pg_temp.listing(p_n int, p_stock int, p_donation boolean,
   p_active boolean default true, p_expires timestamptz default now() + interval '60 days')
 returns void language sql as $$
   insert into public.listings (id, seller_id, title, description, category, condition, price,
-    stock, campus, is_donation, is_active, expires_at)
+    stock, campus, is_donation, withdrawn_at, expires_at)
   values (('85858585-1111-4000-8000-00000000000' || p_n)::uuid,
     '85858585-0000-4000-8000-000000000001', 'T85 ' || p_n, 'desc', 'other', 'like_new',
     case when p_donation then 0 else 50000 end, p_stock, 'bandung', p_donation,
-    p_active, p_expires);
+    case when p_active then null else now() end, p_expires);
 $$;
 select pg_temp.listing(1, 1, false);
 select pg_temp.listing(2, 2, false);
@@ -83,7 +83,7 @@ select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000001')
 reset role;
 select pg_temp.act_as(:b);
 select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000006') $$,
-  '23514', 'listing_unavailable', 'inactive listings cannot be ordered');
+  '23514', 'listing_unavailable', 'withdrawn listings cannot be ordered');
 select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000007') $$,
   '23514', 'listing_unavailable', 'expired listings cannot be ordered');
 select throws_ok($$ select pg_temp.place('85858585-0000-4000-8000-000000000099') $$,

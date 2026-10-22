@@ -79,6 +79,7 @@ set search_path = ''
 as $$
 declare
   v_listing public.listings;
+  v_live public.listings;
   v_until timestamptz;
 begin
   if auth.uid() is null or not public.is_listed_seller(auth.uid()) then
@@ -86,8 +87,11 @@ begin
   end if;
   -- Locks the listing: a second buyer of the last unit waits here, then reads 0 left.
   select * into v_listing from public.listings where id = p_listing for update;
-  if not found or not v_listing.is_active or not public.is_listed_seller(v_listing.seller_id)
-      or v_listing.expires_at <= now() then
+  -- is_live (#83, migration 20261104120000) also
+  -- requires stock left; stock is judged below, so a sold-out listing says sold_out.
+  v_live := v_listing;
+  v_live.stock_left := greatest(v_live.stock_left, 1);
+  if not found or not public.is_live(v_live) then
     raise exception 'listing_unavailable' using errcode = 'check_violation';
   end if;
   if v_listing.seller_id = auth.uid() then
