@@ -342,7 +342,7 @@ class _LocationSheet extends StatelessWidget {
       return ListTile(
         leading: tag == null
             ? const Icon(Icons.public)
-            : SizedBox(width: 44, child: CampusTag.text(tag)),
+            : SizedBox(width: 56, child: CampusTag.text(tag)),
         title: Text(label),
         trailing: on ? const Icon(Icons.check, color: BeeColors.link) : null,
         selected: on,
@@ -420,19 +420,24 @@ class CampusTag extends StatelessWidget {
           color: BeeColors.textHeading.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(BeeRadius.field),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.place, size: 12, color: Colors.white),
-            const SizedBox(width: 2),
-            Text(
-              tag,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+        // Shrinks rather than overflow where space is tight (the location
+        // sheet, large text sizes).
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.place, size: 12, color: Colors.white),
+              const SizedBox(width: 2),
+              Text(
+                tag,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
