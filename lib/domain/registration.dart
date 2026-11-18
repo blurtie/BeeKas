@@ -36,7 +36,7 @@ enum Campus {
   kemanggisan,
   senayan,
   alamSutera('alam_sutera'),
-  base,
+  aso,
   bekasi,
   bandung,
   malang,

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/bid.dart';
 import '../domain/order.dart';
 import '../domain/registration.dart';
 import '../domain/signup_error.dart';
@@ -65,6 +66,21 @@ abstract interface class OrderRepository {
     Campus campus,
     String place,
     DateTime? codAt,
+  );
+
+  /// listing_bids (D-46): null when the listing is not a donation the
+  /// member may see.
+  Future<BidSummary?> bidSummary(String listingId);
+
+  /// The member's token (listing quota) balance.
+  Future<int> tokens();
+
+  /// place_bid: [amount] is the new total. Returns when the window closes.
+  Future<DateTime> placeBid(
+    String listingId,
+    int amount,
+    Campus codCampus,
+    String codPlace,
   );
 }
 
@@ -177,5 +193,53 @@ class SupabaseOrderRepository implements OrderRepository {
     'p_cod_campus': campus.code,
     'p_cod_place': place.trim(),
     'p_cod_at': codAt?.toUtc().toIso8601String(),
+  });
+
+  @override
+  Future<BidSummary?> bidSummary(String listingId) => guardBackend(() async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'listing_bids',
+      params: {'p_listing': listingId},
+    );
+    if (rows.isEmpty) return null;
+    final row = rows.first as Map<String, dynamic>;
+    final ends = row['ends_at'] as String?;
+    return (
+      endsAt: ends == null ? null : DateTime.parse(ends),
+      bidders: row['bidders'] as int,
+      topAmounts: (row['top_amounts'] as List<dynamic>).cast<int>(),
+      myAmount: row['my_amount'] as int?,
+      myRank: row['my_rank'] as int?,
+      stockLeft: row['stock_left'] as int,
+    );
+  });
+
+  @override
+  Future<int> tokens() => guardBackend(() async {
+    final row = await _client
+        .from('quota_balances')
+        .select('balance')
+        .eq('member_id', _client.auth.currentUser!.id)
+        .maybeSingle();
+    return (row?['balance'] as int?) ?? 0;
+  });
+
+  @override
+  Future<DateTime> placeBid(
+    String listingId,
+    int amount,
+    Campus codCampus,
+    String codPlace,
+  ) => guardBackend(() async {
+    final ends = await _client.rpc<String>(
+      'place_bid',
+      params: {
+        'p_listing': listingId,
+        'p_amount': amount,
+        'p_cod_campus': codCampus.code,
+        'p_cod_place': codPlace.trim(),
+      },
+    );
+    return DateTime.parse(ends);
   });
 }

@@ -15,6 +15,7 @@ const Account fakeAdmin = (
   hasPassword: true,
   hasConsent: false,
   rejection: null,
+  campus: null,
 );
 
 /// Records calls; [errors] holds per-method failures, thrown once each in

@@ -16,6 +16,7 @@ Listing fakeListing(
   List<String> specs = const [],
   List<String> photos = const [],
   bool isMine = false,
+  Campus campus = Campus.alamSutera,
 }) => (
   createdAt: '2026-01-01T00:00:00+00:00',
   id: title,
@@ -26,7 +27,7 @@ Listing fakeListing(
   price: price,
   previousPrice: previousPrice,
   stock: stock,
-  campus: Campus.alamSutera,
+  campus: campus,
   warranty: warranty,
   specs: specs,
   isDonation: isDonation,
@@ -48,15 +49,18 @@ class FakeCatalogRepository implements CatalogRepository {
   var calls = 0;
   List<ListingCategory>? lastCategories;
   List<ListingCategory>? lastMatched;
+  List<Campus>? lastCampuses;
 
   @override
   Future<List<Listing>> listings({
     String? query,
     List<ListingCategory>? matched,
     List<ListingCategory>? categories,
+    List<Campus>? campuses,
     Listing? after,
   }) async {
     calls++;
+    lastCampuses = campuses;
     lastCategories = categories;
     lastMatched = matched;
     await gate?.future;
@@ -69,7 +73,8 @@ class FakeCatalogRepository implements CatalogRepository {
         if ((q == null ||
                 '${l.title}|${l.sellerName}'.toLowerCase().contains(q) ||
                 (matched?.contains(l.category) ?? false)) &&
-            (categories == null || categories.contains(l.category)))
+            (categories == null || categories.contains(l.category)) &&
+            (campuses == null || campuses.contains(l.campus)))
           l,
     ];
     final start = after == null ? 0 : matches.indexOf(after) + 1;

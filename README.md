@@ -14,8 +14,11 @@ BeeKas adalah marketplace preloved untuk mahasiswa, dosen, dan staf BINUS Univer
 
 - **Akun dan verifikasi:** daftar dengan email `@binus.ac.id`/`@binus.edu`, kode OTP, persetujuan data, foto kartu dan selfie, pemeriksaan manual oleh admin (setujui atau tolak dengan alasan, kirim ulang), email hasil verifikasi, masuk, lupa kata sandi.
 - **Katalog:** Beranda bertahap, pencarian di server (judul, kategori, penjual), 9 kategori, detail barang dengan harga coret dan stok. Tamu bisa melihat katalog.
-- **Pasang barang:** jual atau donasi, 1–5 foto (metadata lokasi dibuang), Barang Saya (edit, turunkan, tayang ulang, kedaluwarsa 60 hari).
+- **Pasang barang:** jual atau donasi (donasi gratis), 1–5 foto (metadata lokasi dibuang), Barang Saya (edit, turunkan, tayang ulang, kedaluwarsa 60 hari).
 - **Kuota:** paket Rp15.000 isi 3 listing dibayar lewat QRIS, dikonfirmasi admin; 1 listing gratis untuk akun baru.
+- **Donasi lewat tawaran token:** penerima menawar dengan token kuota, tawaran tertinggi menang setelah 24 jam, token yang kalah kembali (D-46).
+- **Area kampus dan lokasi:** tag lokasi di foto barang (ALS, KMG, BDG, ...), filter lokasi, dan pemesanan hanya di area kampus sendiri (D-47).
+- **Profil:** nama, kampus, Verified BINUS, Pesanan Saya per status, Barang Saya, Kuota, Bantuan, Bahasa, Keluar.
 - **Transaksi:** Booking 24 Jam dan Beli Sekarang, COD di kampus, Pesanan Saya (pembelian dan penjualan), batal dan selesai otomatis.
 - **Chat:** chat pembeli–penjual langsung, dengan peringatan bila berbagi kontak di luar aplikasi.
 - **Lainnya:** onboarding, dua bahasa (EN/ID), Bantuan lewat email tim, Kebijakan Privasi dan S&K (draf).

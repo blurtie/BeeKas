@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../config/copy.dart';
 import '../data/chat_repository.dart';
 import '../data/order_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/bid.dart';
+import '../domain/campus_area.dart';
 import '../domain/catalog.dart';
 import '../domain/order.dart';
 import '../domain/registration.dart';
@@ -115,7 +118,7 @@ class _LocationDialogState extends State<_LocationDialog> {
             decoration: InputDecoration(labelText: t('campus')),
             isExpanded: true,
             items: [
-              for (final c in Campus.values)
+              for (final c in listingCampuses)
                 DropdownMenuItem(value: c, child: Text(t(c.copyKey))),
             ],
             onChanged: (c) => setState(() => _campus = c ?? _campus),
@@ -419,6 +422,271 @@ class _BookingScreenState extends State<BookingScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Tawaran Token (D-46, no design yet): donations go to the highest token
+/// bids. Members bid or raise with a Lokasi COD; the donor ([Listing.isMine])
+/// only follows the bids. Winners find a Rp0 order in Pesanan Saya.
+class DonationBidScreen extends StatefulWidget {
+  const DonationBidScreen({
+    super.key,
+    required this.listing,
+    required this.repository,
+    this.now = DateTime.now,
+  });
+  final Listing listing;
+  final OrderRepository repository;
+  final DateTime Function() now;
+
+  @override
+  State<DonationBidScreen> createState() => _DonationBidScreenState();
+}
+
+class _DonationBidScreenState extends State<DonationBidScreen>
+    with _Placing<DonationBidScreen> {
+  @override
+  Listing get listing => widget.listing;
+
+  final _amount = TextEditingController();
+  BidSummary? _summary;
+  int _tokens = 0;
+  var _loading = true;
+  var _loadFailed = false;
+  var _gone = false;
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    // The countdown shows minutes.
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    _amount.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
+    try {
+      final summary = await widget.repository.bidSummary(listing.id);
+      final tokens = listing.isMine ? 0 : await widget.repository.tokens();
+      if (!mounted) return;
+      setState(() {
+        _summary = summary;
+        _gone = summary == null;
+        _tokens = tokens;
+        if (summary != null && _amount.text.isEmpty && !listing.isMine) {
+          _amount.text = '${suggestedBid(summary)}';
+        }
+      });
+    } on SignupException {
+      if (mounted) setState(() => _loadFailed = true);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  int? get _typed => int.tryParse(_amount.text);
+
+  Future<void> _send() async {
+    final summary = _summary!;
+    final problem = bidProblem(
+      amount: _typed,
+      current: summary.myAmount,
+      balance: _tokens,
+    );
+    if (problem != null) {
+      setState(
+        () => error = t(switch (problem) {
+          BidProblem.tooLow => 'errorBidTooLow',
+          BidProblem.notRaised => 'bidMustRaise',
+          BidProblem.notEnoughTokens => 'errorNotEnoughTokens',
+        }),
+      );
+      return;
+    }
+    await run(() async {
+      await widget.repository.placeBid(listing.id, _typed!, campus, place);
+      if (!mounted) return;
+      _amount.clear();
+      _snack(context, t('bidSent'));
+      await _load();
+    });
+  }
+
+  Widget _infoCard(TextTheme textTheme, BidSummary s) {
+    final now = widget.now();
+    final status = switch (s.endsAt) {
+      null => t('bidNoBids'),
+      final DateTime end when isBiddingOver(end, now) => t('bidClosing'),
+      final DateTime end => t('bidClosesIn').replaceAll(
+        '{time}',
+        _hoursMinutes(remainingBidWindow(end, now)),
+      ),
+    };
+    return Container(
+      padding: const EdgeInsets.all(_pad),
+      decoration: BoxDecoration(
+        color: BeeColors.warningSurface,
+        border: Border.all(color: BeeColors.brandPrimary),
+        borderRadius: BorderRadius.circular(BeeRadius.banner),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(
+            backgroundColor: BeeColors.stepperInactive,
+            child: Icon(Icons.gavel_outlined, color: BeeColors.link),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  status,
+                  style: textTheme.titleSmall?.copyWith(
+                    color: BeeColors.link,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  t('bidBidders')
+                      .replaceAll('{n}', '${s.bidders}')
+                      .replaceAll('{units}', '${s.stockLeft}'),
+                  style: textTheme.bodySmall,
+                ),
+                if (s.topAmounts.isNotEmpty)
+                  Text(
+                    t('bidTop').replaceAll('{amounts}', s.topAmounts.join(', ')),
+                    style: textTheme.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _form(TextTheme textTheme, BidSummary s) {
+    final mine = s.myAmount;
+    final typed = _typed;
+    final winning = isWinning(s.myRank, s.stockLeft);
+    return [
+      if (mine != null) ...[
+        Text(
+          t('bidMine')
+              .replaceAll('{n}', '$mine')
+              .replaceAll('{rank}', '${s.myRank}'),
+          style: textTheme.titleSmall,
+        ),
+        Text(
+          t(winning ? 'bidWinning' : 'bidOutbid'),
+          style: textTheme.bodySmall?.copyWith(
+            color: winning ? BeeColors.success : BeeColors.error,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+      Text(
+        t('bidTokens').replaceAll('{n}', '$_tokens'),
+        style: textTheme.bodyMedium,
+      ),
+      if (_tokens == 0)
+        Text(t('bidBuyTokens'), style: textTheme.bodySmall),
+      const SizedBox(height: 16),
+      BeeTextField(
+        label: t('bidAmount'),
+        controller: _amount,
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(6),
+        ],
+        helperText: typed == null || tokensToHold(typed, mine) < 1
+            ? t('bidAmountHint')
+            : t('bidHolds').replaceAll('{n}', '${tokensToHold(typed, mine)}'),
+        onChanged: (_) => setState(() => error = null),
+      ),
+      const SizedBox(height: 16),
+      locationCard(),
+      const SizedBox(height: 16),
+      Text(t('bidRules'), style: textTheme.bodySmall),
+      const SizedBox(height: 24),
+      if (error != null) ...[BeeFormError(error!), const SizedBox(height: 12)],
+      FilledButton(
+        onPressed: busy || isBiddingOver(s.endsAt, widget.now()) ? null : _send,
+        child: BeeButtonLabel(
+          t(mine == null ? 'bidSend' : 'bidRaise'),
+          loading: busy,
+        ),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final l = widget.listing;
+    final s = _summary;
+    return Scaffold(
+      appBar: AppBar(title: Text(t('bidTitle'))),
+      body: SafeArea(
+        child: _loading && s == null
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(BeeSpacing.screenX),
+                children: [
+                  Row(
+                    children: [
+                      _Thumb(l.photos.firstOrNull),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l.title, style: textTheme.titleMedium),
+                            Text(
+                              '${t('donation')} · ${t('free')}',
+                              style: textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_loadFailed) ...[
+                    BeeFormError(t('bidLoadFailed')),
+                    const SizedBox(height: 12),
+                    OutlinedButton(onPressed: _load, child: Text(t('retry'))),
+                  ] else if (_gone || s == null)
+                    Text(t('errorListingUnavailable'))
+                  else ...[
+                    _infoCard(textTheme, s),
+                    const SizedBox(height: 16),
+                    if (l.isMine)
+                      Text(t('bidDonorNote'), style: textTheme.bodyMedium)
+                    else
+                      ..._form(textTheme, s),
+                  ],
+                ],
+              ),
       ),
     );
   }
@@ -778,12 +1046,16 @@ class OrdersScreen extends StatefulWidget {
     this.chats,
     required this.repository,
     this.now = DateTime.now,
+    this.initialFilter,
   });
   final OrderRepository repository;
   final DateTime Function() now;
 
   /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
   final ChatRepository? chats;
+
+  /// The chip selected first: Profil's Diproses and Selesai (K17).
+  final OrderStatus? initialFilter;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -793,7 +1065,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _orders = widget.repository.mine();
 
   /// The K12 chip (D-36); null is Semua.
-  OrderStatus? _filter;
+  late OrderStatus? _filter = widget.initialFilter;
 
   void _reload() {
     setState(() {

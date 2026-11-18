@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../config/copy.dart';
 import '../data/listing_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/campus_area.dart';
 import '../domain/catalog.dart';
 import '../domain/registration.dart';
 import '../domain/signup_error.dart';
@@ -85,6 +86,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       } else if (e is SignupException &&
           e.error == SignupError.listingHasOrders) {
         _snack('errorListingHasOrders');
+        await _load();
+      } else if (e is SignupException &&
+          e.error == SignupError.listingHasBids) {
+        _snack('errorListingHasBids');
         await _load();
       } else {
         _snack('myListingsActionFailed');
@@ -488,7 +493,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
             const SizedBox(height: 16),
             BeeDropdownField<Campus>(
               label: t('location'),
-              items: Campus.values,
+              items: listingCampuses,
               itemLabel: (c) => t(c.copyKey),
               value: _campus,
               onChanged: (c) => setState(() => _campus = c ?? _campus),

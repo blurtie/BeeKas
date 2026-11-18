@@ -47,7 +47,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final id = _client.auth.currentUser!.id;
     final profile = await _client
         .from('profiles')
-        .select('full_name, email, role, status, account_type, consent_at')
+        .select('full_name, email, role, status, account_type, consent_at, campus')
         .eq('id', id)
         .single();
     final status = AccountStatus.values.byName(profile['status'] as String);
@@ -71,6 +71,9 @@ class SupabaseAuthRepository implements AuthRepository {
       hasPassword: hasPassword,
       hasConsent: profile['consent_at'] != null,
       rejection: rejection == null ? null : rejectionFrom(rejection),
+      campus: Campus.values
+          .where((c) => c.code == profile['campus'])
+          .firstOrNull,
     );
   });
 

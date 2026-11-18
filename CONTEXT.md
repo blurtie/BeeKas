@@ -25,8 +25,12 @@ Whether a member is a student, lecturer, or staff. Derived from the BINUS email 
 _Avoid_: role (reserved for admin vs member), affiliation, user type
 
 **Campus**:
-The campus area a member belongs to, one of a fixed list (Kemanggisan, Senayan, Alam Sutera, BASE, Bekasi, Bandung, Malang, Semarang, BINUS Online). Nearby campuses are merged into one area.
+The campus area a member belongs to, one of a fixed list (Kemanggisan, Senayan, Alam Sutera, ASO, Bekasi, Bandung, Malang, Semarang, BINUS Online). Nearby campuses are merged into one area.
 _Avoid_: location, branch
+
+**Area**:
+A group of nearby campuses: Jabodetabek (Kemanggisan, Senayan, Alam Sutera, ASO, Bekasi), Bandung, Malang, Semarang. Members order and bid only within their area; BINUS Online members have none and reach every area (D-47).
+_Avoid_: region, city
 
 **Identity card**:
 The physical BINUS card a member photographs: Flazz for students, lecturer ID card, or staff ID card.
@@ -77,7 +81,7 @@ An order that promises to buy one unit at the listing price when ordered.
 _Avoid_: checkout (that is the screen), instant buy
 
 **Running order (Pesanan berjalan)**:
-An order that is Menunggu or Diproses. A buyer has at most one per listing and at most 2 on donations.
+An order that is Menunggu or Diproses. A buyer has at most one per listing.
 _Avoid_: active order, open order
 
 **Hold**:
@@ -95,6 +99,14 @@ _Avoid_: delivery time
 **Cancel reason (Alasan batal)**:
 A fixed code (changed mind, not as described, can't meet, sold elsewhere, other) plus a note, required for Other. An automatic cancel has no reason.
 _Avoid_: rejection reason (that is for verification)
+
+**Token**:
+One unit of a member's listing quota balance. A sale listing uses one; a donation listing uses none. Members spend tokens to bid on donations (D-46).
+_Avoid_: credit, coin
+
+**Token bid (Tawaran token)**:
+A member's offer of tokens for one unit of a donation. The first bid opens a 24-hour window; when it closes the highest bids win and become Rp0 Beli Sekarang orders. Tokens of losing bids are returned.
+_Avoid_: auction, lelang, offer (that is price haggling in chat)
 
 **Live (Tayang)**:
 A listing shown in the catalog: not removed by an admin, not withdrawn, not expired, stock left above zero, and its seller approved and not frozen.

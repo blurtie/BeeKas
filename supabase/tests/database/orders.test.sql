@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(85);
+select plan(80);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -273,21 +273,11 @@ select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000002') 
   'a cancelled order frees the buyer to order again');
 reset role;
 
--- Donations: at most 2 running (D-30) -------------------------------------------------------
+-- Donations are bid on with tokens (D-46), never ordered here --------------------------------
 
 select pg_temp.act_as(:c);
-select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000003') $$, 'first donation');
-select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000004', 'buy') $$, 'second donation');
-select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000005') $$,
-  '23514', 'donation_limit', 'the third running donation is refused');
-reset role;
-select is((select bool_and(is_donation and price = 0)::text from public.orders where buyer_id = :c and listing_id <> :l2),
-  'true', 'donation orders are free');
-select pg_temp.act_as(:c);
-select lives_ok(format('select public.cancel_order(id, ''changed_mind'', null) from public.orders where listing_id = %L', :d1),
-  'buyer cancels a donation');
-select lives_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000005') $$,
-  'a cancelled donation no longer counts');
+select throws_ok($$ select pg_temp.place('85858585-1111-4000-8000-000000000003') $$,
+  '23514', 'donation_bid_only', 'donations cannot be booked or bought (D-46)');
 reset role;
 
 -- A hold that has run out (before the timers catch it) ---------------------------------------
@@ -323,9 +313,9 @@ select pg_temp.act_as(:c);
 select throws_ok($$ select public.run_order_timers() $$, '42501', null, 'members cannot run the timers');
 reset role;
 
--- Now: B waits on L2 (booking), C on D2 (buy) and D3. Nothing is due yet.
+-- Now: B waits on L2 (booking). Nothing is due yet.
 select public.run_order_timers(now() + interval '23 hours');
-select is((select count(*)::int from public.orders where status = 'waiting' and listing_id::text like '85858585-%'), 3,
+select is((select count(*)::int from public.orders where status = 'waiting' and listing_id::text like '85858585-%'), 1,
   'before 24 hours nothing is cancelled');
 select public.run_order_timers(now() + interval '24 hours');
 select is((select count(*)::int from public.orders where status = 'waiting' and listing_id::text like '85858585-%'), 0,

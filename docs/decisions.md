@@ -162,7 +162,7 @@ Akun baru terbentuk setelah OTP benar. Aturan kata sandi: minimal 8 karakter, se
 
 **Status:** Disetujui tim, 24 September 2026 (dibawa dari D-16 versi web)
 
-**Keputusan:** Kode kampus: `kemanggisan`, `senayan`, `alam_sutera`, `base`, `bekasi`, `bandung`, `malang`, `semarang`, `online`. Kampus yang berdekatan digabung per area (Kemanggisan: Anggrek, Syahdan, Kijang; Senayan: JWC, fX). BINUS Online tidak punya kampus fisik. Label tampilan mengikuti format desain, misalnya "Kampus Binus Alam Sutera".
+**Keputusan:** Kode kampus: `kemanggisan`, `senayan`, `alam_sutera`, `aso`, `bekasi`, `bandung`, `malang`, `semarang`, `online`. Kampus yang berdekatan digabung per area (Kemanggisan: Anggrek, Syahdan, Kijang; Senayan: JWC, fX). BINUS Online tidak punya kampus fisik. Label tampilan mengikuti format desain, misalnya "Kampus Binus Alam Sutera".
 
 ---
 
@@ -414,7 +414,7 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Pembatalan wajib menyertakan alasan, tanpa sanksi.
 - Tawar-menawar lewat chat; penjual yang mengubah harga listing.
 - Lokasi COD: teks bebas ditambah kampus.
-- Donasi: siapa cepat dia dapat, maksimal 2 donasi berjalan per orang.
+- Donasi: siapa cepat dia dapat, maksimal 2 donasi berjalan per orang. **Diganti D-46.**
 
 ---
 
@@ -606,3 +606,35 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Akun yang dibekukan tetap bisa menurunkan listingnya, tetapi tidak bisa mengedit atau menayangkan ulang.
 
 Aturan ini ditegakkan di backend (`relist_listing`).
+
+---
+
+## D-46 — Donasi lewat tawaran token
+
+**Status:** Arahan dosen, 18 November 2026. Rincian (waktu 24 jam, pengembalian token, seri) diusulkan Clarencia; [KONFIRMASI tim].
+
+**Keputusan:**
+- Pemberi donasi tidak membayar token: memasang listing donasi tidak memotong kuota.
+- Penerima donasi yang membayar token: member menawar dengan token (= saldo kuota listing), dan tawaran tertinggi mendapatkan barangnya.
+- Tawaran pertama membuka waktu 24 jam. Saat waktu habis, tawaran tertinggi menang, satu unit per pemenang sebanyak stok tersisa; seri dimenangkan yang lebih dulu mencapai jumlah itu.
+- Token ditahan saat menawar. Token pemenang terpakai (tidak berpindah ke donatur); token yang kalah dikembalikan.
+- Pemenang mendapat pesanan Beli Sekarang Rp0 yang berjalan seperti pesanan biasa. Bila donatur atau timer membatalkan, token pemenang kembali; bila pemenang membatalkan, tidak.
+- Batas 2 donasi berjalan (D-30) dihapus; token yang membatasi.
+- Rincian di PRD-katalog 5.7. Ditegakkan di backend (`place_bid`, `close_donation_bids`, `create_listing`, `place_order`).
+
+---
+
+## D-47 — Area kampus dan filter lokasi
+
+**Status:** Arahan dosen, 19 November 2026. Rincian (pembagian area, BINUS Online, tag) dipilih Clarencia; [KONFIRMASI tim].
+
+**Keputusan:**
+- Kampus BINUS saling berjauhan, jadi member hanya bisa memesan (Booking 24 Jam, Beli Sekarang) dan menawar donasi di **area** kampusnya sendiri.
+- Area: **Jabodetabek** = Kemanggisan, Senayan, Alam Sutera, ASO, Bekasi; **Bandung**, **Malang**, dan **Semarang** masing-masing satu area.
+- **BINUS Online** tidak punya kampus fisik: membernya bisa menjangkau semua area, dan tidak ada barang yang berlokasi di BINUS Online (lokasi barang dan Lokasi COD wajib kampus fisik).
+- Barang di luar area **tetap tampil** di katalog dan detail, dengan keterangan bahwa barang itu di luar area; tombol pesan/tawar menolak dengan pesan yang jelas.
+- Foto barang memakai **tag lokasi** sesuai kampus yang diisi penjual: KMG, SNY, ALS, ASO, BKS, BDG, MLG, SMG.
+- Katalog punya **filter lokasi**: semua lokasi, satu area, atau satu kampus. Default member = areanya sendiri; tamu dan BINUS Online = semua lokasi.
+- Kampus "BASE" dari D-12 diganti **ASO** (BINUS ASO School of Engineering, area Alam Sutera); nilai enum `base` di-rename menjadi `aso` (migration `20261119130000_campus_aso.sql`).
+- Ditegakkan di backend: `can_reach` di `place_order` dan `place_bid`, constraint `listings_campus_physical`, parameter `p_campuses` di `catalog_listings`.
+

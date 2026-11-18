@@ -79,7 +79,7 @@ void main() {
       'kemanggisan',
       'senayan',
       'alam_sutera',
-      'base',
+      'aso',
       'bekasi',
       'bandung',
       'malang',
@@ -104,7 +104,7 @@ void main() {
         fullName: 'A',
         email: 'a@binus.ac.id',
         phone: '  ',
-        campus: Campus.base,
+        campus: Campus.aso,
       );
       expect(r.errors, isEmpty);
       expect(r.registration!.phone, isNull);
@@ -115,7 +115,7 @@ void main() {
         fullName: 'A',
         email: 'a@binus.ac.id',
         phone: '0812',
-        campus: Campus.base,
+        campus: Campus.aso,
       );
       expect(r.errors, {RegistrationField.phone: 'errorInvalidPhone'});
     });
@@ -167,7 +167,7 @@ void main() {
       fullName: 'A',
       email: 'a@binus.ac.id',
       phone: '0812345678',
-      campus: Campus.base,
+      campus: Campus.aso,
     ).registration!;
 
     test('an account with a password is already registered', () {
@@ -207,7 +207,7 @@ void main() {
           fullName: 'A',
           email: 'a@binus.ac.id',
           phone: '',
-          campus: Campus.base,
+          campus: Campus.aso,
         ).registration!,
       );
       expect(r.phoneChanged, isFalse);
