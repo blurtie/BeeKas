@@ -25,11 +25,11 @@ Whether a member is a student, lecturer, or staff. Derived from the BINUS email 
 _Avoid_: role (reserved for admin vs member), affiliation, user type
 
 **Campus**:
-The campus area a member belongs to, one of a fixed list (Kemanggisan, Senayan, Alam Sutera, BASE, Bekasi, Bandung, Malang, Semarang, BINUS Online). Nearby campuses are merged into one area.
+The campus area a member belongs to, one of a fixed list (Kemanggisan, Senayan, Alam Sutera, ASO, Bekasi, Bandung, Malang, Semarang, BINUS Online). Nearby campuses are merged into one area.
 _Avoid_: location, branch
 
 **Area**:
-A group of nearby campuses: Jabodetabek (Kemanggisan, Senayan, Alam Sutera, BASE, Bekasi), Bandung, Malang, Semarang. Members order and bid only within their area; BINUS Online members have none and reach every area (D-47).
+A group of nearby campuses: Jabodetabek (Kemanggisan, Senayan, Alam Sutera, ASO, Bekasi), Bandung, Malang, Semarang. Members order and bid only within their area; BINUS Online members have none and reach every area (D-47).
 _Avoid_: region, city
 
 **Identity card**:

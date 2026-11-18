@@ -63,7 +63,7 @@ void main() {
         Campus.kemanggisan,
         Campus.senayan,
         Campus.alamSutera,
-        Campus.base,
+        Campus.aso,
         Campus.bekasi,
       ]);
       final myArea = t(

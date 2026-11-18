@@ -14,7 +14,7 @@ extension CampusPlace on Campus {
     Campus.kemanggisan => 'KMG',
     Campus.senayan => 'SNY',
     Campus.alamSutera => 'ALS',
-    Campus.base => 'BASE',
+    Campus.aso => 'ASO',
     Campus.bekasi => 'BKS',
     Campus.bandung => 'BDG',
     Campus.malang => 'MLG',
@@ -27,7 +27,7 @@ extension CampusPlace on Campus {
     Campus.kemanggisan ||
     Campus.senayan ||
     Campus.alamSutera ||
-    Campus.base ||
+    Campus.aso ||
     Campus.bekasi => CampusArea.jabodetabek,
     Campus.bandung => CampusArea.bandung,
     Campus.malang => CampusArea.malang,

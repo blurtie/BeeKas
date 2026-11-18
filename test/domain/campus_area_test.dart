@@ -15,7 +15,7 @@ void main() {
       Campus.kemanggisan,
       Campus.senayan,
       Campus.alamSutera,
-      Campus.base,
+      Campus.aso,
       Campus.bekasi,
     ]);
     expect(campusesIn(CampusArea.bandung), [Campus.bandung]);
