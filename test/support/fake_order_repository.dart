@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beekas/data/order_repository.dart';
+import 'package:beekas/domain/bid.dart';
 import 'package:beekas/domain/order.dart';
 import 'package:beekas/domain/registration.dart';
 
@@ -146,5 +147,52 @@ class FakeOrderRepository implements OrderRepository {
     DateTime? codAt,
   ) async {
     calls.add('updateCod $id ${campus.code} $place');
+  }
+
+  /// What listing_bids answers; null when the listing is gone.
+  BidSummary? summary = (
+    endsAt: null,
+    bidders: 0,
+    topAmounts: const <int>[],
+    myAmount: null,
+    myRank: null,
+    stockLeft: 1,
+  );
+  var tokenBalance = 5;
+
+  /// What place_bid answers: the window the server set.
+  DateTime serverBidEnd = DateTime.utc(2026, 11, 24, 9);
+
+  @override
+  Future<BidSummary?> bidSummary(String listingId) async {
+    _fail('bidSummary');
+    return summary;
+  }
+
+  @override
+  Future<int> tokens() async => tokenBalance;
+
+  @override
+  Future<DateTime> placeBid(
+    String listingId,
+    int amount,
+    Campus codCampus,
+    String codPlace,
+  ) async {
+    _fail('placeBid');
+    calls.add('placeBid $listingId $amount ${codCampus.code} $codPlace');
+    final s = summary!;
+    tokenBalance -= amount - (s.myAmount ?? 0);
+    final others = [...s.topAmounts]..remove(s.myAmount);
+    final rank = 1 + others.where((a) => a >= amount).length;
+    summary = (
+      endsAt: s.endsAt ?? serverBidEnd,
+      bidders: s.bidders + (s.myAmount == null ? 1 : 0),
+      topAmounts: [...others, amount]..sort((a, b) => b - a),
+      myAmount: amount,
+      myRank: rank,
+      stockLeft: s.stockLeft,
+    );
+    return summary!.endsAt!;
   }
 }

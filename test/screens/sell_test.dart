@@ -153,6 +153,18 @@ void main() {
     expect(listingPrice(draft), 0);
   });
 
+  testWidgets('quota 0 can still list a donation (D-46)', (tester) async {
+    final repo = FakeListingRepository(quota: 0);
+    await _open(tester, repo);
+    await _fillK5(tester, donation: true);
+    await _choose(tester, t('sellConditionHint'), t('condition_used_good'));
+
+    expect(find.text(t('sellDonationFree')), findsOneWidget);
+    expect(find.text(t('sellBuyQuota')), findsNothing);
+    await _tap(tester, t('sellPost'));
+    expect(repo.created.single.draft.isDonation, isTrue);
+  });
+
   testWidgets('K5 and K6 show what is missing or out of range', (tester) async {
     final repo = FakeListingRepository();
     await _open(tester, repo);

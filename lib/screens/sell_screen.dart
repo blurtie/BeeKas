@@ -342,7 +342,7 @@ class _SellScreenState extends State<SellScreen> {
       FilteringTextInputFormatter.digitsOnly,
       LengthLimitingTextInputFormatter(9),
     ];
-    final canPost = canList(seller.quota);
+    final canPost = canList(seller.quota, donation: _donation);
     return [
       BeeDropdownField<ListingCondition>(
         label: t('condition'),
@@ -398,7 +398,9 @@ class _SellScreenState extends State<SellScreen> {
       ),
       const SizedBox(height: 24),
       Text(
-        canPost
+        _donation
+            ? t('sellDonationFree')
+            : canPost
             ? t('sellQuota').replaceAll('{n}', '${seller.quota}')
             : t('sellQuotaEmpty'),
         style: Theme.of(context).textTheme.bodyMedium,

@@ -60,7 +60,8 @@ class FakeListingRepository implements ListingRepository {
     if (error != null) throw error;
     if (!created.any((l) => l.id == listing.id)) {
       created.add(listing);
-      quota--;
+      // D-46: donations take no quota.
+      if (!listing.draft.isDonation) quota--;
     }
     if (loseAnswer) throw const SignupException(null);
   }

@@ -1184,65 +1184,103 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  // Not on the member's own listing.
-                  if (!l.isMine) ...[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _tryChat(
-                          context,
-                          widget.status,
-                          switch (widget.onChat) {
-                            final onChat? => () => onChat(l),
-                            null => null,
-                          },
+              // D-46: donations are bid on with tokens; the donor follows
+              // the bids from the same screen.
+              if (l.isDonation) ...[
+                Row(
+                  children: [
+                    if (!l.isMine) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _tryChat(
+                            context,
+                            widget.status,
+                            switch (widget.onChat) {
+                              final onChat? => () => onChat(l),
+                              null => null,
+                            },
+                          ),
+                          child: Text(t('chatSeller')),
                         ),
-                        child: Text(t('chatSeller')),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => order(
+                          (orders) => DonationBidScreen(
+                            listing: l,
+                            repository: orders,
+                            now: widget.now,
+                          ),
+                        ),
+                        icon: const Icon(Icons.gavel_outlined),
+                        label: Text(t(l.isMine ? 'bidView' : 'bidOpen')),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    // Not on the member's own listing.
+                    if (!l.isMine) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _tryChat(
+                            context,
+                            widget.status,
+                            switch (widget.onChat) {
+                              final onChat? => () => onChat(l),
+                              null => null,
+                            },
+                          ),
+                          child: Text(t('chatSeller')),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => order(
+                          (orders) => BookingScreen(
+                            listing: l,
+                            repository: orders,
+                            now: widget.now,
+                            chats: widget.chats,
+                          ),
+                        ),
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        label: Text(t('booking24h')),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => order(
+                          (orders) => CheckoutScreen(
+                            listing: l,
+                            repository: orders,
+                            now: widget.now,
+                            chats: widget.chats,
+                          ),
+                        ),
+                        child: Text(t('buyNow')),
                       ),
                     ),
                     const SizedBox(width: 12),
+                    IconButton.outlined(
+                      tooltip: t('addFavorite'),
+                      onPressed: soon,
+                      icon: const Icon(Icons.favorite_border),
+                    ),
                   ],
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => order(
-                        (orders) => BookingScreen(
-                          listing: l,
-                          repository: orders,
-                          now: widget.now,
-                          chats: widget.chats,
-                        ),
-                      ),
-                      icon: const Icon(Icons.calendar_today_outlined),
-                      label: Text(t('booking24h')),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => order(
-                        (orders) => CheckoutScreen(
-                          listing: l,
-                          repository: orders,
-                          now: widget.now,
-                          chats: widget.chats,
-                        ),
-                      ),
-                      child: Text(t('buyNow')),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.outlined(
-                    tooltip: t('addFavorite'),
-                    onPressed: soon,
-                    icon: const Icon(Icons.favorite_border),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),

@@ -332,9 +332,9 @@ By registering for or using BeeKas, you agree to these terms. BeeKas connects se
 
 # 3. Listing items
 
-- You can sell items or donate them. Donated items are given to the buyer for free.
+- You can sell items or donate them. Donated items are free for the recipient; members bid listing tokens for them, and the highest bids win (tokens of bids that lose are returned).
 
-- Fee: Rp1,000 per listing, including donation listings. The fee is paid through a prepaid listing quota package to the BeeKas team's QRIS, then confirmed by an admin. [KONFIRMASI: package prices, quota validity period, and whether quota is refundable.]
+- Fee: Rp1,000 per listing. Donation listings are free. The fee is paid through a prepaid listing quota package to the BeeKas team's QRIS, then confirmed by an admin. [KONFIRMASI: package prices, quota validity period, and whether quota is refundable.]
 
 - Photos must be real photos of the item being sold. Descriptions and condition must be honest, including defects or damage.
 
@@ -526,6 +526,36 @@ Changes to these terms are announced in the app. These terms are governed by the
     'announcementFailed': "Couldn't send the announcement.",
     'booking24h': 'Book for 24 Hours',
     'buyNow': 'Buy Now',
+    'sellDonationFree': 'Donations are free to list: no listing token is used.',
+    'errorDonationBidOnly': 'Donations are given by token bids. Open the item and place a bid.',
+    'errorNotDonation': 'Only donations can be bid on.',
+    'errorBiddingClosed': 'Bidding has closed. The winners are being chosen.',
+    'errorBidTooLow': 'Bid at least 1 token.',
+    'errorNotEnoughTokens': "You don't have enough tokens. Buy a quota package from Profile.",
+    'errorListingHasBids': 'This donation has bids. Wait until bidding closes before taking it down.',
+    'bidTitle': 'Token Bids',
+    'bidOpen': 'Bid with Tokens',
+    'bidView': 'See Bids',
+    'bidNoBids': 'No bids yet. The first bid opens a 24-hour window.',
+    'bidClosing': 'Bidding has closed. The winners are being chosen.',
+    'bidClosesIn': 'Closes in {time}',
+    'bidBidders': '{n} bidders · {units} unit(s) to give',
+    'bidTop': 'Top bids: {amounts} tokens',
+    'bidMine': 'Your bid: {n} tokens (rank {rank})',
+    'bidWinning': 'You would win if bidding closed now.',
+    'bidOutbid': 'You are outbid. Raise your bid to win.',
+    'bidTokens': 'Your tokens: {n}',
+    'bidBuyTokens': 'Tokens are your listing quota. Buy a package from Profile > Quota.',
+    'bidAmount': 'Total bid (tokens)',
+    'bidAmountHint': 'Enter your total bid.',
+    'bidHolds': 'Uses {n} token(s) now.',
+    'bidRules': 'Tokens are held when you bid. If you lose, they come back. If you win, they are spent and the item becomes a Rp0 order in My Orders; the donor sets the COD time. If the donor cancels, your tokens come back; if you cancel, they do not.',
+    'bidSend': 'Place Bid',
+    'bidRaise': 'Raise Bid',
+    'bidSent': 'Bid placed.',
+    'bidMustRaise': 'Your new bid must be higher than your current bid.',
+    'bidLoadFailed': "Couldn't load the bids. Please try again.",
+    'bidDonorNote': 'You are the donor. When bidding closes, the winners appear as orders in My Orders for you to accept.',
     'addFavorite': 'Add to favorites',
     'photoCount': 'Photo {i} of {n}',
     'noPhoto': 'No photo',
@@ -1095,9 +1125,9 @@ Dengan mendaftar atau memakai BeeKas, kamu menyetujui syarat ini. BeeKas mempert
 
 # 3. Memasang barang
 
-- Kamu bisa menjual barang atau mendonasikannya. Barang donasi diberikan gratis kepada pembeli.
+- Kamu bisa menjual barang atau mendonasikannya. Barang donasi gratis bagi penerimanya; member menawar dengan token listing, dan tawaran tertinggi yang mendapatkannya (token dari tawaran yang kalah dikembalikan).
 
-- Biaya: Rp1.000 per listing, termasuk listing donasi. Biaya dibayar lewat paket kuota listing prabayar ke QRIS tim BeeKas, lalu dikonfirmasi admin. [KONFIRMASI: harga paket, masa berlaku kuota, dan apakah kuota bisa dikembalikan.]
+- Biaya: Rp1.000 per listing. Listing donasi gratis. Biaya dibayar lewat paket kuota listing prabayar ke QRIS tim BeeKas, lalu dikonfirmasi admin. [KONFIRMASI: harga paket, masa berlaku kuota, dan apakah kuota bisa dikembalikan.]
 
 - Foto harus foto asli barang yang dijual. Deskripsi dan kondisi harus jujur, termasuk cacat atau kerusakan.
 
@@ -1288,6 +1318,36 @@ Perubahan syarat diumumkan di aplikasi. Syarat ini tunduk pada hukum Republik In
     'announcementFailed': 'Pengumuman gagal terkirim.',
     'booking24h': 'Booking 24 Jam',
     'buyNow': 'Beli Sekarang',
+    'sellDonationFree': 'Memasang donasi gratis: tidak memakai token listing.',
+    'errorDonationBidOnly': 'Donasi diberikan lewat tawaran token. Buka barangnya dan ajukan tawaran.',
+    'errorNotDonation': 'Hanya barang donasi yang bisa ditawar.',
+    'errorBiddingClosed': 'Waktu tawaran sudah habis. Pemenang sedang ditentukan.',
+    'errorBidTooLow': 'Tawar paling sedikit 1 token.',
+    'errorNotEnoughTokens': 'Token-mu tidak cukup. Beli paket kuota dari Profil.',
+    'errorListingHasBids': 'Donasi ini sudah punya tawaran. Tunggu waktu tawaran selesai sebelum menurunkannya.',
+    'bidTitle': 'Tawaran Token',
+    'bidOpen': 'Tawar dengan Token',
+    'bidView': 'Lihat Tawaran',
+    'bidNoBids': 'Belum ada tawaran. Tawaran pertama membuka waktu 24 jam.',
+    'bidClosing': 'Waktu tawaran sudah habis. Pemenang sedang ditentukan.',
+    'bidClosesIn': 'Ditutup dalam {time}',
+    'bidBidders': '{n} penawar · {units} unit dibagikan',
+    'bidTop': 'Tawaran tertinggi: {amounts} token',
+    'bidMine': 'Tawaranmu: {n} token (peringkat {rank})',
+    'bidWinning': 'Kamu menang kalau tawaran ditutup sekarang.',
+    'bidOutbid': 'Tawaranmu terlampaui. Naikkan tawaran untuk menang.',
+    'bidTokens': 'Token kamu: {n}',
+    'bidBuyTokens': 'Token = kuota listing-mu. Beli paket dari Profil > Kuota.',
+    'bidAmount': 'Total tawaran (token)',
+    'bidAmountHint': 'Isi total tawaranmu.',
+    'bidHolds': 'Memakai {n} token sekarang.',
+    'bidRules': 'Token ditahan saat kamu menawar. Kalau kalah, token kembali. Kalau menang, token terpakai dan barang menjadi pesanan Rp0 di Pesanan Saya; donatur yang menentukan waktu COD. Kalau donatur membatalkan, token kembali; kalau kamu yang membatalkan, token tidak kembali.',
+    'bidSend': 'Kirim Tawaran',
+    'bidRaise': 'Naikkan Tawaran',
+    'bidSent': 'Tawaran terkirim.',
+    'bidMustRaise': 'Tawaran baru harus lebih tinggi dari tawaranmu sekarang.',
+    'bidLoadFailed': 'Tawaran gagal dimuat. Coba lagi.',
+    'bidDonorNote': 'Kamu donaturnya. Saat waktu tawaran habis, pemenang muncul sebagai pesanan di Pesanan Saya untuk kamu terima.',
     'addFavorite': 'Tambah ke favorit',
     'photoCount': 'Foto {i} dari {n}',
     'noPhoto': 'Tidak ada foto',

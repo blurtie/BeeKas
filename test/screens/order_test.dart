@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:beekas/config/copy.dart';
 import 'package:beekas/data/signup_repository.dart';
 import 'package:beekas/domain/access.dart';
+import 'package:beekas/domain/catalog.dart';
 import 'package:beekas/domain/order.dart';
 import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/catalog_screens.dart';
@@ -184,14 +185,119 @@ void main() {
       expect(repo.calls, ['place Macbook Air M1 buy alam_sutera Lobi Anggrek']);
       expect(find.text(t('ordersTitle')), findsOneWidget);
     });
+  });
 
-    testWidgets('the third donation shows the limit', (tester) async {
+  group('Tawaran Token (D-46)', () {
+    final buku = fakeListing(
+      'Buku Exploring English',
+      price: 0,
+      isDonation: true,
+    );
+
+    Future<void> open(
+      WidgetTester tester,
+      FakeOrderRepository repo, {
+      Listing? listing,
+    }) async {
+      final l = listing ?? buku;
+      await _pump(
+        tester,
+        ListingDetailScreen(
+          listing: l,
+          status: AccountStatus.approved,
+          orders: repo,
+          now: _now,
+        ),
+      );
+      expect(find.text(t('booking24h')), findsNothing);
+      expect(find.text(t('buyNow')), findsNothing);
+      await _tapText(tester, t(l.isMine ? 'bidView' : 'bidOpen'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a guest is told to get verified', (tester) async {
+      await _pump(
+        tester,
+        ListingDetailScreen(listing: buku, orders: FakeOrderRepository()),
+      );
+      await _tapText(tester, t('bidOpen'));
+      expect(find.text(t('orderNeedsApproval_guest')), findsOneWidget);
+      expect(find.text(t('bidTitle')), findsNothing);
+    });
+
+    testWidgets('the first bid opens the window', (tester) async {
+      final repo = FakeOrderRepository();
+      await open(tester, repo);
+      expect(find.text(t('bidNoBids')), findsOneWidget);
+      expect(find.text(t('bidTokens').replaceAll('{n}', '5')), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, t('bidAmount')),
+        '3',
+      );
+      await tester.pump();
+      expect(find.text(t('bidHolds').replaceAll('{n}', '3')), findsOneWidget);
+      await _tapText(tester, t('bidSend'));
+      await tester.pumpAndSettle();
+      expect(repo.calls, ['placeBid Buku Exploring English 3 alam_sutera ']);
+      expect(
+        find.text(t('bidMine').replaceAll('{n}', '3').replaceAll('{rank}', '1')),
+        findsOneWidget,
+      );
+      expect(find.text(t('bidWinning')), findsOneWidget);
+      expect(find.text(t('bidTokens').replaceAll('{n}', '2')), findsOneWidget);
+      expect(find.text(t('bidRaise')), findsOneWidget);
+    });
+
+    testWidgets('outbid members see it and must raise', (tester) async {
       final repo = FakeOrderRepository()
-        ..errors['place'] = const SignupException(SignupError.donationLimit);
-      await _detail(tester, repo, status: AccountStatus.approved);
-      await _tapText(tester, t('buyNow'));
-      await _tapText(tester, t('checkoutConfirm'));
-      expect(find.text(t('errorDonationLimit')), findsOneWidget);
+        ..summary = (
+          endsAt: _start.add(const Duration(hours: 2, minutes: 5)),
+          bidders: 2,
+          topAmounts: [5, 3],
+          myAmount: 3,
+          myRank: 2,
+          stockLeft: 1,
+        );
+      await open(tester, repo);
+      expect(
+        find.text(t('bidClosesIn').replaceAll('{time}', '02:05')),
+        findsOneWidget,
+      );
+      expect(find.text(t('bidOutbid')), findsOneWidget);
+      // Suggested: one more than the top bid.
+      expect(find.widgetWithText(TextField, '6'), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, t('bidAmount')),
+        '3',
+      );
+      await _tapText(tester, t('bidRaise'));
+      expect(find.text(t('bidMustRaise')), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, t('bidAmount')),
+        '9',
+      );
+      await _tapText(tester, t('bidRaise'));
+      expect(find.text(t('errorNotEnoughTokens')), findsOneWidget);
+      expect(repo.calls, isEmpty);
+    });
+
+    testWidgets('a refusal from the server is shown', (tester) async {
+      final repo = FakeOrderRepository()
+        ..errors['placeBid'] = const SignupException(SignupError.biddingClosed);
+      await open(tester, repo);
+      await _tapText(tester, t('bidSend'));
+      await tester.pumpAndSettle();
+      expect(find.text(t('errorBiddingClosed')), findsOneWidget);
+    });
+
+    testWidgets('the donor only follows the bids', (tester) async {
+      await open(
+        tester,
+        FakeOrderRepository(),
+        listing: fakeListing('Buku', price: 0, isDonation: true, isMine: true),
+      );
+      expect(find.text(t('bidDonorNote')), findsOneWidget);
+      expect(find.text(t('bidSend')), findsNothing);
     });
   });
 

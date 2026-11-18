@@ -414,7 +414,7 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Pembatalan wajib menyertakan alasan, tanpa sanksi.
 - Tawar-menawar lewat chat; penjual yang mengubah harga listing.
 - Lokasi COD: teks bebas ditambah kampus.
-- Donasi: siapa cepat dia dapat, maksimal 2 donasi berjalan per orang.
+- Donasi: siapa cepat dia dapat, maksimal 2 donasi berjalan per orang. **Diganti D-46.**
 
 ---
 
@@ -606,3 +606,19 @@ Email, tipe akun, dan peran tidak bisa diubah member. `approved` dan `rejected` 
 - Akun yang dibekukan tetap bisa menurunkan listingnya, tetapi tidak bisa mengedit atau menayangkan ulang.
 
 Aturan ini ditegakkan di backend (`relist_listing`).
+
+---
+
+## D-46 — Donasi lewat tawaran token
+
+**Status:** Arahan dosen, 18 November 2026. Rincian (waktu 24 jam, pengembalian token, seri) diusulkan Clarencia; [KONFIRMASI tim].
+
+**Keputusan:**
+- Pemberi donasi tidak membayar token: memasang listing donasi tidak memotong kuota.
+- Penerima donasi yang membayar token: member menawar dengan token (= saldo kuota listing), dan tawaran tertinggi mendapatkan barangnya.
+- Tawaran pertama membuka waktu 24 jam. Saat waktu habis, tawaran tertinggi menang, satu unit per pemenang sebanyak stok tersisa; seri dimenangkan yang lebih dulu mencapai jumlah itu.
+- Token ditahan saat menawar. Token pemenang terpakai (tidak berpindah ke donatur); token yang kalah dikembalikan.
+- Pemenang mendapat pesanan Beli Sekarang Rp0 yang berjalan seperti pesanan biasa. Bila donatur atau timer membatalkan, token pemenang kembali; bila pemenang membatalkan, tidak.
+- Batas 2 donasi berjalan (D-30) dihapus; token yang membatasi.
+- Rincian di PRD-katalog 5.7. Ditegakkan di backend (`place_bid`, `close_donation_bids`, `create_listing`, `place_order`).
+

@@ -154,10 +154,19 @@ Beli Sekarang = janji beli dengan harga listing (D-30). Alur: Detail → **Beli 
 
 ### 5.7 Donasi
 
-Donasi = listing dengan harga Rp0 (D-28), dipesan lewat Booking 24 Jam atau Beli Sekarang seperti barang biasa. "Siapa cepat dia dapat" = pesanan pertama yang masuk mendapat unitnya; tidak ada antrean atau seleksi oleh penjual.
+> **Diganti oleh D-46 (18 November 2026, arahan dosen).** Aturan lama di bawah (siapa cepat dia dapat, maksimal 2 donasi berjalan) tidak berlaku lagi.
 
-- **Maksimal 2 donasi berjalan per orang (D-30):** pesanan donasi berstatus Menunggu atau Diproses dihitung; Selesai dan Dibatalkan tidak. Pesanan ketiga ditolak server dengan pesan yang jelas.
-- **K-19** Bolehkah penjual donasi menolak pemesan pertama (mis. tidak membalas chat)? Diputuskan: boleh, lewat Batalkan dengan alasan; unit kembali ke stok untuk pemesan berikutnya.
+Donasi = listing dengan harga Rp0 (D-28). **Memasang donasi gratis** (tidak memakai token/kuota). Donasi tidak dipesan lewat Booking 24 Jam atau Beli Sekarang, tetapi lewat **Tawaran Token**:
+
+- **Token** = satu unit saldo kuota listing (`quota_balances`). Member `approved` yang tidak dibekukan menawar dengan token; donatur tidak bisa menawar barangnya sendiri.
+- **Waktu tawaran:** tawaran pertama membuka waktu 24 jam (`listings.bid_ends_at`). Tawaran berikutnya tidak memperpanjang waktu.
+- **Menawar:** total tawaran minimal 1 token. Satu tawaran per member per listing; tawaran hanya bisa dinaikkan, tidak ditarik. Token langsung ditahan; menaikkan tawaran hanya menahan selisihnya.
+- **Pemenang:** saat waktu habis (`pg_cron` tiap menit), tawaran tertinggi mendapat unit, satu unit per pemenang, sebanyak stok tersisa. Seri: yang lebih dulu mencapai jumlah itu menang. Token pemenang terpakai; token yang kalah dikembalikan.
+- **Setelah menang:** pemenang mendapat pesanan Beli Sekarang Rp0 berstatus Menunggu dengan Lokasi COD dari tawarannya, lalu berjalan seperti pesanan biasa (donatur Terima dengan waktu COD, Selesai, atau Dibatalkan). Bila donatur atau timer membatalkan, token pemenang kembali; bila pemenang sendiri membatalkan, token tidak kembali.
+- **Sisa stok** setelah penutupan bisa ditawar lagi dengan waktu 24 jam baru.
+- Donasi yang masih punya tawaran aktif tidak bisa diturunkan sendiri. Bila admin menurunkannya atau donatur dibekukan, semua tawaran dikembalikan saat waktu habis.
+- Siapa menawar berapa tidak terlihat; member hanya melihat ringkasan (jumlah penawar, 5 tawaran tertinggi tanpa nama, tawaran dan peringkatnya sendiri).
+- **K-19** tetap berlaku: donatur boleh membatalkan pemenang dengan alasan; unit kembali ke stok untuk ditawar lagi.
 
 ### 5.8 Chat teks (K14, K15; #13)
 

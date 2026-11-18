@@ -17,4 +17,10 @@ void main() {
     expect(quotaAfterListing(3), 2);
     expect(() => quotaAfterListing(0), throwsArgumentError);
   });
+
+  test('a donation takes no quota (D-46)', () {
+    expect(canList(0, donation: true), isTrue);
+    expect(quotaAfterListing(0, donation: true), 0);
+    expect(quotaAfterListing(2, donation: true), 2);
+  });
 }

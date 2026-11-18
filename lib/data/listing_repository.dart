@@ -30,7 +30,8 @@ abstract interface class ListingRepository {
 
   Future<void> deletePhotos(List<String> paths);
 
-  /// create_listing: takes 1 quota and the listing is live at once. Sending
+  /// create_listing: takes 1 quota (none for a donation, D-46) and the
+  /// listing is live at once. Sending
   /// an id that already has the seller's listing changes nothing.
   Future<void> createListing(NewListing listing, List<String> photos);
 

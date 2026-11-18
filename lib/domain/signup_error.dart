@@ -65,6 +65,13 @@ enum SignupError {
   notParty('errorNotParty'),
   codTimeMissing('errorCodTimeMissing'),
   codTimePast('errorCodTimePast'),
+  // From place_bid, place_order and withdraw_listing (D-46).
+  donationBidOnly('errorDonationBidOnly'),
+  notDonation('errorNotDonation'),
+  biddingClosed('errorBiddingClosed'),
+  bidTooLow('errorBidTooLow'),
+  notEnoughTokens('errorNotEnoughTokens'),
+  listingHasBids('errorListingHasBids'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -118,6 +125,12 @@ SignupError signupErrorFrom(String? code, String message) {
     ('42501', 'not_party') => SignupError.notParty,
     ('23514', 'cod_time_missing') => SignupError.codTimeMissing,
     ('23514', 'cod_time_past') => SignupError.codTimePast,
+    ('23514', 'donation_bid_only') => SignupError.donationBidOnly,
+    ('23514', 'not_donation') => SignupError.notDonation,
+    ('23514', 'bidding_closed') => SignupError.biddingClosed,
+    ('23514', 'bid_too_low') => SignupError.bidTooLow,
+    ('23514', 'not_enough_tokens') => SignupError.notEnoughTokens,
+    ('23514', 'listing_has_bids') => SignupError.listingHasBids,
     _ => SignupError.unknown,
   };
 }
