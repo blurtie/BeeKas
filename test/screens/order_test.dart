@@ -9,6 +9,7 @@ import 'package:beekas/domain/signup_error.dart';
 import 'package:beekas/screens/catalog_screens.dart';
 import 'package:beekas/screens/chat_screens.dart';
 import 'package:beekas/screens/order_screens.dart';
+import 'package:beekas/ui/components.dart';
 import 'package:beekas/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -231,7 +232,10 @@ void main() {
       expect(find.text(t('bidNoBids')), findsOneWidget);
       expect(find.text(t('bidTokens').replaceAll('{n}', '5')), findsOneWidget);
       await tester.enterText(
-        find.widgetWithText(TextField, t('bidAmount')),
+        find.descendant(
+          of: find.widgetWithText(BeeTextField, t('bidAmount')),
+          matching: find.byType(TextField),
+        ),
         '3',
       );
       await tester.pump();
@@ -267,13 +271,19 @@ void main() {
       // Suggested: one more than the top bid.
       expect(find.widgetWithText(TextField, '6'), findsOneWidget);
       await tester.enterText(
-        find.widgetWithText(TextField, t('bidAmount')),
+        find.descendant(
+          of: find.widgetWithText(BeeTextField, t('bidAmount')),
+          matching: find.byType(TextField),
+        ),
         '3',
       );
       await _tapText(tester, t('bidRaise'));
       expect(find.text(t('bidMustRaise')), findsOneWidget);
       await tester.enterText(
-        find.widgetWithText(TextField, t('bidAmount')),
+        find.descendant(
+          of: find.widgetWithText(BeeTextField, t('bidAmount')),
+          matching: find.byType(TextField),
+        ),
         '9',
       );
       await _tapText(tester, t('bidRaise'));

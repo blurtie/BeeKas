@@ -310,7 +310,13 @@ class _LocationBar extends StatelessWidget {
           label: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_locationLabel(campuses, memberArea)),
+              Flexible(
+                child: Text(
+                  _locationLabel(campuses, memberArea),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               const Icon(Icons.arrow_drop_down, size: 18),
             ],
           ),
