@@ -622,3 +622,18 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 - Batas 2 donasi berjalan (D-30) dihapus; token yang membatasi.
 - Rincian di PRD-katalog 5.7. Ditegakkan di backend (`place_bid`, `close_donation_bids`, `create_listing`, `place_order`).
 
+---
+
+## D-47 — Area kampus dan filter lokasi
+
+**Status:** Arahan dosen, 19 November 2026. Rincian (pembagian area, BINUS Online, tag) dipilih Clarencia; [KONFIRMASI tim].
+
+**Keputusan:**
+- Kampus BINUS saling berjauhan, jadi member hanya bisa memesan (Booking 24 Jam, Beli Sekarang) dan menawar donasi di **area** kampusnya sendiri.
+- Area: **Jabodetabek** = Kemanggisan, Senayan, Alam Sutera, BASE, Bekasi; **Bandung**, **Malang**, dan **Semarang** masing-masing satu area.
+- **BINUS Online** tidak punya kampus fisik: membernya bisa menjangkau semua area, dan tidak ada barang yang berlokasi di BINUS Online (lokasi barang dan Lokasi COD wajib kampus fisik).
+- Barang di luar area **tetap tampil** di katalog dan detail, dengan keterangan bahwa barang itu di luar area; tombol pesan/tawar menolak dengan pesan yang jelas.
+- Foto barang memakai **tag lokasi** sesuai kampus yang diisi penjual: KMG, SNY, ALS, BASE, BKS, BDG, MLG, SMG.
+- Katalog punya **filter lokasi**: semua lokasi, satu area, atau satu kampus. Default member = areanya sendiri; tamu dan BINUS Online = semua lokasi.
+- Ditegakkan di backend: `can_reach` di `place_order` dan `place_bid`, constraint `listings_campus_physical`, parameter `p_campuses` di `catalog_listings`.
+

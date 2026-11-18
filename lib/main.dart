@@ -204,6 +204,9 @@ Widget _screenFor(BuildContext context, Account account) =>
       Destination.home => CatalogShell(
         repository: _catalogRepository,
         status: account.status,
+        campus: account.campus,
+        fullName: account.fullName,
+        onHelp: () => _help(context),
         onSell: () => _sell(context),
         onSignOut: () => _signOut(context),
         onQuota: () => _quota(context),

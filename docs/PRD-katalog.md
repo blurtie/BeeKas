@@ -201,9 +201,14 @@ Donasi = listing dengan harga Rp0 (D-28). **Memasang donasi gratis** (tidak mema
 
 **#73 (cari akun dari nomor HP):** tidak termasuk PRD ini kecuali diputuskan lain; tetap di backlog admin.
 
+### 5.9b Area kampus dan filter lokasi (D-47)
+
+- Member hanya bisa memesan dan menawar barang di area kampusnya (Jabodetabek, Bandung, Malang, Semarang); BINUS Online menjangkau semua area. Barang di luar area tetap tampil dengan keterangan.
+- Tag lokasi di foto kartu dan detail barang (ALS, KMG, BDG, ...). Filter lokasi di atas Beranda dan Kategori; default area member.
+
 ### 5.10 Profil versi Festival (K17, `daftar-6.png`)
 
-Yang dibangun: nama, badge Verified BINUS (`approved`), Pesanan Saya (Semua/Diproses/Selesai), Barang Saya, Kuota, Bantuan, Bahasa EN/ID, Keluar. Menu admin muncul untuk admin.
+Yang dibangun: nama, kampus dan tag lokasi, area jangkauan (D-47), badge Verified BINUS (`approved`), Pesanan Saya (Semua/Diproses/Selesai), Barang Saya, Kuota, Bantuan, Bahasa EN/ID, Keluar. Menu admin muncul untuk admin. **Dibangun 19 November 2026** (tab Profil menggantikan lembar Profil sementara).
 
 **Koreksi desain D-22.3 di K17:** menu **"Alamat Saya"** dihapus (tidak ada pengiriman). "Metode Pembayaran (COD)" dihapus karena hanya ada COD **K-28** (diputuskan: hapus).
 

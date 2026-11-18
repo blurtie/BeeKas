@@ -8,11 +8,14 @@ import '../data/catalog_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/access.dart';
+import '../domain/campus_area.dart';
 import '../domain/catalog.dart';
+import '../domain/registration.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
 import 'order_screens.dart';
+import 'profile_screen.dart';
 
 /// Opens Detail Barang for a listing.
 typedef _Detail = Widget Function(Listing listing);
@@ -65,9 +68,22 @@ class CatalogShell extends StatefulWidget {
     this.onChats,
     this.onChat,
     this.chats,
+    this.campus,
+    this.fullName,
+    this.onHelp,
   });
 
   final CatalogRepository repository;
+
+  /// The member's campus: decides the default location filter and which
+  /// listings can be ordered (D-47). Null for guests.
+  final Campus? campus;
+
+  /// Shown on Profil (K17).
+  final String? fullName;
+
+  /// Bantuan from Profil.
+  final VoidCallback? onHelp;
 
   /// Chat from Status Booking and Detail Pesanan (K10, K13).
   final ChatRepository? chats;
@@ -111,6 +127,7 @@ class _CatalogShellState extends State<CatalogShell> {
 
   Widget _detail(Listing listing) => ListingDetailScreen(
     listing: listing,
+    memberCampus: widget.campus,
     status: widget.status,
     orders: widget.orders,
     now: widget.now,
@@ -137,85 +154,85 @@ class _CatalogShellState extends State<CatalogShell> {
     }
   }
 
-  /// Temporary Profil until K17: Kuota and Keluar for members; guests and
-  /// accounts without them get Segera hadir.
+  /// K17 Profil for members (they have Kuota); guests and accounts without
+  /// it get Segera hadir, with Keluar when signed in.
   void _profile() {
-    final onQuota = widget.onQuota;
-    final onSignOut = widget.onSignOut;
-    final onMyListings = widget.onMyListings;
-    if (onQuota == null) return showComingSoon(context, onSignOut: onSignOut);
-    showModalBottomSheet<void>(
+    if (widget.onQuota == null) {
+      return showComingSoon(context, onSignOut: widget.onSignOut);
+    }
+    setState(() => _tab = 3);
+  }
+
+  /// D-47 location filter; null is every location. Members start in their
+  /// own area, guests and BINUS Online everywhere.
+  late List<Campus>? _campuses = switch (widget.campus?.area) {
+    final area? => campusesIn(area),
+    null => null,
+  };
+
+  Future<void> _chooseLocation() async {
+    final picked = await showModalBottomSheet<(List<Campus>?,)>(
       context: context,
-      builder: (sheet) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.orders case final orders?)
-              ListTile(
-                leading: const Icon(Icons.receipt_long_outlined),
-                title: Text(t('ordersTitle')),
-                onTap: () {
-                  Navigator.pop(sheet);
-                  Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OrdersScreen(
-                        repository: orders,
-                        now: widget.now,
-                        chats: widget.chats,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            if (onMyListings != null)
-              ListTile(
-                leading: const Icon(Icons.grid_view_outlined),
-                title: Text(t('profileMyListings')),
-                onTap: () {
-                  Navigator.pop(sheet);
-                  onMyListings();
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: Text(t('profileQuota')),
-              onTap: () {
-                Navigator.pop(sheet);
-                onQuota();
-              },
-            ),
-            if (onSignOut != null)
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(t('signOut')),
-                onTap: () {
-                  Navigator.pop(sheet);
-                  onSignOut();
-                },
-              ),
-          ],
-        ),
+      isScrollControlled: true,
+      builder: (sheet) => _LocationSheet(
+        selected: _campuses,
+        memberArea: widget.campus?.area,
       ),
     );
+    if (picked != null && mounted) {
+      setState(() {
+        _campuses = picked.$1;
+        _refresh++;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _tab == 0
-            ? _HomeView(
-                key: ValueKey(_refresh),
-                repository: widget.repository,
-                onSoon: _soon,
-                detail: _detail,
+        child: _tab == 3
+            ? ProfileView(
+                fullName: widget.fullName,
+                status: widget.status,
+                campus: widget.campus,
+                orders: widget.orders,
+                chats: widget.chats,
+                now: widget.now,
+                onMyListings: widget.onMyListings,
+                onQuota: widget.onQuota,
+                onHelp: widget.onHelp,
+                onSignOut: widget.onSignOut,
               )
-            : _CategoryView(
-                key: ValueKey(_refresh),
-                repository: widget.repository,
-                detail: _detail,
-                onBack: () => setState(() => _tab = 0),
+            : Column(
+                children: [
+                  _LocationBar(
+                    campuses: _campuses,
+                    memberArea: widget.campus?.area,
+                    onTap: _chooseLocation,
+                  ),
+                  Expanded(
+                    child: _tab == 0
+                        ? _HomeView(
+                            key: ValueKey(_refresh),
+                            repository: LocatedCatalog(
+                              widget.repository,
+                              _campuses,
+                            ),
+                            onSoon: _soon,
+                            detail: _detail,
+                          )
+                        : _CategoryView(
+                            key: ValueKey(_refresh),
+                            repository: LocatedCatalog(
+                              widget.repository,
+                              _campuses,
+                            ),
+                            detail: _detail,
+                            onBack: () => setState(() => _tab = 0),
+                          ),
+                  ),
+                ],
               ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -249,9 +266,168 @@ class _CatalogShellState extends State<CatalogShell> {
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
             label: t('navProfile'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// D-47: the filter's label.
+String _locationLabel(List<Campus>? campuses, CampusArea? memberArea) {
+  if (campuses == null) return t('locationAll');
+  for (final area in CampusArea.values) {
+    if (listEquals(campuses, campusesIn(area))) {
+      return t(area == memberArea ? 'locationMyArea' : 'locationArea')
+          .replaceAll('{area}', t('area_${area.name}'));
+    }
+  }
+  if (campuses.length == 1) return t(campuses.single.copyKey);
+  return t('locationSome').replaceAll('{n}', '${campuses.length}');
+}
+
+/// Above Beranda and Kategori: which locations the catalog shows (D-47).
+class _LocationBar extends StatelessWidget {
+  const _LocationBar({
+    required this.campuses,
+    required this.memberArea,
+    required this.onTap,
+  });
+  final List<Campus>? campuses;
+  final CampusArea? memberArea;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_pad, 8, _pad, 0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ActionChip(
+          avatar: const Icon(Icons.place_outlined, size: 18),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_locationLabel(campuses, memberArea)),
+              const Icon(Icons.arrow_drop_down, size: 18),
+            ],
+          ),
+          tooltip: t('locationFilter'),
+          onPressed: onTap,
+        ),
+      ),
+    );
+  }
+}
+
+/// Pops `(campuses,)`: null for every location, an area, or one campus.
+class _LocationSheet extends StatelessWidget {
+  const _LocationSheet({required this.selected, required this.memberArea});
+  final List<Campus>? selected;
+  final CampusArea? memberArea;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    Widget option(String label, List<Campus>? value, {String? tag}) {
+      final on = listEquals(selected, value);
+      return ListTile(
+        leading: tag == null
+            ? const Icon(Icons.public)
+            : SizedBox(width: 44, child: CampusTag.text(tag)),
+        title: Text(label),
+        trailing: on ? const Icon(Icons.check, color: BeeColors.link) : null,
+        selected: on,
+        onTap: () => Navigator.pop(context, (value,)),
+      );
+    }
+
+    return SafeArea(
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        builder: (context, scroll) => ListView(
+          controller: scroll,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(_pad),
+              child: Text(t('locationFilter'), style: textTheme.titleMedium),
+            ),
+            if (memberArea case final area?)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_pad, 0, _pad, 8),
+                child: Text(
+                  t('locationReachNote').replaceAll(
+                    '{area}',
+                    t('area_${area.name}'),
+                  ),
+                  style: textTheme.bodySmall,
+                ),
+              ),
+            option(t('locationAll'), null),
+            for (final area in CampusArea.values) ...[
+              const Divider(height: 1),
+              option(
+                t(area == memberArea ? 'locationMyArea' : 'locationArea')
+                    .replaceAll('{area}', t('area_${area.name}')),
+                campusesIn(area),
+                tag: campusesIn(area).length == 1
+                    ? campusesIn(area).single.tag
+                    : 'JBD',
+              ),
+              if (campusesIn(area).length > 1)
+                for (final c in campusesIn(area))
+                  Padding(
+                    padding: const EdgeInsets.only(left: 24),
+                    child: option(t(c.copyKey), [c], tag: c.tag),
+                  ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The campus tag on listing photos: ALS, KMG, BDG... (D-47).
+class CampusTag extends StatelessWidget {
+  CampusTag(Campus campus, {super.key})
+    : tag = campus.tag,
+      label = t(campus.copyKey);
+  const CampusTag.text(this.tag, {super.key}) : label = null;
+  final String tag;
+
+  /// Read out instead of the tag.
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      excludeSemantics: label != null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: BeeColors.textHeading.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(BeeRadius.field),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.place, size: 12, color: Colors.white),
+            const SizedBox(width: 2),
+            Text(
+              tag,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -691,6 +867,11 @@ class _ListingCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   ListingPhoto(listing.photos.firstOrNull),
+                  Positioned(
+                    left: 8,
+                    bottom: 8,
+                    child: CampusTag(listing.campus),
+                  ),
                   if (listing.isDonation)
                     Positioned(
                       left: 8,
@@ -921,8 +1102,13 @@ class ListingDetailScreen extends StatefulWidget {
     this.chats,
     this.now = DateTime.now,
     this.onAccount,
+    this.memberCampus,
   });
   final Listing listing;
+
+  /// The member's campus; orders and bids outside its area are refused
+  /// (D-47). Null for guests and accounts without a campus.
+  final Campus? memberCampus;
 
   /// See [CatalogShell.chats].
   final ChatRepository? chats;
@@ -988,6 +1174,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           );
         return;
       }
+      // D-47: the server refuses it too (out_of_area).
+      if (!l.isMine && !canReach(widget.memberCampus, l.campus)) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(t('errorOutOfArea'))));
+        return;
+      }
       // Approved but no order backend wired (only in tests and previews).
       if (orders == null) return soon();
       Navigator.push<void>(
@@ -1018,6 +1211,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           children: [
                             for (final url in l.photos) ListingPhoto(url),
                           ],
+                        ),
+                        Positioned(
+                          left: 12,
+                          bottom: 12,
+                          child: CampusTag(l.campus),
                         ),
                         Positioned(
                           right: 12,
@@ -1184,6 +1382,26 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.status != null &&
+                  !l.isMine &&
+                  !canReach(widget.memberCampus, l.campus)) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: BeeColors.error),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t('outOfAreaNote').replaceAll(
+                          '{area}',
+                          t('area_${l.campus.area!.name}'),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
               // D-46: donations are bid on with tokens; the donor follows
               // the bids from the same screen.
               if (l.isDonation) ...[

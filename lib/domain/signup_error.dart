@@ -72,6 +72,10 @@ enum SignupError {
   bidTooLow('errorBidTooLow'),
   notEnoughTokens('errorNotEnoughTokens'),
   listingHasBids('errorListingHasBids'),
+  // From place_order and place_bid (D-47).
+  outOfArea('errorOutOfArea'),
+  // listings_campus_physical: the form checks it first.
+  listingCampus('errorListingCampus'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -131,6 +135,9 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'bid_too_low') => SignupError.bidTooLow,
     ('23514', 'not_enough_tokens') => SignupError.notEnoughTokens,
     ('23514', 'listing_has_bids') => SignupError.listingHasBids,
+    ('23514', 'out_of_area') => SignupError.outOfArea,
+    ('23514', _) when message.contains('listings_campus_physical') =>
+      SignupError.listingCampus,
     _ => SignupError.unknown,
   };
 }

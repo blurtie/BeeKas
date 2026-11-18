@@ -18,6 +18,7 @@ Account _account(
   hasPassword: hasPassword,
   hasConsent: hasConsent,
   rejection: null,
+  campus: Campus.alamSutera,
 );
 
 void main() {

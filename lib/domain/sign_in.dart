@@ -18,6 +18,9 @@ typedef Account = ({
   bool hasConsent,
   // The latest rejection, read only while rejected (L12).
   Rejection? rejection,
+  // Null only for seeded admins. Decides which listings the member can
+  // reach (D-47).
+  Campus? campus,
 });
 
 enum Destination {

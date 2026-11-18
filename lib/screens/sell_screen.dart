@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../config/copy.dart';
 import '../data/listing_repository.dart';
 import '../data/signup_repository.dart';
+import '../domain/campus_area.dart';
 import '../domain/catalog.dart';
 import '../domain/photo.dart';
 import '../domain/quota.dart';
@@ -154,6 +155,10 @@ class _SellScreenState extends State<SellScreen> {
       _postError = null;
     });
     if (errors.isNotEmpty) return;
+    if (!(_campus ?? _seller!.campus).isPhysical) {
+      setState(() => _postError = t('sellChooseLocation'));
+      return;
+    }
     setState(() => _posting = true);
     try {
       await publishListing(widget.repository, (
@@ -169,7 +174,9 @@ class _SellScreenState extends State<SellScreen> {
       setState(() {
         _posting = false;
         _postError = switch (error) {
-          SignupError.noQuota || SignupError.notAllowed => t(error!.copyKey),
+          SignupError.noQuota ||
+          SignupError.notAllowed ||
+          SignupError.listingCampus => t(error!.copyKey),
           _ => t('sellFailed'),
         };
       });
@@ -391,9 +398,10 @@ class _SellScreenState extends State<SellScreen> {
       const SizedBox(height: 16),
       BeeDropdownField<Campus>(
         label: t('location'),
-        items: Campus.values,
+        // D-47: items are met at a physical campus, never BINUS Online.
+        items: listingCampuses,
         itemLabel: (c) => t(c.copyKey),
-        value: _campus ?? seller.campus,
+        value: _campus ?? (seller.campus.isPhysical ? seller.campus : null),
         onChanged: (c) => setState(() => _campus = c),
       ),
       const SizedBox(height: 24),

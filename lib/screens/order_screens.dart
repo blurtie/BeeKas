@@ -8,6 +8,7 @@ import '../data/chat_repository.dart';
 import '../data/order_repository.dart';
 import '../data/signup_repository.dart';
 import '../domain/bid.dart';
+import '../domain/campus_area.dart';
 import '../domain/catalog.dart';
 import '../domain/order.dart';
 import '../domain/registration.dart';
@@ -117,7 +118,7 @@ class _LocationDialogState extends State<_LocationDialog> {
             decoration: InputDecoration(labelText: t('campus')),
             isExpanded: true,
             items: [
-              for (final c in Campus.values)
+              for (final c in listingCampuses)
                 DropdownMenuItem(value: c, child: Text(t(c.copyKey))),
             ],
             onChanged: (c) => setState(() => _campus = c ?? _campus),
@@ -1045,12 +1046,16 @@ class OrdersScreen extends StatefulWidget {
     this.chats,
     required this.repository,
     this.now = DateTime.now,
+    this.initialFilter,
   });
   final OrderRepository repository;
   final DateTime Function() now;
 
   /// Chat Penjual / Chat Pembeli (#86); null shows Segera hadir.
   final ChatRepository? chats;
+
+  /// The chip selected first: Profil's Diproses and Selesai (K17).
+  final OrderStatus? initialFilter;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -1060,7 +1065,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _orders = widget.repository.mine();
 
   /// The K12 chip (D-36); null is Semua.
-  OrderStatus? _filter;
+  late OrderStatus? _filter = widget.initialFilter;
 
   void _reload() {
     setState(() {

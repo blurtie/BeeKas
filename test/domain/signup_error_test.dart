@@ -174,9 +174,20 @@ void main() {
       ('bid_too_low', SignupError.bidTooLow),
       ('not_enough_tokens', SignupError.notEnoughTokens),
       ('listing_has_bids', SignupError.listingHasBids),
+      ('out_of_area', SignupError.outOfArea),
     ]) {
       expect(signupErrorFrom('23514', message), error, reason: message);
     }
+  });
+
+  test('maps the listing location constraint (D-47)', () {
+    expect(
+      signupErrorFrom(
+        '23514',
+        'new row for relation "listings" violates check constraint "listings_campus_physical"',
+      ),
+      SignupError.listingCampus,
+    );
   });
 
   test('anything else is unknown', () {
