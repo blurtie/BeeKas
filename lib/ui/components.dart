@@ -160,10 +160,11 @@ class BeeFormError extends StatelessWidget {
 
 /// Top bar with a back button; [title] holds e.g. the Daftar stepper.
 class BeeHeader extends StatelessWidget implements PreferredSizeWidget {
-  const BeeHeader({super.key, this.title, this.onBack});
+  const BeeHeader({super.key, this.title, this.onBack, this.actions});
 
   final Widget? title;
   final VoidCallback? onBack;
+  final List<Widget>? actions;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -178,6 +179,7 @@ class BeeHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: title,
       centerTitle: true,
+      actions: actions,
     );
   }
 }

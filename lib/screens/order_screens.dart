@@ -1632,7 +1632,7 @@ class _CancelDialogState extends State<_CancelDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final r in CancelReason.values)
+                for (final r in CancelReason.choosable)
                   ChoiceChip(
                     label: Text(t(r.copyKey)),
                     selected: _reason == r,
