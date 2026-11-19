@@ -638,3 +638,15 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 - Kampus "BASE" dari D-12 diganti **ASO** (BINUS ASO School of Engineering, area Alam Sutera); nilai enum `base` di-rename menjadi `aso` (migration `20261119130000_campus_aso.sql`).
 - Ditegakkan di backend: `can_reach` di `place_order` dan `place_bid`, constraint `listings_campus_physical`, parameter `p_campuses` di `catalog_listings`.
 
+
+---
+
+## D-48 — Penyedia email cloud untuk Festival
+
+**Status:** Dikonfirmasi Faiqi, 19 November 2026 (tiket T0 #80, PR T12 #92)
+
+**Keputusan:**
+- OTP Auth (Confirm signup, Magic link, Reset password) dikirim layanan Auth Supabase lewat **SMTP Gmail** akun `beekas2026@gmail.com` dengan App Password (`smtp.gmail.com`, port 587). Diisi Faiqi di dashboard (Authentication → SMTP); bukan Edge Function.
+- Email keputusan verifikasi (`send-decision-emails`) dikirim lewat **API HTTP Brevo** (`POST https://api.brevo.com/v3/smtp/email`), karena Edge Functions memblokir port 587. Pengirim `beekas2026@gmail.com` yang diverifikasi di Brevo. Secret: `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`.
+- Risiko email masuk spam (pengirim Gmail tanpa domain sendiri) diterima untuk Festival. Setelah Festival pindah ke domain sendiri.
+- App Password dan API key hanya di dashboard; tidak pernah di repo, issue, PR, atau chat.
