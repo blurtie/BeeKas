@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(16);
 
 create function pg_temp.act_as(p_id uuid) returns void
 language sql as $$
@@ -50,6 +50,19 @@ select pg_temp.act_as(:s);
 select lives_ok(format('select public.relist_listing(%L)', current_setting('t.d1')),
   'an expired donation frees a slot for a relist');
 reset role;
+
+-- 20261120140000: units given away (stock 0) no longer count; live ones still do.
+reset role;
+update public.listings set stock_left = 0
+  where seller_id = :s and is_donation and public.is_live(listings);
+select pg_temp.act_as(:s);
+select lives_ok('select pg_temp.list(true)', 'three donations given away (stock 0) do not count');
+select set_config('t.d5', pg_temp.list(true)::text, true);
+select set_config('t.d6', pg_temp.list(true)::text, true);
+select throws_ok('select pg_temp.list(true)', '23514', 'donation_listing_limit',
+  'three live donations block a fourth');
+reset role;
+update public.listings set stock_left = 1 where id = current_setting('t.d3')::uuid;
 
 -- D-47 Lokasi COD ----------------------------------------------------------------------------
 
