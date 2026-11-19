@@ -88,6 +88,9 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         _snack('errorListingHasOrders');
         await _load();
       } else if (e is SignupException &&
+          e.error == SignupError.donationListingLimit) {
+        _snack('errorDonationListingLimit');
+      } else if (e is SignupException &&
           e.error == SignupError.listingHasBids) {
         _snack('errorListingHasBids');
         await _load();

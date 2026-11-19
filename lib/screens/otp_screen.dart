@@ -115,8 +115,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = t('otpSubtitle')
-        .replaceFirst('{email}', widget.registration.email);
+    final subtitle =
+        '${t('otpSubtitle').replaceFirst('{email}', widget.registration.email)}'
+        '\n${t('otpJunkHint')}';
     if (_alreadyRegistered) {
       return BeeSignupPage(
         title: t('otpTitle'),

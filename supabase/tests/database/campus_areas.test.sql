@@ -58,9 +58,11 @@ select throws_ok(format('update public.listings set campus = ''online'' where id
 -- Ordering ------------------------------------------------------------------------------------
 
 create function pg_temp.place(p_listing uuid) returns timestamptz
-language sql as $$ select public.place_order(p_listing, 'booking', 'alam_sutera', null) $$;
+language sql as $$ select public.place_order(p_listing, 'booking',
+  (select campus from public.listings where id = p_listing), null) $$;
 create function pg_temp.bid(p_listing uuid) returns timestamptz
-language sql as $$ select public.place_bid(p_listing, 1, 'alam_sutera', null) $$;
+language sql as $$ select public.place_bid(p_listing, 1,
+  (select campus from public.listings where id = p_listing), null) $$;
 
 select pg_temp.act_as(:b);
 select throws_ok(format('select pg_temp.place(%L)', :las), '23514', 'out_of_area',

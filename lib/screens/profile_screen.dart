@@ -72,11 +72,7 @@ class ProfileView extends StatelessWidget {
             const CircleAvatar(
               radius: 36,
               backgroundColor: BeeColors.warningSurface,
-              child: Icon(
-                Icons.person,
-                size: 40,
-                color: BeeColors.textHeading,
-              ),
+              child: Icon(Icons.person, size: 40, color: BeeColors.textHeading),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -119,10 +115,8 @@ class ProfileView extends StatelessWidget {
           Text(
             c.area == null
                 ? t('profileAreaAll')
-                : t('profileArea').replaceAll(
-                    '{area}',
-                    t('area_${c.area!.name}'),
-                  ),
+                : t('profileArea')
+                      .replaceAll('{area}', t('area_${c.area!.name}')),
             style: textTheme.bodySmall,
           ),
         ],

@@ -244,7 +244,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.calls, ['placeBid Buku Exploring English 3 alam_sutera ']);
       expect(
-        find.text(t('bidMine').replaceAll('{n}', '3').replaceAll('{rank}', '1')),
+        find.text(
+          t('bidMine').replaceAll('{n}', '3').replaceAll('{rank}', '1'),
+        ),
         findsOneWidget,
       );
       expect(find.text(t('bidWinning')), findsOneWidget);

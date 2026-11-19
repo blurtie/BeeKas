@@ -532,10 +532,9 @@ class _DonationBidScreenState extends State<DonationBidScreen>
     final status = switch (s.endsAt) {
       null => t('bidNoBids'),
       final DateTime end when isBiddingOver(end, now) => t('bidClosing'),
-      final DateTime end => t('bidClosesIn').replaceAll(
-        '{time}',
-        _hoursMinutes(remainingBidWindow(end, now)),
-      ),
+      final DateTime end => t(
+        'bidClosesIn',
+      ).replaceAll('{time}', _hoursMinutes(remainingBidWindow(end, now))),
     };
     return Container(
       padding: const EdgeInsets.all(_pad),
@@ -572,7 +571,8 @@ class _DonationBidScreenState extends State<DonationBidScreen>
                 ),
                 if (s.topAmounts.isNotEmpty)
                   Text(
-                    t('bidTop').replaceAll('{amounts}', s.topAmounts.join(', ')),
+                    t('bidTop')
+                        .replaceAll('{amounts}', s.topAmounts.join(', ')),
                     style: textTheme.bodySmall,
                   ),
               ],
@@ -607,8 +607,7 @@ class _DonationBidScreenState extends State<DonationBidScreen>
         t('bidTokens').replaceAll('{n}', '$_tokens'),
         style: textTheme.bodyMedium,
       ),
-      if (_tokens == 0)
-        Text(t('bidBuyTokens'), style: textTheme.bodySmall),
+      if (_tokens == 0) Text(t('bidBuyTokens'), style: textTheme.bodySmall),
       const SizedBox(height: 16),
       BeeTextField(
         label: t('bidAmount'),

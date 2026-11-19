@@ -54,9 +54,7 @@ void main() {
       expect(find.text(t('locationAll')), findsOneWidget);
     });
 
-    testWidgets('members start in their area and can widen it', (
-      tester,
-    ) async {
+    testWidgets('members start in their area and can widen it', (tester) async {
       final repo = FakeCatalogRepository([_als, _bdg]);
       await _pump(tester, _shell(repo, campus: Campus.kemanggisan));
       expect(repo.lastCampuses, [
@@ -66,9 +64,8 @@ void main() {
         Campus.aso,
         Campus.bekasi,
       ]);
-      final myArea = t(
-        'locationMyArea',
-      ).replaceAll('{area}', t('area_jabodetabek'));
+      final myArea = t('locationMyArea')
+          .replaceAll('{area}', t('area_jabodetabek'));
       expect(find.text(myArea), findsOneWidget);
       expect(find.text('Kipas Angin'), findsOneWidget);
       expect(find.text('Rice Cooker'), findsNothing);
