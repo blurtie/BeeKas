@@ -29,11 +29,16 @@ enum CancelReason {
   notAsDescribed('not_as_described'),
   cannotMeet('cannot_meet'),
   soldElsewhere('sold_elsewhere'),
-  other('other');
+  other('other'),
+  // K-23: set by moderation (Diturunkan admin), never chosen by a party.
+  adminRemoved('admin_removed');
 
   const CancelReason(this.code);
   final String code;
   String get copyKey => 'cancelReason_$code';
+
+  /// What a party picks from in Batalkan / Tolak.
+  static final choosable = values.where((r) => r != adminRemoved).toList();
 
   static CancelReason fromCode(String code) =>
       values.firstWhere((r) => r.code == code);

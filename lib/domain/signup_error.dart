@@ -81,6 +81,11 @@ enum SignupError {
   // From place_order, place_bid and update_cod: the Lokasi COD (D-47).
   codCampusOnline('errorCodCampusOnline'),
   codOutOfArea('errorCodOutOfArea'),
+  // From submit_report (#87).
+  alreadyReported('errorAlreadyReported'),
+  notParticipant('errorNotParticipant'),
+  // From dismiss_report: decided by another admin meanwhile.
+  reportClosed('errorReportClosed'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -144,6 +149,9 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'donation_listing_limit') => SignupError.donationListingLimit,
     ('23514', 'cod_campus_online') => SignupError.codCampusOnline,
     ('23514', 'cod_out_of_area') => SignupError.codOutOfArea,
+    ('23514', 'already_reported') => SignupError.alreadyReported,
+    ('42501', 'not_participant') => SignupError.notParticipant,
+    ('23514', 'report_closed') => SignupError.reportClosed,
     ('23514', _) when message.contains('listings_campus_physical') =>
       SignupError.listingCampus,
     _ => SignupError.unknown,
