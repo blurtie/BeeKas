@@ -121,3 +121,27 @@ Migration `20261105120000_orders.sql` menjadwalkan job `pg_cron` bernama `order-
    select id from public.orders where status = 'waiting' and hold_until < now() - interval '15 minutes';
    select id from public.orders where status = 'processing' and cod_at < now() - interval '3 days 15 minutes';
    ```
+
+## 10. Signing APK rilis (#92)
+
+Build rilis (`flutter build apk --release`) ditandatangani dengan kunci rilis dari `android/key.properties`. Bila file itu tidak ada atau kurang isinya, build **gagal** dengan pesan `Release signing: android/key.properties is missing ...`; tidak pernah jatuh ke kunci debug. Keystore dan kata sandinya dibuat dan disimpan manusia, **di luar repo**, dengan minimal dua pemegang. `key.properties`, `*.jks`, dan `*.keystore` sudah di `android/.gitignore`. Nilai kata sandi tidak pernah ditulis di repo, issue, PR, atau chat.
+
+1. Buat keystore (sekali saja; `keytool` ikut JDK). Simpan di luar folder repo:
+   ```sh
+   keytool -genkeypair -v -keystore <path di luar repo>/beekas-release.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias beekas
+   ```
+   `keytool` menanyakan kata sandi keystore dan kunci; isi dengan nilai acak yang panjang.
+2. Buat `android/key.properties` (tidak di-commit) dengan empat baris:
+   ```properties
+   storePassword=<kata sandi keystore>
+   keyPassword=<kata sandi kunci>
+   keyAlias=beekas
+   storeFile=<path absolut ke beekas-release.jks>
+   ```
+   `storeFile` relatif dibaca dari folder `android/`.
+3. Cadangkan `.jks` dan kedua kata sandi di dua tempat milik dua orang berbeda (mis. pengelola kata sandi). Kunci yang hilang berarti APK baru tidak bisa memperbarui APK lama.
+4. Build dengan nilai publik cloud dari file yang tidak di-commit (`dart_defines*.json` diabaikan git, kecuali `dart_defines.example.json`):
+   ```sh
+   flutter build apk --release --dart-define-from-file=dart_defines.cloud.json
+   ```
+5. Cek tanda tangan: `keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk` harus menampilkan sertifikat rilis, bukan `CN=Android Debug`.

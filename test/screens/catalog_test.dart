@@ -341,6 +341,21 @@ void main() {
     expect(find.text(t('chatNeedsApproval')), findsOneWidget);
   });
 
+  testWidgets('no heart (Favorit) on Beranda, cards or detail until #89', (
+    tester,
+  ) async {
+    expect(favoritesEnabled, isFalse);
+    await _pump(tester, FakeCatalogRepository([_macbook]));
+    await tester.pumpAndSettle();
+    expect(find.text('Macbook Air M1'), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border), findsNothing);
+
+    await tester.tap(find.text('Macbook Air M1'));
+    await tester.pumpAndSettle();
+    expect(find.text(t('chatSeller')), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border), findsNothing);
+  });
+
   testWidgets('Chat Penjual opens the chat for approved members (5.8)', (
     tester,
   ) async {
