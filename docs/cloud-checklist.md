@@ -223,6 +223,30 @@ Wi-Fi mati di kedua HP, supaya tidak ada ketergantungan pada LAN laptop. Pasang 
 3. HP A pasang listing. HP B (akun lain, area sama) melihatnya di katalog, memesan, lalu chat dua arah.
 4. Bayar kuota dengan QRIS asli → admin konfirmasi.
 5. Lupa kata sandi di HP B → OTP sampai.
+6. Donasi lewat tawaran token (D-46) tanpa menunggu 24 jam. Ini **satu-satunya** perubahan data lewat SQL selama smoke test.
+   1. HP B pasang listing **donasi**. HP A (area sama) cek saldo di layar Kuota (= 1), lalu tawar 1 token. Saldo HP A langsung jadi 0 (token ditahan).
+   2. Ambil id listing dan pastikan waktunya sudah berjalan:
+      ```sql
+      select id, title, bid_ends_at, stock_left from public.listings
+      where is_donation and bid_ends_at is not null order by created_at desc;
+      ```
+   3. Majukan waktu habis **listing itu saja**. Harus mengembalikan tepat 1 baris:
+      ```sql
+      update public.listings set bid_ends_at = now() - interval '1 minute'
+      where id = '<id listing>' and is_donation and bid_ends_at is not null
+      returning id, title, bid_ends_at;
+      ```
+   4. Tunggu 1–2 menit (cron `donation-bids` tiap menit memanggil `close_donation_bids()`), lalu cek:
+      ```sql
+      select b.status, b.amount, b.order_id is not null as has_order, o.price, o.status as order_status,
+        (select balance from public.quota_balances where member_id = b.bidder_id) as bidder_balance,
+        l.bid_ends_at, l.stock_left
+      from public.donation_bids b
+      join public.listings l on l.id = b.listing_id
+      left join public.orders o on o.id = b.order_id
+      where b.listing_id = '<id listing>';
+      ```
+      Harus: `status = won`, `has_order = true`, `price = 0`, `order_status = waiting`, `bidder_balance = 0` (token pemenang terpakai, tidak dikembalikan), `bid_ends_at` null, `stock_left` berkurang 1.
 
 ## Pemantauan
 
