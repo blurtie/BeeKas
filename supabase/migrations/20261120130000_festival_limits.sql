@@ -1,7 +1,8 @@
 -- Small fixes before BINUS Festival (25 November 2026).
 -- - D-51: at most 3 active donation listings per member, since donations are free to
---   list (D-46). Active: not removed, not withdrawn, not expired. Enforced in
---   create_listing and relist_listing.
+--   list (D-46). Active = live (is_live, PRD-katalog 7.1): not removed, not withdrawn,
+--   not expired, stock left. A donation whose units were all given away no longer
+--   counts. Enforced in create_listing and relist_listing.
 -- - D-47: the Lokasi COD is a physical campus (not BINUS Online) in the buyer's area.
 --   Enforced in place_order, place_bid and update_cod (the same column, set later).
 
@@ -13,9 +14,8 @@ set search_path = ''
 as $$
 begin
   perform pg_advisory_xact_lock(hashtextextended('donation-listings:' || p_member::text, 0));
-  if (select count(*) from public.listings
-      where seller_id = p_member and is_donation and removed_at is null
-        and withdrawn_at is null and expires_at > now()) >= 3 then
+  if (select count(*) from public.listings l
+      where l.seller_id = p_member and l.is_donation and public.is_live(l)) >= 3 then
     raise exception 'donation_listing_limit' using errcode = 'check_violation';
   end if;
 end;

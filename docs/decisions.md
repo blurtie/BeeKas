@@ -658,6 +658,6 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 **Status:** Dikonfirmasi Faiqi, 20 November 2026
 
 **Keputusan:**
-- Satu member maksimal punya **3 listing donasi aktif**. Aktif artinya tidak diturunkan (admin atau sendiri) dan belum kedaluwarsa. Tujuannya mencegah spam, karena sejak D-46 memasang donasi tidak memotong kuota.
+- Satu member maksimal punya **3 listing donasi aktif**. Aktif artinya masih tayang: tidak diturunkan (admin atau sendiri), belum kedaluwarsa, dan stoknya belum habis. Donasi yang semua unitnya sudah diberikan tidak dihitung. Tujuannya mencegah spam, karena sejak D-46 memasang donasi tidak memotong kuota.
 - Listing jual tidak terkena batas ini, karena sudah dibatasi kuota.
 - Ditegakkan di backend: `create_listing` dan `relist_listing` menolak dengan `donation_listing_limit` (migration `20261120130000_festival_limits.sql`).
