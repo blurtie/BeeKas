@@ -283,7 +283,7 @@ Buka ulang aplikasi → konsol admin muncul.
 4. Lupa kata sandi di Member 2 → OTP sampai → masuk dengan kata sandi baru. (Sudah teruji juga lewat pemulihan pendaftaran Admin.)
 
 **12.D Donasi lewat tawaran token (D-46) tanpa menunggu 24 jam.** Ini **satu-satunya** perubahan data lewat SQL selama smoke test.
-1. Member 1 pasang listing **donasi** (butuh kuota; pakai saldo dari 12.C.3).
+1. Member 1 pasang listing **donasi**. Saldo Member 1 tidak berubah: listing donasi tidak memakai kuota (D-46).
 2. Member 2 cek layar Kuota: saldo harus **1** (belum dipakai karena Member 2 hanya membeli). Lalu tawar 1 token. Saldo langsung jadi 0 (token ditahan).
 3. Ambil id listing:
    ```sql
