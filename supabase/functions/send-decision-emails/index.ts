@@ -7,8 +7,28 @@ import { env, fromCron, rpc } from "../_shared/cron.ts";
 type Email = { id: number; recipient: string; subject: string; body: string };
 type Send = (e: Email) => Promise<void>;
 
-// One sender per EMAIL_API mode. The cloud provider is added once it is chosen.
+// Secrets each EMAIL_API mode needs. Missing ones are logged by name only, never by value.
+const required: Record<string, string[]> = {
+  mailpit: ["EMAIL_FROM", "MAILPIT_URL"],
+  brevo: ["BREVO_API_KEY", "EMAIL_FROM", "EMAIL_FROM_NAME"],
+};
+
+// One sender per EMAIL_API mode. Cloud uses Brevo (T0 #80): EMAIL_API unset defaults to it.
 const senders: Record<string, Send> = {
+  // https://developers.brevo.com/reference/sendtransacemail : 201 { messageId }
+  brevo: async (e) => {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", "api-key": env("BREVO_API_KEY") },
+      body: JSON.stringify({
+        sender: { name: env("EMAIL_FROM_NAME"), email: env("EMAIL_FROM") },
+        to: [{ email: e.recipient }],
+        subject: e.subject,
+        textContent: e.body,
+      }),
+    });
+    if (!res.ok) throw new Error(`brevo ${res.status}: ${await res.text()}`);
+  },
   mailpit: async (e) => {
     const from = parseFrom(env("EMAIL_FROM"));
     const res = await fetch(`${env("MAILPIT_URL")}/api/v1/send`, {
@@ -30,12 +50,17 @@ Deno.serve(async (req) => {
   if (!(await fromCron(req, "decision_emails_cron_secret"))) {
     return new Response("unauthorized", { status: 401 });
   }
-  const mode = env("EMAIL_API");
+  const mode = env("EMAIL_API") || "brevo";
   const send = senders[mode];
+  const missing = (required[mode] ?? []).filter((k) => !env(k));
   // Not configured is not a send failure: claim nothing, rows stay pending with attempts as is.
   if (!send) {
-    console.warn(`send-decision-emails: EMAIL_API "${mode}" is not configured or not implemented; nothing sent`);
+    console.warn(`send-decision-emails: EMAIL_API "${mode}" is not implemented; nothing sent`);
     return Response.json({ sent: 0, skipped: true });
+  }
+  if (missing.length) {
+    console.error(`send-decision-emails: missing secrets for "${mode}": ${missing.join(", ")}; nothing sent`);
+    return Response.json({ sent: 0, skipped: true, missing });
   }
   const emails: Email[] = await rpc("claim_decision_emails", {});
   let sent = 0;
