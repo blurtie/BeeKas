@@ -246,39 +246,67 @@ Build rilis ditandatangani kunci dari `android/key.properties`. Bila file itu ti
    ```
    Harus tanpa error dan `Signer #1 certificate DN` = sertifikat rilis, bukan `CN=Android Debug`.
 
-## 12. Smoke test dua HP lewat data seluler
+## 12. Smoke test tiga perangkat lewat data seluler
 
-Wi-Fi mati di kedua HP, supaya tidak ada ketergantungan pada LAN laptop. Pasang APK dari langkah 11.
+Admin saat ini hanya membuka konsol admin (Verifikasi, Payments, Announcements), tanpa katalog. Jadi admin **tidak** dipakai untuk memesan atau menawar.
 
-1. HP A: daftar dengan email BINUS → OTP sampai → foto kartu dan selfie terkirim.
-2. Admin menyetujui → email keputusan sampai (lewat Brevo; cek Spam). SQL: `select status, attempts, last_error from public.decision_emails order by id desc limit 3;` harus `sent`.
-3. HP A pasang listing. HP B (akun lain, area sama) melihatnya di katalog, memesan, lalu chat dua arah.
-4. Bayar kuota dengan QRIS asli → admin konfirmasi.
-5. Lupa kata sandi di HP B → OTP sampai.
-6. Donasi lewat tawaran token (D-46) tanpa menunggu 24 jam. Ini **satu-satunya** perubahan data lewat SQL selama smoke test.
-   1. HP B pasang listing **donasi**. HP A (area sama) cek saldo di layar Kuota (= 1), lalu tawar 1 token. Saldo HP A langsung jadi 0 (token ditahan).
-   2. Ambil id listing dan pastikan waktunya sudah berjalan:
-      ```sql
-      select id, title, bid_ends_at, stock_left from public.listings
-      where is_donation and bid_ends_at is not null order by created_at desc;
-      ```
-   3. Majukan waktu habis **listing itu saja**. Harus mengembalikan tepat 1 baris:
-      ```sql
-      update public.listings set bid_ends_at = now() - interval '1 minute'
-      where id = '<id listing>' and is_donation and bid_ends_at is not null
-      returning id, title, bid_ends_at;
-      ```
-   4. Tunggu 1–2 menit (cron `donation-bids` tiap menit memanggil `close_donation_bids()`), lalu cek:
-      ```sql
-      select b.status, b.amount, b.order_id is not null as has_order, o.price, o.status as order_status,
-        (select balance from public.quota_balances where member_id = b.bidder_id) as bidder_balance,
-        l.bid_ends_at, l.stock_left
-      from public.donation_bids b
-      join public.listings l on l.id = b.listing_id
-      left join public.orders o on o.id = b.order_id
-      where b.listing_id = '<id listing>';
-      ```
-      Harus: `status = won`, `has_order = true`, `price = 0`, `order_status = waiting`, `bidder_balance = 0` (token pemenang terpakai, tidak dikembalikan), `bid_ends_at` null, `stock_left` berkurang 1.
+| Peran | Perangkat | Tugas |
+|---|---|---|
+| Admin | HP fisik 1, data seluler | menyetujui akun dan pembayaran |
+| Member 1 | emulator, internet laptop | penjual dan donatur |
+| Member 2 | HP fisik 2, data seluler (APK lewat WhatsApp/Drive, izinkan "instal dari sumber ini") | pembeli dan penawar donasi |
+
+Semua member di area kampus yang sama (mis. Jabodetabek, D-47).
+
+**12.A Admin.** Daftar dengan email BINUS → OTP → berkas terkirim. Jadikan admin (harus tepat 1 baris):
+```sql
+update public.profiles set role = 'admin', status = 'approved'
+where email = '<email admin>' and status <> 'approved'
+returning id, email, role, status;
+```
+Buka ulang aplikasi → konsol admin muncul.
+
+**12.B Member 1 dan Member 2 disetujui lewat aplikasi.**
+1. Member 1 dan Member 2 daftar → OTP sampai → foto kartu dan selfie terkirim → layar "Verification in progress".
+2. Admin: Verifikasi → setujui keduanya.
+3. Email keputusan sampai ke keduanya (lewat Brevo; cek Spam):
+   ```sql
+   select profile_id, kind, status, attempts, last_error from public.decision_emails order by id desc limit 2;
+   ```
+   Harus 2 baris `sent`.
+4. Buka ulang aplikasi di kedua member → beranda katalog; layar Kuota menunjukkan **1**.
+
+**12.C Pesanan, chat, kuota, lupa kata sandi.**
+1. Member 1 pasang listing biasa (saldo 1 → 0).
+2. Member 2 melihatnya di katalog, Booking 24 Jam atau Beli Sekarang, lalu chat dua arah dengan Member 1.
+3. Member 1 beli kuota: layar QRIS tampil, unggah bukti → Admin: Payments → konfirmasi → saldo Member 1 bertambah 3. Selama QRIS masih gambar dummy, cukup cek alurnya, jangan bayar sungguhan.
+4. Lupa kata sandi di Member 2 → OTP sampai → masuk dengan kata sandi baru. (Sudah teruji juga lewat pemulihan pendaftaran Admin.)
+
+**12.D Donasi lewat tawaran token (D-46) tanpa menunggu 24 jam.** Ini **satu-satunya** perubahan data lewat SQL selama smoke test.
+1. Member 1 pasang listing **donasi** (butuh kuota; pakai saldo dari 12.C.3).
+2. Member 2 cek layar Kuota: saldo harus **1** (belum dipakai karena Member 2 hanya membeli). Lalu tawar 1 token. Saldo langsung jadi 0 (token ditahan).
+3. Ambil id listing:
+   ```sql
+   select id, title, bid_ends_at, stock_left from public.listings
+   where is_donation and bid_ends_at is not null order by created_at desc;
+   ```
+4. Majukan waktu habis **listing itu saja**. Harus mengembalikan tepat 1 baris:
+   ```sql
+   update public.listings set bid_ends_at = now() - interval '1 minute'
+   where id = '<id listing>' and is_donation and bid_ends_at is not null
+   returning id, title, bid_ends_at;
+   ```
+5. Tunggu 1–2 menit (cron `donation-bids` tiap menit memanggil `close_donation_bids()`), lalu cek:
+   ```sql
+   select b.status, b.amount, b.order_id is not null as has_order, o.price, o.status as order_status,
+     (select balance from public.quota_balances where member_id = b.bidder_id) as bidder_balance,
+     l.bid_ends_at, l.stock_left
+   from public.donation_bids b
+   join public.listings l on l.id = b.listing_id
+   left join public.orders o on o.id = b.order_id
+   where b.listing_id = '<id listing>';
+   ```
+   Harus: `status = won`, `has_order = true`, `price = 0`, `order_status = waiting`, `bidder_balance = 0` (token pemenang terpakai, tidak dikembalikan), `bid_ends_at` null, `stock_left` berkurang 1. Member 2 melihat pesanan Rp0 di Pesanan Saya.
 
 ## Catatan booth
 
