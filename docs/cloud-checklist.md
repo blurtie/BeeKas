@@ -22,6 +22,38 @@ Ikuti berurutan. Bila hasil sebuah langkah berbeda dari lokal (grant, cron, buck
    - Batas email per jam: setelah Custom SMTP aktif, naikkan dari bawaan (30/jam) sesuai perkiraan booth, mis. 100/jam. Gmail sendiri membatasi sekitar 500 email/hari per akun.
 5. Cek: daftar dengan email BINUS uji; kode 6 digit harus sampai (periksa juga folder Spam).
 
+## 1A. Pengaturan Auth (samakan dengan `supabase/config.toml`)
+
+Isi lewat dashboard, satu per satu. **Jangan** `supabase config push`: perintah itu ikut menimpa SMTP, template, dan URL dengan nilai lokal.
+
+| `config.toml` | Lokal | Dashboard cloud | Isi di cloud |
+|---|---|---|---|
+| `[auth.email] otp_length` | `6` | Authentication → Sign In / Providers → Email → Email OTP Length | `6` (bawaan cloud 8; layar OTP aplikasi 6 kotak) |
+| `[auth.email] otp_expiry` | `3600` | idem → Email OTP Expiration | `3600` |
+| `[auth.email] enable_confirmations` | `false` | idem → Confirm email | Biarkan **nyala** (lihat catatan) |
+| `[auth.email] double_confirm_changes` | `true` | idem → Secure email change | nyala (bawaan) |
+| `[auth.email] secure_password_change` | `false` | idem → Secure password change | mati (bawaan); kalau nyala, Lupa kata sandi butuh login ulang terbaru |
+| `[auth] minimum_password_length` | `8` | idem → Minimum password length | `8` (bawaan cloud 6) |
+| `[auth] password_requirements` | `letters_digits` | idem → Password Requirements | Letters and digits |
+| `[auth] enable_signup`, `[auth.email] enable_signup` | `true` | Sign In / Providers → Allow new users to sign up; Email provider aktif | nyala |
+| `[auth] enable_anonymous_sign_ins` | `false` | Sign In / Providers → Allow anonymous sign-ins | mati |
+| `[auth.email] max_frequency` | `60s` | Authentication → Rate Limits → interval per pengguna (atau SMTP Settings → Minimum interval) | `60` detik |
+| `[auth.rate_limit] email_sent` | `2` / jam | Rate Limits → emails sent | `100` / jam (lokal 2 hanya untuk Mailpit; lihat langkah 1) |
+| `[auth.rate_limit] sign_in_sign_ups` | `30` / 5 menit / IP | Rate Limits → sign-ups and sign-ins | `30`; naikkan ke `100` bila booth memakai satu Wi-Fi bersama |
+| `[auth.rate_limit] token_verifications` | `30` / 5 menit / IP | Rate Limits → token verifications | idem |
+| `[auth.rate_limit] token_refresh` | `150` | Rate Limits → token refreshes | `150` (bawaan) |
+| `[auth] jwt_expiry` | `3600` | Project Settings → JWT Keys | `3600` (bawaan) |
+| `[auth] enable_refresh_token_rotation`, `refresh_token_reuse_interval` | `true`, `10` | Authentication → Sessions | bawaan |
+| `[auth] site_url` | `http://127.0.0.1:3000` | Authentication → URL Configuration → Site URL | URL web milik tim (mis. situs Netlify BeeKas) atau biarkan bawaan; **bukan** 127.0.0.1. Redirect URLs dikosongkan |
+| SMS, MFA, OAuth, Web3 | mati | — | mati (bawaan) |
+
+**Confirm email.** Aplikasi tidak memakai `signUp(password)`. Daftar = `signInWithOtp` (membuat user dan mengirim kode) → `verifyOTP(type: email)` → `updateUser(password)` (`lib/data/signup_repository.dart`). Lupa kata sandi = `resetPasswordForEmail` → `verifyOTP(type: recovery)`. Email dianggap terkonfirmasi saat kode diverifikasi, jadi:
+- **Nyala** (sekarang): user baru menerima template *Confirm signup*. Sudah teruji di cloud.
+- **Mati** (seperti lokal): user baru menerima template *Magic link*. Isinya sama (keduanya `otp.html`), jadi perilaku aplikasi tidak berubah.
+Tidak perlu diubah. Kalau diubah, tes ulang 12.1 karena template yang terkirim berbeda.
+
+**Site URL** hanya dipakai untuk tautan di email dan redirect OAuth. Template BeeKas hanya berisi `{{ .Token }}` dan tidak ada OAuth, jadi nilainya tidak memengaruhi APK. Yang penting: jangan arahkan ke alamat lokal atau domain yang bukan milik tim, dan jangan tambah Redirect URLs.
+
 ## 2. Brevo untuk email keputusan verifikasi
 
 1. Buat akun di brevo.com (paket Free).
@@ -247,6 +279,10 @@ Wi-Fi mati di kedua HP, supaya tidak ada ketergantungan pada LAN laptop. Pasang 
       where b.listing_id = '<id listing>';
       ```
       Harus: `status = won`, `has_order = true`, `price = 0`, `order_status = waiting`, `bidder_balance = 0` (token pemenang terpakai, tidak dikembalikan), `bid_ends_at` null, `stock_left` berkurang 1.
+
+## Catatan booth
+
+- Pengguna yang melihat "email sudah terdaftar" saat daftar (pendaftaran sebelumnya terputus sebelum kata sandi dibuat): arahkan ke **Sign in → Lupa kata sandi**. Kode 6 digit dikirim, kata sandi dibuat, lalu aplikasi melanjutkan ke data diri, foto kartu, dan selfie. Teruji di smoke test 12.1.
 
 ## Pemantauan
 
