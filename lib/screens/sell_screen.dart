@@ -176,6 +176,7 @@ class _SellScreenState extends State<SellScreen> {
         _postError = switch (error) {
           SignupError.noQuota ||
           SignupError.notAllowed ||
+          SignupError.donationListingLimit ||
           SignupError.listingCampus => t(error!.copyKey),
           _ => t('sellFailed'),
         };

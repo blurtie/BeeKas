@@ -47,7 +47,9 @@ class SupabaseAuthRepository implements AuthRepository {
     final id = _client.auth.currentUser!.id;
     final profile = await _client
         .from('profiles')
-        .select('full_name, email, role, status, account_type, consent_at, campus')
+        .select(
+          'full_name, email, role, status, account_type, consent_at, campus',
+        )
         .eq('id', id)
         .single();
     final status = AccountStatus.values.byName(profile['status'] as String);

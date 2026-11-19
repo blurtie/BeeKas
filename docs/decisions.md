@@ -650,3 +650,14 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 - Email keputusan verifikasi (`send-decision-emails`) dikirim lewat **API HTTP Brevo** (`POST https://api.brevo.com/v3/smtp/email`), karena Edge Functions memblokir port 587. Pengirim `beekas2026@gmail.com` yang diverifikasi di Brevo. Secret: `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`.
 - Risiko email masuk spam (pengirim Gmail tanpa domain sendiri) diterima untuk Festival. Setelah Festival pindah ke domain sendiri.
 - App Password dan API key hanya di dashboard; tidak pernah di repo, issue, PR, atau chat.
+
+---
+
+## D-51 — Batas listing donasi aktif
+
+**Status:** Dikonfirmasi Faiqi, 20 November 2026
+
+**Keputusan:**
+- Satu member maksimal punya **3 listing donasi aktif**. Aktif artinya tidak diturunkan (admin atau sendiri) dan belum kedaluwarsa. Tujuannya mencegah spam, karena sejak D-46 memasang donasi tidak memotong kuota.
+- Listing jual tidak terkena batas ini, karena sudah dibatasi kuota.
+- Ditegakkan di backend: `create_listing` dan `relist_listing` menolak dengan `donation_listing_limit` (migration `20261120130000_festival_limits.sql`).

@@ -51,6 +51,10 @@ language sql as $$ select balance from public.quota_balances where member_id = p
 
 select pg_temp.act_as(:s);
 select lives_ok($$ select pg_temp.list(true) $$, 'a donor with no tokens lists a donation');
+-- D-51 allows 3 active donations; this one only shows listing is free.
+reset role;
+update public.listings set withdrawn_at = now() where seller_id = :s;
+select pg_temp.act_as(:s);
 select throws_ok($$ select pg_temp.list(false) $$, '23514', 'no_quota', 'a sale still needs a token');
 select set_config('t.d1', pg_temp.list(true)::text, true);
 select set_config('t.d2', pg_temp.list(true, 2)::text, true);

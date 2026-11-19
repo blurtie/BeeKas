@@ -76,6 +76,11 @@ enum SignupError {
   outOfArea('errorOutOfArea'),
   // listings_campus_physical: the form checks it first.
   listingCampus('errorListingCampus'),
+  // From create_listing and relist_listing (D-51).
+  donationListingLimit('errorDonationListingLimit'),
+  // From place_order, place_bid and update_cod: the Lokasi COD (D-47).
+  codCampusOnline('errorCodCampusOnline'),
+  codOutOfArea('errorCodOutOfArea'),
   unknown('errorSignupUnknown');
 
   const SignupError(this.copyKey);
@@ -136,6 +141,9 @@ SignupError signupErrorFrom(String? code, String message) {
     ('23514', 'not_enough_tokens') => SignupError.notEnoughTokens,
     ('23514', 'listing_has_bids') => SignupError.listingHasBids,
     ('23514', 'out_of_area') => SignupError.outOfArea,
+    ('23514', 'donation_listing_limit') => SignupError.donationListingLimit,
+    ('23514', 'cod_campus_online') => SignupError.codCampusOnline,
+    ('23514', 'cod_out_of_area') => SignupError.codOutOfArea,
     ('23514', _) when message.contains('listings_campus_physical') =>
       SignupError.listingCampus,
     _ => SignupError.unknown,
