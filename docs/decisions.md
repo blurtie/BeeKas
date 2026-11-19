@@ -653,6 +653,17 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 
 ---
 
+## D-49 — Dua admin untuk Festival
+
+**Status:** Dikonfirmasi Faiqi, 19 November 2026 (PR T12 #92)
+
+**Keputusan:**
+- Mengubah D-40 (K-39) untuk Festival: admin cloud cukup **dua orang** (Faiqi + satu anggota). Anggota lain tetap member agar bisa demo belanja di booth.
+- Alasan: akun admin saat ini langsung diarahkan ke konsol admin dan tidak bisa membuka katalog (`lib/domain/sign_in.dart:43`, dari PR #52). Ini celah, bukan keputusan: PRD-katalog menulis admin = fitur member + layar admin.
+- Kembali ke satu akun admin per anggota setelah tiket "Admin bisa berpindah antara konsol admin dan katalog" selesai.
+
+---
+
 ## D-51 — Batas listing donasi aktif
 
 **Status:** Dikonfirmasi Faiqi, 20 November 2026

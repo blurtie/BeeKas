@@ -193,11 +193,11 @@ select cron.unschedule('delete-expired-photos-once');
 ## 8. QRIS dan admin
 
 1. **QRIS (K-09, D-29, D-35).** Setelah CFO setuju, unggah gambar QRIS asli ke bucket publik `payment-qris` dengan nama tepat `qris.png` (PNG/JPEG, ≤ 1 MB) lewat **Storage**. Gambar dan nama CFO tidak di-commit. Mengganti cukup menimpa file yang sama; aplikasi tidak perlu dirilis ulang.
-2. **Admin per orang (D-40 K-39, D-21).** Tiap anggota tim mendaftar biasa lewat aplikasi (email BINUS + OTP). Lalu pemilik project memberi peran admin satu orang per perintah. Kata sandi tidak pernah dibagikan.
+2. **Dua admin untuk Festival (D-49, mengubah D-40 K-39).** Hanya Faiqi dan satu anggota lain yang jadi admin; anggota lain tetap member agar bisa demo belanja (admin belum bisa membuka katalog). Calon admin mendaftar biasa lewat aplikasi (email BINUS + OTP), lalu pemilik project memberi peran admin satu orang per perintah. Kata sandi tidak pernah dibagikan.
    ```sql
    update public.profiles set role = 'admin' where email = '<email anggota>' returning id, email, role, status;
    ```
-   Harus mengembalikan tepat satu baris.
+   Harus mengembalikan tepat satu baris. Total admin harus 2: `select count(*) from public.profiles where role = 'admin';`
 
 ## 9. Security Advisor dan backup
 
