@@ -20,6 +20,9 @@ import 'profile_screen.dart';
 /// Opens Detail Barang for a listing.
 typedef _Detail = Widget Function(Listing listing);
 
+/// Favorit (K4) is not built yet (#89): its heart buttons stay hidden until then.
+const favoritesEnabled = false;
+
 /// Chat, Booking, Beli, favorites and selling come with later PRDs (#74).
 /// [onSignOut], for signed-in members, rides along until Profil exists.
 void showComingSoon(BuildContext context, {VoidCallback? onSignOut}) {
@@ -174,10 +177,8 @@ class _CatalogShellState extends State<CatalogShell> {
     final picked = await showModalBottomSheet<(List<Campus>?,)>(
       context: context,
       isScrollControlled: true,
-      builder: (sheet) => _LocationSheet(
-        selected: _campuses,
-        memberArea: widget.campus?.area,
-      ),
+      builder: (sheet) =>
+          _LocationSheet(selected: _campuses, memberArea: widget.campus?.area),
     );
     if (picked != null && mounted) {
       setState(() {
@@ -366,10 +367,8 @@ class _LocationSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(_pad, 0, _pad, 8),
                 child: Text(
-                  t('locationReachNote').replaceAll(
-                    '{area}',
-                    t('area_${area.name}'),
-                  ),
+                  t('locationReachNote')
+                      .replaceAll('{area}', t('area_${area.name}')),
                   style: textTheme.bodySmall,
                 ),
               ),
@@ -640,11 +639,12 @@ class _HomeViewState extends State<_HomeView> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: t('favorites'),
-                    icon: const Icon(Icons.favorite_border),
-                    onPressed: widget.onSoon,
-                  ),
+                  if (favoritesEnabled)
+                    IconButton(
+                      tooltip: t('favorites'),
+                      icon: const Icon(Icons.favorite_border),
+                      onPressed: widget.onSoon,
+                    ),
                   IconButton(
                     tooltip: t('notifications'),
                     icon: const Icon(Icons.notifications_none),
@@ -892,18 +892,19 @@ class _ListingCard extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: IconButton(
-                      tooltip: t('addFavorite'),
-                      icon: const Icon(Icons.favorite_border),
-                      style: IconButton.styleFrom(
-                        backgroundColor: BeeColors.surface,
+                  if (favoritesEnabled)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: IconButton(
+                        tooltip: t('addFavorite'),
+                        icon: const Icon(Icons.favorite_border),
+                        style: IconButton.styleFrom(
+                          backgroundColor: BeeColors.surface,
+                        ),
+                        onPressed: () => showComingSoon(context),
                       ),
-                      onPressed: () => showComingSoon(context),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -1501,12 +1502,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         child: Text(t('buyNow')),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    IconButton.outlined(
-                      tooltip: t('addFavorite'),
-                      onPressed: soon,
-                      icon: const Icon(Icons.favorite_border),
-                    ),
+                    if (favoritesEnabled) ...[
+                      const SizedBox(width: 12),
+                      IconButton.outlined(
+                        tooltip: t('addFavorite'),
+                        onPressed: soon,
+                        icon: const Icon(Icons.favorite_border),
+                      ),
+                    ],
                   ],
                 ),
               ],
