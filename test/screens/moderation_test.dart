@@ -195,7 +195,7 @@ void main() {
       final repo = _FakeModeration()..groups = [_group];
       await _pump(tester, ReportListScreen(repository: repo));
       expect(find.text('Kalkulator'), findsOneWidget);
-      expect(find.textContaining('2 reporters'), findsOneWidget);
+      expect(find.textContaining('Reporters: 2'), findsOneWidget);
 
       await tester.tap(find.text('Kalkulator'));
       await tester.pumpAndSettle();
