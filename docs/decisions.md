@@ -653,6 +653,39 @@ Aturan ini ditegakkan di backend (`relist_listing`).
 
 ---
 
+## D-49 — Dua admin untuk Festival
+
+**Status:** Dikonfirmasi Faiqi, 19 November 2026 (PR T12 #92)
+
+**Keputusan:**
+- Mengubah D-40 (K-39) untuk Festival: admin cloud cukup **dua orang** (Faiqi + satu anggota). Anggota lain tetap member agar bisa demo belanja di booth.
+- Alasan: akun admin saat ini langsung diarahkan ke konsol admin dan tidak bisa membuka katalog (`lib/domain/sign_in.dart:43`, dari PR #52). Ini celah, bukan keputusan: PRD-katalog menulis admin = fitur member + layar admin.
+- Kembali ke satu akun admin per anggota setelah tiket "Admin bisa berpindah antara konsol admin dan katalog" selesai.
+
+---
+
+## D-50 — Booking 24 Jam memakai token
+
+**Status:** Dikonfirmasi Faiqi, 19 November 2026 (masukan user interview). Saldo awal 3: [KONFIRMASI CFO]
+
+**Keputusan:**
+- Booking 24 Jam menahan **1 token** (saldo kuota) saat pesanan dibuat. Saldo 0 → booking ditolak dengan pesan yang jelas. Beli Sekarang dan pesanan donasi tidak memakai token.
+- Token **kembali** ke pembeli bila:
+  - penjual menolak (membatalkan saat `waiting`);
+  - timer habis sebelum penjual menerima;
+  - pembeli membatalkan sebelum diterima;
+  - penjual membatalkan setelah diterima, kecuali alasannya pembeli tidak datang;
+  - admin membatalkan.
+- Token **hangus** saat penjual menerima booking. Setelah itu tetap hangus bila pembeli membatalkan, pembeli tidak datang COD (dicatat penjual), atau pesanan selesai.
+- Perpanjangan booking (+24 jam) tidak memakai token tambahan.
+- Saldo awal untuk Festival diusulkan **3** (bukan 1, mengubah D-35 K-08). Nilainya disimpan di satu tempat agar mudah diubah; menunggu konfirmasi CFO.
+
+**Alasan:** Booking tanpa biaya membuat barang ditahan tanpa niat membeli. Token membuat pembeli berpikir dulu, tanpa menghukum pembeli yang dibatalkan oleh pihak lain.
+
+**Konsekuensi:** Perlu alasan batal baru untuk pembeli tidak datang, ledger reason baru, jalur batal oleh admin, dan pgTAP untuk setiap baris aturan. Dikerjakan Sabtu, 21 November 2026, bersama T9.
+
+---
+
 ## D-51 — Batas listing donasi aktif
 
 **Status:** Dikonfirmasi Faiqi, 20 November 2026
