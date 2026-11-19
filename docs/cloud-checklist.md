@@ -308,9 +308,30 @@ Buka ulang aplikasi → konsol admin muncul.
    ```
    Harus: `status = won`, `has_order = true`, `price = 0`, `order_status = waiting`, `bidder_balance = 0` (token pemenang terpakai, tidak dikembalikan), `bid_ends_at` null, `stock_left` berkurang 1. Member 2 melihat pesanan Rp0 di Pesanan Saya.
 
+### Hasil smoke test 19 November 2026
+
+Admin = HP Samsung (data seluler), Member 1 = emulator, Member 2 = HP Evan (APK lewat WhatsApp, data seluler).
+
+**Terbukti di cloud:**
+- Daftar dengan OTP 6 digit lewat SMTP Gmail, sampai ke Inbox Outlook BINUS (setelah Email OTP Length diubah ke 6; lihat 1A).
+- Pemulihan pendaftaran yang terputus lewat Sign in → Lupa kata sandi.
+- Admin dari SQL; menyetujui dua member dari konsol admin.
+- Email keputusan `approved` lewat Brevo: `sent` di database, Delivered di Brevo Logs, isi benar, tetapi masuk **Junk** Outlook BINUS.
+- Saldo awal 1 dari trigger; pembayaran kuota dikonfirmasi admin (+3); pasang listing biasa (−1); ledger cocok dengan saldo.
+- Booking sampai pesanan selesai, chat dua arah.
+- Listing donasi tanpa kuota; tawaran 1 token (saldo 1 → 0); cron `donation-bids` menutup tawaran: `won`, pesanan Rp0 `waiting`, saldo pemenang tetap 0, `bid_ends_at` null, `stock_left` 1 → 0.
+
+**Belum terbukti / terbuka:**
+- QRIS asli (masih gambar dummy, langkah 8.1) dan pembayaran sungguhan.
+- Admin kedua (D-49, langkah 8.2).
+- Satu email keputusan terkirim dua kali dengan jeda 10 menit (`attempts = 1`, `last_error` null): pencatatan `finish_decision_email` pertama tidak tercatat. Penyebab belum diperiksa (`net._http_response`, log function).
+- Email keputusan masuk Junk: teks layar menunggu verifikasi diganti di T9; domain sendiri setelah Festival (D-48).
+- Admin belum bisa membuka katalog (issue terpisah, D-49).
+
 ## Catatan booth
 
 - Pengguna yang melihat "email sudah terdaftar" saat daftar (pendaftaran sebelumnya terputus sebelum kata sandi dibuat): arahkan ke **Sign in → Lupa kata sandi**. Kode 6 digit dikirim, kata sandi dibuat, lalu aplikasi melanjutkan ke data diri, foto kartu, dan selfie. Teruji di smoke test 12.1.
+- Email "Akun BeeKas disetujui" biasanya masuk folder **Junk** Outlook BINUS. Minta pengguna mengecek Junk dan menandai "It's not junk".
 
 ## Pemantauan
 
