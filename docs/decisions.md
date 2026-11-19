@@ -678,7 +678,7 @@ Aturan ini ditegakkan di backend (`relist_listing`).
   - admin membatalkan.
 - Token **hangus** saat penjual menerima booking. Setelah itu tetap hangus bila pembeli membatalkan, pembeli tidak datang COD (dicatat penjual), atau pesanan selesai.
 - Perpanjangan booking (+24 jam) tidak memakai token tambahan.
-- Saldo awal untuk Festival diusulkan **3** (bukan 1, mengubah D-xx saldo awal K-08). Nilainya disimpan di satu tempat agar mudah diubah; menunggu konfirmasi CFO.
+- Saldo awal untuk Festival diusulkan **3** (bukan 1, mengubah D-35 K-08). Nilainya disimpan di satu tempat agar mudah diubah; menunggu konfirmasi CFO.
 
 **Alasan:** Booking tanpa biaya membuat barang ditahan tanpa niat membeli. Token membuat pembeli berpikir dulu, tanpa menghukum pembeli yang dibatalkan oleh pihak lain.
 
