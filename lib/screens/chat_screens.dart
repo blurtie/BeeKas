@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../config/copy.dart';
 import '../data/chat_repository.dart';
+import '../data/moderation_repository.dart';
 import '../data/signup_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/chat.dart';
 import '../domain/signup_error.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
+import 'moderation_screens.dart';
 
 String _two(int n) => n.toString().padLeft(2, '0');
 
@@ -68,10 +70,14 @@ class ChatListScreen extends StatefulWidget {
     super.key,
     required this.repository,
     this.now = DateTime.now,
+    this.moderation,
   });
 
   final ChatRepository repository;
   final DateTime Function() now;
+
+  /// See [ChatRoomScreen.moderation].
+  final ModerationRepository? moderation;
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -193,6 +199,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           title: c.otherName,
                           conversationId: c.id,
                           item: c.item,
+                          moderation: widget.moderation,
                         ),
                       ),
                     ),
@@ -342,10 +349,14 @@ class ChatRoomScreen extends StatefulWidget {
     this.listingId,
     this.item,
     this.now = DateTime.now,
+    this.moderation,
   });
 
   final ChatRepository repository;
   final String title;
+
+  /// Lapor the other party (K16, #87), once the conversation exists.
+  final ModerationRepository? moderation;
   final String? conversationId;
   final String? listingId;
   final ChatItem? item;
@@ -498,7 +509,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Widget build(BuildContext context) {
     final item = widget.item;
     return Scaffold(
-      appBar: BeeHeader(title: Text(widget.title)),
+      appBar: BeeHeader(
+        title: Text(widget.title),
+        actions: [
+          if ((widget.moderation, _id) case (final moderation?, final id?))
+            IconButton(
+              tooltip: t('report'),
+              icon: const Icon(Icons.flag_outlined),
+              onPressed: () => showReportSheet(
+                context,
+                title: t('reportChatTitle').replaceAll('{name}', widget.title),
+                submit: (reason, note) =>
+                    moderation.reportChat(id, reason, note),
+              ),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [

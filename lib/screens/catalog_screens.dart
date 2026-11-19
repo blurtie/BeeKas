@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../config/copy.dart';
 import '../data/catalog_repository.dart';
 import '../data/chat_repository.dart';
+import '../data/moderation_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/access.dart';
 import '../domain/campus_area.dart';
@@ -14,6 +15,7 @@ import '../domain/registration.dart';
 import '../ui/assets.dart';
 import '../ui/components.dart';
 import '../ui/tokens.dart';
+import 'moderation_screens.dart';
 import 'order_screens.dart';
 import 'profile_screen.dart';
 
@@ -74,9 +76,13 @@ class CatalogShell extends StatefulWidget {
     this.campus,
     this.fullName,
     this.onHelp,
+    this.moderation,
   });
 
   final CatalogRepository repository;
+
+  /// See [ListingDetailScreen.moderation].
+  final ModerationRepository? moderation;
 
   /// The member's campus: decides the default location filter and which
   /// listings can be ordered (D-47). Null for guests.
@@ -137,6 +143,7 @@ class _CatalogShellState extends State<CatalogShell> {
     onAccount: widget.onAccount,
     onChat: widget.onChat,
     chats: widget.chats,
+    moderation: widget.moderation,
   );
 
   void _snack(String message) => ScaffoldMessenger.of(context)
@@ -1115,8 +1122,12 @@ class ListingDetailScreen extends StatefulWidget {
     this.now = DateTime.now,
     this.onAccount,
     this.memberCampus,
+    this.moderation,
   });
   final Listing listing;
+
+  /// Lapor (K16, #87): approved members, not on their own listing.
+  final ModerationRepository? moderation;
 
   /// The member's campus; orders and bids outside its area are refused
   /// (D-47). Null for guests and accounts without a campus.
@@ -1202,7 +1213,22 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
 
     return Scaffold(
-      appBar: const BeeHeader(),
+      appBar: BeeHeader(
+        actions: [
+          if (widget.moderation case final moderation?
+              when widget.status == AccountStatus.approved && !l.isMine)
+            IconButton(
+              tooltip: t('report'),
+              icon: const Icon(Icons.flag_outlined),
+              onPressed: () => showReportSheet(
+                context,
+                title: t('reportListingTitle'),
+                submit: (reason, note) =>
+                    moderation.reportListing(l.id, reason, note),
+              ),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: _pad),
         children: [

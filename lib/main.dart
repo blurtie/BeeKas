@@ -7,6 +7,7 @@ import 'data/auth_repository.dart';
 import 'data/camera.dart';
 import 'data/catalog_repository.dart';
 import 'data/chat_repository.dart';
+import 'data/moderation_repository.dart';
 import 'data/language.dart';
 import 'data/listing_repository.dart';
 import 'data/onboarding.dart';
@@ -27,6 +28,7 @@ import 'screens/legal_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/password_screen.dart';
+import 'screens/moderation_screens.dart';
 import 'screens/payment_screens.dart';
 import 'screens/pending_screen.dart';
 import 'screens/phone_screen.dart';
@@ -220,16 +222,21 @@ Widget _screenFor(BuildContext context, Account account) =>
         onChats: () => Navigator.push(
           context,
           MaterialPageRoute<void>(
-            builder: (_) => ChatListScreen(repository: _chatRepository),
+            builder: (_) => ChatListScreen(
+              repository: _chatRepository,
+              moderation: _moderationRepository,
+            ),
           ),
         ),
         chats: _chatRepository,
+        moderation: _moderationRepository,
         // Chat Penjual (5.8).
         onChat: (listing) => Navigator.push(
           context,
           MaterialPageRoute<void>(
             builder: (_) => ChatRoomScreen(
               repository: _chatRepository,
+              moderation: _moderationRepository,
               title: listing.sellerName,
               listingId: listing.id,
               item: (
@@ -249,6 +256,12 @@ Widget _screenFor(BuildContext context, Account account) =>
           context,
           MaterialPageRoute(
             builder: (_) => PaymentListScreen(repository: _paymentRepository),
+          ),
+        ),
+        onReports: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => ReportListScreen(repository: _moderationRepository),
           ),
         ),
         onAnnouncements: () => Navigator.push(
@@ -438,3 +451,6 @@ void _legal(BuildContext context, String titleKey) => Navigator.push(
 );
 
 final _chatRepository = SupabaseChatRepository(Supabase.instance.client);
+final _moderationRepository = SupabaseModerationRepository(
+  Supabase.instance.client,
+);

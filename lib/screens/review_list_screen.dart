@@ -16,6 +16,7 @@ class ReviewListScreen extends StatefulWidget {
     required this.onSignOut,
     this.onPayments,
     this.onAnnouncements,
+    this.onReports,
     this.now = DateTime.now,
   });
 
@@ -27,6 +28,9 @@ class ReviewListScreen extends StatefulWidget {
 
   /// K21 Pengumuman Admin BeeKas (#86).
   final VoidCallback? onAnnouncements;
+
+  /// K19 Laporan (#87).
+  final VoidCallback? onReports;
   final DateTime Function() now;
 
   @override
@@ -80,6 +84,11 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
             TextButton(
               onPressed: widget.onPayments,
               child: Text(t('paymentsAdminTitle')),
+            ),
+          if (widget.onReports != null)
+            TextButton(
+              onPressed: widget.onReports,
+              child: Text(t('reportsAdminTitle')),
             ),
           if (widget.onAnnouncements != null)
             TextButton(
